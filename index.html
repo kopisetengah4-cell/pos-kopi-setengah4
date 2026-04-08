@@ -331,8 +331,40 @@
     }
 
     function updateHistory() {
-        const list = allTransactions.filter(t => t.branchId === currentBranchId);
-        document.getElementById('history-tbody').innerHTML = list.slice(0,25).map(t => `<tr><td>${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td>Rp ${t.total.toLocaleString()}</td><td><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`).join('');
+        const list = allTransactions.filter(t => t.branchId === currentBranchId || currentBranchId === "KS4-ADM");
+        document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => {
+            // Tombol Hapus hanya muncul jika login sebagai ADMIN
+            const deleteBtn = (currentBranchId === "KS4-ADM") ? 
+                `<button onclick="deleteTransaction('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; margin-left:5px">HAPUS</button>` : '';
+
+            return `<tr>
+                <td>${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                <td><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td>
+                <td>Rp ${t.total.toLocaleString()}</td>
+                <td>
+                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                    ${deleteBtn}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Fungsi Baru untuk Hapus Data Langsung ke Firebase
+    function deleteTransaction(id) {
+        if(confirm("Apakah Bos yakin ingin menghapus transaksi ini secara permanen?")) {
+            // Cari key asli Firebase berdasarkan ID transaksi
+            transRef.once('value', snap => {
+                const data = snap.val();
+                for (let key in data) {
+                    if (data[key].id == id) {
+                        transRef.child(key).remove()
+                        .then(() => alert("Transaksi Berhasil Dihapus!"))
+                        .catch(err => alert("Gagal hapus: " + err));
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     function viewStruk(id) {
