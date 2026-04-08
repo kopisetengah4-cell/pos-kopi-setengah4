@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS KS4 - Final Pro v40</title>
+    <title>POS KS4 - Final Anti-Refresh v40</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -11,8 +11,10 @@
     <style>
         :root { --primary: #1a4d2e; --secondary: #f8f9fa; --text: #333; --admin: #d35400; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
+        
+        /* ANTI REFRESH (PULL-TO-REFRESH DISABLED) ADA DI SINI BOS */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; overscroll-behavior-y: none; touch-action: pan-x pan-y; }
+        
         /* Login */
         #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
         .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
@@ -26,7 +28,9 @@
 
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
-        main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 380px; }
+        
+        /* ANTI REFRESH LANJUTAN */
+        main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 380px; overscroll-behavior-y: contain; }
         
         /* Tabs Mode & Range */
         .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; }
@@ -149,12 +153,11 @@
         <h3>Laporan <span id="rep-title">HARI INI</span></h3>
         <div id="report-summary-box"></div>
         <div id="report-details-box"></div>
-        <!-- TOMBOL HAPUS LAPORAN ADMIN MUNCUL DI SINI NANTI -->
         <div id="admin-delete-report-box"></div> 
     </main>
 </div>
 
-<!-- PAGE MANAGEMENT (EDITOR MENU) -->
+<!-- PAGE MANAGEMENT -->
 <div id="page-mgmt" class="page">
     <main>
         <h3>Manajemen Menu</h3>
@@ -188,8 +191,6 @@
     const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // Saya kembalikan ref database ke v39 agar data transaksi Bos yang tadi dicoba tidak hilang.
     const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v39');
 
@@ -213,7 +214,7 @@
     };
 
     let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [], activeRange = "day";
-    let currentFilteredTransactions = []; // Menyimpan data laporan yang sedang dilihat
+    let currentFilteredTransactions = [];
 
     // --- FITUR AUTO LOGIN 1 JAM ---
     function checkSession() {
@@ -309,7 +310,7 @@
             return dOk && bOk;
         });
 
-        currentFilteredTransactions = filtered; // Menyimpan data untuk fitur "Kosongkan Laporan"
+        currentFilteredTransactions = filtered;
 
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, items={};
         filtered.forEach(t => {
@@ -351,7 +352,6 @@
         const sorted = Object.entries(items).sort((a,b)=>b[1]-a[1]);
         document.getElementById('report-details-box').innerHTML = `<div class="report-card"><h4>Daftar Menu Terjual</h4><div class="table-container"><table>${sorted.map(p=>`<tr><td>${p[0]}</td><td style="text-align:right"><b>${p[1]}</b></td></tr>`).join('')}</table></div></div>`;
 
-        // Tampilkan Tombol Kosongkan Laporan Hanya Jika Admin dan ada data
         const delBox = document.getElementById('admin-delete-report-box');
         if (currentBranchId === "KS4-ADM" && filtered.length > 0) {
             delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3);">🗑️ KOSONGKAN DATA LAPORAN INI</button>`;
@@ -360,10 +360,9 @@
         }
     }
 
-    // FUNGSI BARU: HAPUS SEMUA TRANSAKSI DI LAPORAN SAAT INI (KHUSUS ADMIN)
     function clearReportData() {
         if(currentFilteredTransactions.length === 0) return;
-        let warning = prompt("PERINGATAN BAHAYA!\nSeluruh transaksi pada laporan cabang ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:");
+        let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:");
         
         if (warning === "HAPUS") {
             const idsToRemove = currentFilteredTransactions.map(t => t.id);
@@ -372,7 +371,7 @@
                 let updates = {};
                 for (let k in data) {
                     if (idsToRemove.includes(data[k].id)) {
-                        updates[k] = null; // Tandai data untuk dihapus
+                        updates[k] = null; 
                     }
                 }
                 transRef.update(updates).then(() => {
@@ -380,7 +379,7 @@
                 });
             });
         } else if (warning !== null) {
-            alert("Penghapusan dibatalkan. Kata kunci salah.");
+            alert("Penghapusan dibatalkan.");
         }
     }
 
@@ -392,9 +391,9 @@
             const isToday = txDate.toDateString() === now.toDateString();
             
             if (currentBranchId === "KS4-ADM") {
-                return true; // Admin melihat semua
+                return true; 
             } else {
-                return t.branchId === currentBranchId && isToday; // Cabang hanya melihat hari ini
+                return t.branchId === currentBranchId && isToday; 
             }
         });
 
@@ -465,4 +464,4 @@
     function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = localMenu[masterMode].find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
 </script>
 </body>
-    </html>
+</html>
