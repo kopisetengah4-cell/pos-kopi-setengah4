@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS KS4 - Final Auto-Reset v39</title>
+    <title>POS KS4 - Final Pro v40</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -149,10 +149,12 @@
         <h3>Laporan <span id="rep-title">HARI INI</span></h3>
         <div id="report-summary-box"></div>
         <div id="report-details-box"></div>
+        <!-- TOMBOL HAPUS LAPORAN ADMIN MUNCUL DI SINI NANTI -->
+        <div id="admin-delete-report-box"></div> 
     </main>
 </div>
 
-<!-- PAGE MANAGEMENT -->
+<!-- PAGE MANAGEMENT (EDITOR MENU) -->
 <div id="page-mgmt" class="page">
     <main>
         <h3>Manajemen Menu</h3>
@@ -186,12 +188,13 @@
     const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const transRef = db.ref('transactions_master_v39'); // FOLDER BARU AGAR BERSIH 100%
+    
+    // Saya kembalikan ref database ke v39 agar data transaksi Bos yang tadi dicoba tidak hilang.
+    const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v39');
 
     const users = { "KS4-TD": { name: "TANDUR", pass: "1245" }, "KS4-KB": { name: "KEBON JERUK", pass: "1425" }, "KS4-PI": { name: "PONDOK INDAH", pass: "3265" }, "KS4-MT": { name: "MENTENG", pass: "9865" }, "KS4-CP": { name: "CEMPUT", pass: "7845" }, "KS4-OT": { name: "OTISTA", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
-    // DATA MENU 100% LENGKAP
     const initialData = { 
         ONLINE: [ 
             { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" }, 
@@ -210,6 +213,7 @@
     };
 
     let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [], activeRange = "day";
+    let currentFilteredTransactions = []; // Menyimpan data laporan yang sedang dilihat
 
     // --- FITUR AUTO LOGIN 1 JAM ---
     function checkSession() {
@@ -217,7 +221,7 @@
         if (session) {
             const data = JSON.parse(session);
             const now = new Date().getTime();
-            if (now - data.timestamp < 3600000) { // 1 Jam
+            if (now - data.timestamp < 3600000) { 
                 currentBranchId = data.branchId;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('branch-display').innerText = users[currentBranchId].name;
@@ -234,7 +238,6 @@
         }
     }
     window.onload = checkSession;
-    // ------------------------------
 
     menuRef.on('value', snap => {
         if(snap.val()) { localMenu = snap.val(); } 
@@ -265,10 +268,7 @@
         } else { alert("Login Gagal! ID atau Password Salah."); }
     }
 
-    function logout() {
-        localStorage.removeItem('ks4_session');
-        location.reload();
-    }
+    function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
 
     function setMasterMode(m) { 
         masterMode = m; cart = {}; 
@@ -299,7 +299,7 @@
     function updateCart(id, d) { if(localMenu[masterMode].find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); cart[id] = (cart[id] || 0) + d; if(cart[id] <= 0) delete cart[id]; renderMenu(); updateUI(); }
     function updateUI() { let t = 0; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); if(m) t += m.price * cart[id]; } document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; }
     
-    // --- REPORT ---
+    // --- REPORT & DELETE REPORT BUTTON ---
     function updateReport() {
         const bF = document.getElementById('branch-filter').value, now = new Date();
         const filtered = allTransactions.filter(t => {
@@ -308,6 +308,8 @@
             let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId;
             return dOk && bOk;
         });
+
+        currentFilteredTransactions = filtered; // Menyimpan data untuk fitur "Kosongkan Laporan"
 
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, items={};
         filtered.forEach(t => {
@@ -348,6 +350,38 @@
             </div>`;
         const sorted = Object.entries(items).sort((a,b)=>b[1]-a[1]);
         document.getElementById('report-details-box').innerHTML = `<div class="report-card"><h4>Daftar Menu Terjual</h4><div class="table-container"><table>${sorted.map(p=>`<tr><td>${p[0]}</td><td style="text-align:right"><b>${p[1]}</b></td></tr>`).join('')}</table></div></div>`;
+
+        // Tampilkan Tombol Kosongkan Laporan Hanya Jika Admin dan ada data
+        const delBox = document.getElementById('admin-delete-report-box');
+        if (currentBranchId === "KS4-ADM" && filtered.length > 0) {
+            delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3);">🗑️ KOSONGKAN DATA LAPORAN INI</button>`;
+        } else {
+            delBox.innerHTML = '';
+        }
+    }
+
+    // FUNGSI BARU: HAPUS SEMUA TRANSAKSI DI LAPORAN SAAT INI (KHUSUS ADMIN)
+    function clearReportData() {
+        if(currentFilteredTransactions.length === 0) return;
+        let warning = prompt("PERINGATAN BAHAYA!\nSeluruh transaksi pada laporan cabang ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:");
+        
+        if (warning === "HAPUS") {
+            const idsToRemove = currentFilteredTransactions.map(t => t.id);
+            transRef.once('value', s => {
+                const data = s.val();
+                let updates = {};
+                for (let k in data) {
+                    if (idsToRemove.includes(data[k].id)) {
+                        updates[k] = null; // Tandai data untuk dihapus
+                    }
+                }
+                transRef.update(updates).then(() => {
+                    alert("Seluruh data pada laporan tersebut berhasil dikosongkan!");
+                });
+            });
+        } else if (warning !== null) {
+            alert("Penghapusan dibatalkan. Kata kunci salah.");
+        }
     }
 
     // --- HISTORY (AUTO RESET HARIAN UNTUK CABANG) ---
@@ -358,9 +392,9 @@
             const isToday = txDate.toDateString() === now.toDateString();
             
             if (currentBranchId === "KS4-ADM") {
-                return true; // Admin bisa melihat semua
+                return true; // Admin melihat semua
             } else {
-                return t.branchId === currentBranchId && isToday; // Cabang hanya hari ini
+                return t.branchId === currentBranchId && isToday; // Cabang hanya melihat hari ini
             }
         });
 
@@ -431,4 +465,4 @@
     function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = localMenu[masterMode].find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
 </script>
 </body>
-</html>
+    </html>
