@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POS KS4 - Final Stable Version</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root { --primary: #1a4d2e; --secondary: #f8f9fa; --text: #333; --admin: #d35400; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Login */
+        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* Header */
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); font-weight: 800; color: var(--primary); flex-shrink: 0; position: relative; }
+        .branch-tag { position: absolute; left: 15px; top: 18px; font-size: 0.55rem; background: #eee; padding: 4px 8px; border-radius: 5px; font-weight: 800; }
+        .logout-btn { position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
+
+        .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .page.active { display: flex; }
+        main { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 380px; }
+        
+        /* Nav & Mode Tabs */
+        .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; }
+        .m-tab, .r-tab { 
+            flex: 1; padding: 11px; border: none; border-radius: 10px; 
+            font-weight: 800; font-size: 0.7rem; cursor: pointer; 
+            background: #ddd; color: #777; transition: all 0.3s ease;
+        }
+        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
+
+        .nav-tabs { display: flex; background: white; padding: 10px; gap: 8px; border-bottom: 1px solid #eee; overflow-x: auto; scrollbar-width: none; }
+        .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; }
+        .tab.active { background: var(--primary); color: white; }
+
+        /* Grid */
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
+        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
+        .card p { color: var(--primary); font-weight: bold; margin: 5px 0; font-size: 0.85rem; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; }
+
+        /* Tables */
+        .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; color: #666; font-weight: 800; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .row-total { background: #fff3e0; font-weight: bold; }
+
+        /* Admin Management */
+        .admin-panel { background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px; }
+        .input-group { background: white; padding: 15px; border-radius: 15px; border: 2px dashed var(--admin); margin-bottom: 15px; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; }
+        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Navigation Bottom */
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #eee; height: 70px; z-index: 3000; }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 0.65rem; font-weight: 600; cursor: pointer; }
+        .nav-btn.active { color: var(--primary); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h2 style="text-align:center; color:var(--primary)">POS KS4</h2>
+        <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
+        <input type="password" id="login-pass" placeholder="PASSWORD">
+        <button onclick="handleLogin()" style="width:100%">MASUK</button>
+    </div>
+</div>
+
+<div class="header">
+    <span class="branch-tag" id="branch-display">UNIT</span>
+    KOPI SETENGAH EMPAT
+    <button class="logout-btn" onclick="location.reload()"></button>
+</div>
+
+<!-- PAGE POS -->
+<div id="page-pos" class="page active">
+    <div class="mode-tabs">
+        <button id="m-online" class="m-tab active" onclick="setMasterMode('ONLINE')">ORDER ONLINE</button>
+        <button id="m-dinein" class="m-tab" onclick="setMasterMode('DINEIN')">DINE IN</button>
+    </div>
+    <div id="cat-nav" class="nav-tabs">
+        <button class="tab active" onclick="changeCategory('ICE')">ICE</button>
+        <button class="tab" onclick="changeCategory('HOT')">HOT</button>
+        <button class="tab" onclick="changeCategory('PAKET')">PAKET</button>
+        <button class="tab" onclick="changeCategory('SNACKS')">ROTI</button>
+        <button class="tab" onclick="changeCategory('EXTRA')">EXTRA</button>
+    </div>
+    <main><div class="product-grid" id="product-grid"></div></main>
+    <div class="footer-cart">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px">
+            <span id="label-mode" style="font-size:0.7rem; font-weight:bold; color:var(--primary)">MODE: ONLINE</span>
+            <input type="number" id="discount-input" value="0" style="width:100px; text-align:right" oninput="updateUI()">
+        </div>
+        <div id="total-price-display" style="font-size:1.2rem; font-weight:800; text-align:right">Rp 0</div>
+        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px" onclick="openCheckout()">TINJAU & BAYAR</button>
+    </div>
+</div>
+
+<!-- PAGE RIWAYAT -->
+<div id="page-history" class="page">
+    <main>
+        <h3>Riwayat Transaksi</h3>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>WAKTU</th><th>MODE</th><th>TOTAL</th><th>DETAIL</th></tr></thead>
+                <tbody id="history-tbody"></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- PAGE REPORT -->
+<div id="page-report" class="page">
+    <main>
+        <div id="admin-panel" style="display:none" class="admin-panel">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px">
+                <option value="ALL">SEMUA CABANG</option>
+                <option value="KS4-TD">TANDUR</option>
+                <option value="KS4-KB">KEBON JERUK</option>
+                <option value="KS4-PI">PONDOK INDAH</option>
+                <option value="KS4-MT">MENTENG</option>
+                <option value="KS4-CP">CEMPUT</option>
+                <option value="KS4-OT">OTISTA</option>
+            </select>
+            <div class="range-tabs">
+                <button id="r-day" class="r-tab active" onclick="setRange('day')">HARIAN</button>
+                <button id="r-week" class="r-tab" onclick="setRange('week')">MINGGUAN</button>
+                <button id="r-month" class="r-tab" onclick="setRange('month')">BULANAN</button>
+            </div>
+        </div>
+        <h3>Laporan <span id="rep-title">HARI INI</span></h3>
+        <div id="report-summary-box"></div>
+        <div id="report-details-box"></div>
+    </main>
+</div>
+
+<!-- PAGE MANAGEMENT -->
+<div id="page-mgmt" class="page">
+    <main>
+        <h3>Master Menu Editor</h3>
+        <div class="input-group">
+            <input type="text" id="new-name" placeholder="Nama Menu">
+            <input type="number" id="new-price" placeholder="Harga">
+            <select id="new-cat">
+                <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
+            </select>
+            <select id="new-mode">
+                <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
+            </select>
+            <button onclick="addNewMenu()" style="background:var(--admin); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold">SIMPAN MENU BARU</button>
+        </div>
+        <div id="mgmt-list"></div>
+    </main>
+</div>
+
+<nav class="bottom-nav" id="main-nav">
+    <button class="nav-btn active" id="btn-nav-pos" onclick="showPage('pos')">Kasir</button>
+    <button class="nav-btn" id="btn-nav-history" onclick="showPage('history')">Riwayat</button>
+    <button class="nav-btn" id="btn-nav-report" onclick="showPage('report')">Laporan</button>
+    <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')" style="display:none">Menu</button>
+</nav>
+
+<!-- Modals -->
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Roti Paket Puas</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button></div></div>
+<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center"><h3 id="rec-header">STRUK</h3><div id="rec-branch" style="font-size:0.7rem"></div><table id="rec-table"></table><h4 id="rec-total" style="text-align:right"></h4><div id="modal-btns-confirm"><button style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:bold;margin-top:20px" onclick="confirmPayment()">KONFIRMASI BAYAR</button><button style="width:100%;padding:10px;color:#999;border:none;background:none" onclick="closeModal()">Kembali</button></div><div id="modal-btns-close" style="display:none"><button style="width:100%;padding:14px;background:#444;color:white;border:none;border-radius:8px;margin-top:20px" onclick="closeModal()">TUTUP</button></div></div></div>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const transRef = db.ref('transactions_v35_final');
+    const menuRef = db.ref('master_menu_v35');
+
+    const users = { "KS4-TD": { name: "TANDUR", pass: "1245" }, "KS4-KB": { name: "KEBON JERUK", pass: "1425" }, "KS4-PI": { name: "PONDOK INDAH", pass: "3265" }, "KS4-MT": { name: "MENTENG", pass: "9865" }, "KS4-CP": { name: "CEMPUT", pass: "7845" }, "KS4-OT": { name: "OTISTA", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+
+    // DATA MENU LENGKAP DEFAULT
+    const initialData = {
+        ONLINE: [
+            { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" },
+            { id: 24, name: "Americano Hot", price: 24000, cat: "HOT" }, { id: 25, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 26, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 27, name: "Kopi Susu Hot", price: 25000, cat: "HOT" },
+            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
+            { id: 41, name: "Roti Coklat", price: 18000, cat: "SNACKS" }, { id: 42, name: "Roti Vanila", price: 18000, cat: "SNACKS" }, { id: 43, name: "Roti Bluberry", price: 18000, cat: "SNACKS" },
+            { id: 44, name: "Cup Besar", price: 6000, cat: "EXTRA" }, { id: 45, name: "Jelly", price: 6000, cat: "EXTRA" }, { id: 46, name: "Cream", price: 6000, cat: "EXTRA" }, { id: 47, name: "Shoot Coffe", price: 6000, cat: "EXTRA" }
+        ],
+        DINEIN: [
+            { id: 101, name: "Americano", price: 22000, cat: "ICE" }, { id: 102, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 103, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 104, name: "Caramel", price: 25000, cat: "ICE" }, { id: 105, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 106, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 107, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 108, name: "Idealis", price: 25000, cat: "ICE" }, { id: 109, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 110, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 111, name: "Long Black", price: 24000, cat: "ICE" }, { id: 112, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 113, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 114, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 115, name: "Pandan", price: 25000, cat: "ICE" }, { id: 116, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 117, name: "Remon", price: 20000, cat: "ICE" }, { id: 118, name: "Rum", price: 25000, cat: "ICE" }, { id: 119, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 120, name: "Shaken", price: 25000, cat: "ICE" }, { id: 121, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 122, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 123, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 124, name: "Vanilla", price: 25000, cat: "ICE" },
+            { id: 125, name: "Americano Hot", price: 22000, cat: "HOT" }, { id: 126, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 127, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 128, name: "Kopi Susu Hot", price: 23000, cat: "HOT" },
+            { id: 129, name: "Roti Coklat", price: 10000, cat: "SNACKS" }, { id: 130, name: "Roti Vanila", price: 10000, cat: "SNACKS" }, { id: 131, name: "Roti Blueberry", price: 10000, cat: "SNACKS" },
+            { id: 132, name: "1 Liter Kopsu", price: 100000, cat: "PAKET" }, { id: 133, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 134, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 135, name: "500ML Kopsu", price: 65000, cat: "PAKET" }, { id: 136, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 137, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" },
+            { id: 138, name: "Cup Besar", price: 5000, cat: "EXTRA" }, { id: 139, name: "Jelly", price: 5000, cat: "EXTRA" }, { id: 140, name: "Cream", price: 5000, cat: "EXTRA" }, { id: 141, name: "Shoot Coffe", price: 5000, cat: "EXTRA" }
+        ]
+    };
+
+    let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [], activeRange = "day";
+
+    menuRef.on('value', snap => {
+        if(snap.val()) { localMenu = snap.val(); } 
+        else { menuRef.set(initialData); localMenu = initialData; }
+        renderMenu(); renderMgmt();
+    });
+
+    transRef.on('value', snap => {
+        allTransactions = snap.val() ? Object.values(snap.val()).reverse() : [];
+        if(currentBranchId) { updateReport(); updateHistory(); }
+    });
+
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.toUpperCase(), p = document.getElementById('login-pass').value;
+        if (users[u] && users[u].pass === p) {
+            currentBranchId = u;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('branch-display').innerText = users[u].name;
+            if(u === "KS4-ADM") {
+                document.getElementById('btn-nav-pos').style.display = 'none';
+                document.getElementById('btn-nav-history').style.display = 'none';
+                document.getElementById('btn-nav-mgmt').style.display = 'flex';
+                document.getElementById('admin-panel').style.display = 'block';
+                showPage('report');
+            } else { showPage('pos'); setMasterMode('ONLINE'); }
+        } else { alert("Gagal!"); }
+    }
+
+    function setMasterMode(m) { 
+        masterMode = m; cart = {}; 
+        document.getElementById('m-online').classList.toggle('active', m === 'ONLINE');
+        document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN');
+        renderMenu(); updateUI(); 
+    }
+
+    function setRange(r) {
+        activeRange = r;
+        document.getElementById('r-day').classList.toggle('active', r === 'day');
+        document.getElementById('r-week').classList.toggle('active', r === 'week');
+        document.getElementById('r-month').classList.toggle('active', r === 'month');
+        updateReport();
+    }
+
+    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
+    
+    function renderMenu() {
+        const grid = document.getElementById('product-grid'); grid.innerHTML = '';
+        if(!localMenu[masterMode]) return;
+        localMenu[masterMode].filter(m => m.cat === activeCat).forEach(item => {
+            const q = cart[item.id] || 0, isPuas = item.name.includes("Puas"), act = isPuas ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
+            grid.innerHTML += `<div class="card" onclick="${act}"><h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p>
+                <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
+        });
+    }
+
+    function updateCart(id, d) {
+        let mObj = [...localMenu.ONLINE, ...localMenu.DINEIN].find(x => x.id == id);
+        if(mObj?.name.includes("Puas") && d < 0 && cart.extraBread) cart.extraBread.pop();
+        cart[id] = (cart[id] || 0) + d;
+        if(cart[id] <= 0) delete cart[id];
+        renderMenu(); updateUI();
+    }
+
+    function updateUI() {
+        let t = 0; const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
+        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); if(m) t += m.price * cart[id]; }
+        document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`;
+    }
+
+    // --- REPORT & HISTORY ---
+    function updateReport() {
+        const bF = document.getElementById('branch-filter').value, now = new Date();
+        const filtered = allTransactions.filter(t => {
+            const d = new Date(t.date);
+            let dOk = (activeRange==='day') ? d.toDateString()===now.toDateString() : (activeRange==='week' ? (now-d)<604800000 : t.date.startsWith(now.toISOString().slice(0,7)));
+            let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId;
+            return dOk && bOk;
+        });
+
+        let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, items={};
+        filtered.forEach(t => {
+            om += t.total;
+            for(let id in t.items) {
+                if(id==='extraBread') continue;
+                let m = [...localMenu.ONLINE, ...localMenu.DINEIN].find(x => x.id == id);
+                if(!m) continue;
+                let q = t.items[id], name = m.name.toLowerCase(); items[m.name] = (items[m.name] || 0) + q;
+                if(name.includes("besar")) b += q; else if(name.includes("hot")) h += q;
+                else if(name.includes("roti coklat")) rc += q; else if(name.includes("roti vanila")) rv += q; else if(name.includes("roti blue")) rb += q;
+                else if(name.includes("buy3get1") || name.includes("4x")) { k_raw += (q * 4); r += q; }
+                else if(name.includes("puas")) k_raw += q; else if(name.includes("paling laku")) k_raw += (q * 2);
+                else if(name.includes("5x")) k_raw += (q * 5); else if(name.includes("2x")) k_raw += (q * 2);
+                else if(m.cat === "ICE") { k_raw += q; if(name.includes("remon")) r += q; }
+            }
+            if(t.extraBread) t.extraBread.forEach(bid => { if(bid==41) rc++; if(bid==42) rv++; if(bid==43) rb++; });
+        });
+
+        document.getElementById('report-summary-box').innerHTML = `
+            <div class="report-card">
+                <h4>Total Omzet: Rp ${om.toLocaleString()}</h4>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>FISIK</th><th>QTY</th></tr></thead>
+                        <tbody>
+                            <tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr>
+                            <tr><td>Cup Besar</td><td><b>${b}</b></td></tr>
+                            <tr><td>Cup Hot</td><td><b>${h}</b></td></tr>
+                            <tr><td>Remon</td><td><b>${r}</b></td></tr>
+                            <tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr>
+                            <tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr>
+                            <tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr>
+                            <tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        const sorted = Object.entries(items).sort((a,b)=>b[1]-a[1]);
+        document.getElementById('report-details-box').innerHTML = `<div class="report-card"><h4>Menu Terjual</h4><div class="table-container"><table>${sorted.map(p=>`<tr><td>${p[0]}</td><td style="text-align:right"><b>${p[1]}</b></td></tr>`).join('')}</table></div></div>`;
+    }
+
+    function updateHistory() {
+        const list = allTransactions.filter(t => t.branchId === currentBranchId);
+        document.getElementById('history-tbody').innerHTML = list.slice(0,25).map(t => `<tr><td>${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td>Rp ${t.total.toLocaleString()}</td><td><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`).join('');
+    }
+
+    function viewStruk(id) {
+        const t = allTransactions.find(x => x.id == id);
+        let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
+        for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString()}</td></tr>`; }
+        if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; });
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString();
+        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString();
+        document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; document.getElementById('modal-receipt').classList.add('show');
+    }
+
+    // --- ADMIN ---
+    function addNewMenu() {
+        const n = document.getElementById('new-name').value, p = parseInt(document.getElementById('new-price').value), c = document.getElementById('new-cat').value, m = document.getElementById('new-mode').value;
+        if(!n || !p) return alert("Isi lengkap!");
+        if(!localMenu[m]) localMenu[m] = [];
+        localMenu[m].push({ id: Date.now(), name: n, price: p, cat: c });
+        menuRef.set(localMenu); alert("Berhasil!");
+    }
+    function renderMgmt() {
+        const list = document.getElementById('mgmt-list'); list.innerHTML = '';
+        ['ONLINE', 'DINEIN'].forEach(m => {
+            list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`;
+            localMenu[m].forEach(item => {
+                list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString()}</div>
+                    <div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button>
+                    <button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`;
+            });
+        });
+    }
+    function editM(m, id) { const p = prompt("Harga Baru:"); if(p){ let i = localMenu[m].findIndex(x=>x.id==id); localMenu[m][i].price = parseInt(p); menuRef.set(localMenu); } }
+    function delM(m, id) { if(confirm("Hapus?")){ localMenu[m] = localMenu[m].filter(x=>x.id!=id); menuRef.set(localMenu); } }
+
+    function openCheckout() {
+        if(Object.keys(cart).length === 0) return alert("Pilih menu!");
+        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode];
+        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString()}</td></tr>`; }
+        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; });
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + (s-d).toLocaleString();
+        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show');
+    }
+
+    function confirmPayment() {
+        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 };
+        for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; }
+        t.total -= d; transRef.push(t).then(() => { closeModal(); cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); alert("SUKSES!"); });
+    }
+
+    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
+    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
+    function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
+    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = localMenu[masterMode].find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
+</script>
+</body>
+</html>
