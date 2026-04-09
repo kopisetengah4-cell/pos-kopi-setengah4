@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v50</title>
+    <title>POS KS4 - Print Bluetooth v51 (Susu Stats)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -64,8 +64,8 @@
 
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; color: #666; font-weight: 800; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; padding: 10px; text-align: center; border-bottom: 2px solid #eee; color: #666; font-weight: 800; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
         .row-total { background: #fff3e0; font-weight: bold; }
 
         .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
@@ -150,7 +150,7 @@
         <h3>Riwayat Pesanan Hari Ini</h3>
         <div class="table-container">
             <table>
-                <thead><tr><th>WAKTU</th><th>MODE</th><th>TOTAL</th><th>DETAIL</th></tr></thead>
+                <thead><tr><th style="text-align:left;">WAKTU</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
                 <tbody id="history-tbody"></tbody>
             </table>
         </div>
@@ -190,7 +190,7 @@
             <h3 style="color:var(--admin); border-bottom: 2px solid var(--admin); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>WAKTU</th><th>CABANG</th><th>TOTAL</th><th>AKSI</th></tr></thead>
+                    <thead><tr><th style="text-align:left;">WAKTU</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
                     <tbody id="admin-history-tbody"></tbody>
                 </table>
             </div>
@@ -473,6 +473,11 @@
         currentFilteredTransactions = filtered;
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, l1=0, ml500=0;
         
+        // --- VARIABEL STATISTIK SUSU ---
+        let cupSusu = 0, cupNonSusu = 0;
+        let l1Susu = 0, l1NonSusu = 0;
+        let ml500Susu = 0, ml500NonSusu = 0;
+        
         let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
 
         filtered.forEach(t => {
@@ -481,25 +486,56 @@
                 if(id==='extraBread') continue;
                 let m = [...localMenu.ONLINE, ...localMenu.DINEIN].find(x => x.id == id);
                 if(!m) continue;
-                let q = t.items[id], name = m.name.toLowerCase(); 
+                let q = t.items[id], nameLower = m.name.toLowerCase(); 
                 
                 let kategori = m.cat || "EXTRA";
                 catItems[kategori][m.name] = (catItems[kategori][m.name] || 0) + q;
 
-                let isPaketBotol = name.includes("1 liter") || name.includes("500ml");
-                if(name.includes("1 liter")) l1 += q;
-                if(name.includes("500ml")) ml500 += q;
+                let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml");
+                if(nameLower.includes("1 liter")) l1 += q;
+                if(nameLower.includes("500ml")) ml500 += q;
 
+                // --- PENGHITUNGAN CUP FISIK BIASA ---
                 if(!isPaketBotol) {
-                    if(name.includes("besar")) b += q; 
-                    else if(name.includes("hot")) h += q;
-                    else if(name.includes("roti coklat")) rc += q; 
-                    else if(name.includes("roti vanila")) rv += q; 
-                    else if(name.includes("roti blue")) rb += q;
-                    else if(name.includes("buy3get1") || name.includes("4x")) { k_raw += (q * 4); r += q; }
-                    else if(name.includes("puas")) k_raw += q; else if(name.includes("paling laku")) k_raw += (q * 2);
-                    else if(name.includes("5x")) k_raw += (q * 5); else if(name.includes("2x")) k_raw += (q * 2);
-                    else if(m.cat === "ICE") { k_raw += q; if(name.includes("remon")) r += q; }
+                    if(nameLower.includes("besar")) b += q; 
+                    else if(nameLower.includes("hot")) h += q;
+                    else if(nameLower.includes("roti coklat")) rc += q; 
+                    else if(nameLower.includes("roti vanila")) rv += q; 
+                    else if(nameLower.includes("roti blue")) rb += q;
+                    else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; }
+                    else if(nameLower.includes("puas")) k_raw += q; else if(nameLower.includes("paling laku")) k_raw += (q * 2);
+                    else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2);
+                    else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; }
+                }
+
+                // --- PENGHITUNGAN KHUSUS STATISTIK SUSU VS NON-SUSU ---
+                if (m.cat !== "SNACKS" && m.cat !== "EXTRA") {
+                    if (nameLower.includes("1 liter")) {
+                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh")) l1NonSusu += q;
+                        else l1Susu += q;
+                    } else if (nameLower.includes("500ml")) {
+                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh")) ml500NonSusu += q;
+                        else ml500Susu += q;
+                    } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) {
+                        cupSusu += (3 * q);
+                        cupNonSusu += (1 * q);
+                    } else if (nameLower.includes("puas")) {
+                        cupSusu += (1 * q);
+                    } else if (nameLower.includes("paling laku")) {
+                        cupSusu += (1 * q);
+                        cupNonSusu += (1 * q);
+                    } else if (nameLower.includes("5x")) {
+                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon")) cupNonSusu += (5 * q);
+                        else cupSusu += (5 * q);
+                    } else if (nameLower.includes("2x")) {
+                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon")) cupNonSusu += (2 * q);
+                        else cupSusu += (2 * q);
+                    } else {
+                        // Cup Satuan Reguler (ICE / HOT)
+                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit"].some(ns => nameLower.includes(ns));
+                        if (isNonSusu) cupNonSusu += q;
+                        else cupSusu += q;
+                    }
                 }
             }
             if(t.extraBread) t.extraBread.forEach(bid => { 
@@ -514,7 +550,7 @@
                 <h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>FISIK</th><th>QTY</th></tr></thead>
+                        <thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead>
                         <tbody>
                             <tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr>
                             <tr><td>Cup Besar</td><td><b>${b}</b></td></tr>
@@ -547,6 +583,37 @@
 
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
 
+        // Tambahkan Tabel Analisis Susu di paling bawah Rincian Menu
+        detailsHtml += `
+            <div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;">
+                <h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4>
+                <div class="table-container" style="overflow-x:auto;">
+                    <table style="text-align:center; width:100%; font-size:0.7rem;">
+                        <thead>
+                            <tr style="background:#f0f5f1; color:var(--primary);">
+                                <th style="text-align:center; padding:8px;">Cup Susu</th>
+                                <th style="text-align:center; padding:8px;">Cup Non Susu</th>
+                                <th style="text-align:center; padding:8px;">1L Susu</th>
+                                <th style="text-align:center; padding:8px;">1L Non Susu</th>
+                                <th style="text-align:center; padding:8px;">500ml Susu</th>
+                                <th style="text-align:center; padding:8px;">500ml Non</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td>
+                                <td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td>
+                                <td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td>
+                                <td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td>
+                                <td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td>
+                                <td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
         if(currentBranchId === "KS4-ADM") {
@@ -554,10 +621,10 @@
             let histHtml = '';
             filtered.forEach(t => {
                 histHtml += `<tr>
-                    <td>${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
-                    <td><b>${t.branchName}</b></td>
-                    <td>Rp ${t.total.toLocaleString()}</td>
-                    <td>
+                    <td style="text-align:left;">${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td style="text-align:left;"><b>${t.branchName}</b></td>
+                    <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
+                    <td style="text-align:left;">
                         <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
                         <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
                     </td>
@@ -605,7 +672,7 @@
         });
 
         document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => {
-            return `<tr><td>${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td>Rp ${t.total.toLocaleString()}</td><td><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`;
+            return `<tr><td style="text-align:left;">${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td style="text-align:left;"><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td style="text-align:left;">Rp ${t.total.toLocaleString()}</td><td style="text-align:left;"><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`;
         }).join('');
     }
 
