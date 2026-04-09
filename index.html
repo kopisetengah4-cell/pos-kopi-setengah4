@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v49</title>
+    <title>POS KS4 - Print Bluetooth v49 (RawBT Update)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -239,7 +239,7 @@
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
-        <button style="width:100%;padding:15px;background:#2980b9;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;margin-bottom:10px;" onclick="window.print()">🖨️ CETAK BLUETOOTH</button>
+        <button style="width:100%;padding:15px;background:#2980b9;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;margin-bottom:10px;" onclick="cetakRawBT()">🖨️ CETAK BLUETOOTH (RawBT)</button>
         <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
     </div>
 </div></div>
@@ -287,11 +287,13 @@
 
     let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [];
     let currentFilteredTransactions = [];
-    
     let activeRange = "today"; 
     let filterTypeTemp = "today"; 
     let filterDate1 = ""; 
     let filterDate2 = "";
+
+    // VARIABLE BARU UNTUK MENYIMPAN TEKS STRUK RAWBT
+    window.rawbtPrintText = "";
 
     function checkSession() {
         const savedLogin = localStorage.getItem('ks4_saved_login');
@@ -609,8 +611,11 @@
 
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
-    // FUNGSI MEMBUAT TAMPILAN KHUSUS UNTUK PRINTER BLUETOOTH
+    // --- FUNGSI UPDATE RAWBT ---
+    // Diperbarui: Menyusun format HTML lama dan Format Teks Murni untuk dikirim ke aplikasi kasir
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
+        
+        // 1. Ini kode HTML lama (Dibiarkan jika sewaktu-waktu dicetak di laptop/PC)
         let p = `<div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:8px;">KOPI SETENGAH EMPAT<br><span style="font-size:11px; font-weight:normal;">Cab. ${branchName}</span></div>`;
         p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
         p += `<div style="font-size:11px; margin-bottom:5px;">Wkt: ${new Date(dateStr).toLocaleString('id-ID')}<br>Tipe: ${mode}</div>`;
@@ -643,6 +648,69 @@
         p += `<div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>IG: @kopisetengahempat<br>----</div>`;
         
         document.getElementById('print-area').innerHTML = p;
+
+        // 2. KODE BARU: Menyusun teks struk yang dihitung presisi untuk kertas 58mm (Maksimal 32 Karakter)
+        let txt = "KOPI SETENGAH EMPAT\n";
+        txt += "Cabang " + branchName + "\n";
+        txt += "--------------------------------\n";
+        txt += "Waktu: " + new Date(dateStr).toLocaleString('id-ID') + "\n";
+        txt += "Tipe : " + mode + "\n";
+        txt += "--------------------------------\n";
+        
+        for(let id in items) {
+           if(id === 'extraBread') continue;
+           let m = list.find(x => x.id == id);
+           if(m) {
+               txt += m.name + "\n";
+               let qtyLine = items[id] + "x @" + m.price.toLocaleString();
+               let subtotal = (m.price * items[id]).toLocaleString();
+               
+               // Hitung spasi agar harga selalu rata kanan
+               let spaceCount = 32 - qtyLine.length - subtotal.length;
+               txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
+           }
+        }
+        
+        if(extraBread && extraBread.length > 0) {
+            extraBread.forEach(bid => {
+                let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
+                txt += rn + "\n";
+                let qtyLine = "1x @0";
+                let subtotal = "0";
+                let spaceCount = 32 - qtyLine.length - subtotal.length;
+                txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
+            });
+        }
+        
+        txt += "--------------------------------\n";
+        
+        if(disc && disc > 0) {
+             let dLine = "Diskon:";
+             let dVal = "-Rp " + disc.toLocaleString();
+             let spc = 32 - dLine.length - dVal.length;
+             txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n";
+        }
+        
+        let tLine = "TOTAL:";
+        let tVal = "Rp " + total.toLocaleString();
+        let spcT = 32 - tLine.length - tVal.length;
+        txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n";
+        
+        txt += "--------------------------------\n";
+        txt += "          Terima Kasih          \n";
+        txt += "     IG: @kopisetengahempat     \n";
+        txt += "\n\n\n"; // Memberikan ruang agar kertas bisa dipotong
+        
+        // Simpan teks di memori sistem agar bisa dilempar ke RawBT
+        window.rawbtPrintText = txt;
+    }
+
+    // FUNGSI PEMANGGIL RAWBT
+    function cetakRawBT() {
+        if(!window.rawbtPrintText) return alert("Belum ada data struk!");
+        let teksEncoded = encodeURIComponent(window.rawbtPrintText);
+        let rawbtLink = "intent:" + teksEncoded + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
+        window.location.href = rawbtLink;
     }
 
     function viewStruk(id) {
@@ -748,4 +816,4 @@
     }
 </script>
 </body>
-</html>
+    </html>
