@@ -707,10 +707,19 @@
 
     // FUNGSI PEMANGGIL RAWBT
     function cetakRawBT() {
-        if(!window.rawbtPrintText) return alert("Belum ada data struk!");
-        let teksEncoded = encodeURIComponent(window.rawbtPrintText);
-        let rawbtLink = "rawbt:" + teksEncoded;
+    if(!window.rawbtPrintText) return alert("Belum ada data struk!");
+    
+    let teksEncoded = encodeURIComponent(window.rawbtPrintText);
+    let rawbtLink = "rawbt:" + teksEncoded;
+
+    // Cek apakah web ini dibuka di dalam Kodular/App Inventor
+    if (window.AppInventor) {
+        // Kirim link rawbt ke blok Kodular
+        window.AppInventor.setWebViewString(rawbtLink);
+    } else {
+        // Jika dibuka di Chrome biasa
         window.location.href = rawbtLink;
+    }
     }
 
     function viewStruk(id) {
