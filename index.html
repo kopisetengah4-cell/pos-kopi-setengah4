@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v49 (RawBT Update)</title>
+    <title>POS KS4 - Print Bluetooth v50</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -266,7 +266,7 @@
     const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v39');
 
-    const users = { "KS4-TD": { name: "TANDUR", pass: "1245" }, "KS4-KB": { name: "KEBON JERUK", pass: "1425" }, "KS4-PI": { name: "PONDOK INDAH", pass: "3265" }, "KS4-MT": { name: "MENTENG", pass: "9865" }, "KS4-CP": { name: "CEMPUT", pass: "7845" }, "KS4-OT": { name: "OTISTA", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
     const initialData = {
         ONLINE: [
@@ -612,137 +612,132 @@
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
     // --- FUNGSI UPDATE RAWBT (DESAIN BARU) ---
-function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
-    let d = new Date(dateStr);
-    
-    // Membuat ID Pesanan otomatis dari 5 angka terakhir waktu transaksi
-    let idPesanan = "ORD-" + d.getTime().toString().slice(-5);
-    
-    // Format Tanggal & Waktu khas Indonesia
-    let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
-    let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
+        let d = new Date(dateStr);
+        
+        // Membuat ID Pesanan otomatis
+        let idPesanan = "ORD-" + d.getTime().toString().slice(-5);
+        
+        // Format Tanggal & Waktu
+        let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
+        let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
 
-    // 1. KODE UNTUK TAMPILAN DI LAYAR HP (PREVIEW)
-    let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
-    p += `<div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName}</div>`;
-    p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
-    p += `<div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal}<br>Waktu: ${waktu}<br>Tipe: ${mode}</div>`;
-    p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
-    p += `<table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`;
+        // 1. KODE TAMPILAN DI LAYAR HP
+        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
+        p += `<div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName}</div>`;
+        p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
+        p += `<div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal}<br>Waktu: ${waktu}<br>Tipe: ${mode}</div>`;
+        p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
+        p += `<table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`;
 
-    const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
-    for(let id in items) {
-       if(id === 'extraBread') continue;
-       let m = list.find(x => x.id == id);
-       if(m) {
-           p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr>`;
-           p += `<tr><td style="padding:0 0 4px 0;">${items[id]}x @${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`;
-       }
+        const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
+        for(let id in items) {
+           if(id === 'extraBread') continue;
+           let m = list.find(x => x.id == id);
+           if(m) {
+               p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr>`;
+               p += `<tr><td style="padding:0 0 4px 0;">${items[id]}x @${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`;
+           }
+        }
+        if(extraBread && extraBread.length > 0) {
+            extraBread.forEach(bid => {
+                let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
+                p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x @0</td><td style="text-align:right; padding:0 0 4px 0;">0</td></tr>`;
+            });
+        }
+        p += `</table>`;
+        p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`;
+
+        if(disc && disc > 0) {
+             p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`;
+        }
+        p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>`;
+        p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div>`;
+        p += `<div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+
+        document.getElementById('print-area').innerHTML = p;
+
+        // 2. KODE UNTUK MESIN PRINTER RAWBT
+        let txt = "<center><b>KOPI SETENGAH 4</b></center>\n";
+        txt += "<center>" + branchName + "</center>\n";
+        txt += "--------------------------------\n";
+        txt += "ID Pesanan : " + idPesanan + "\n";
+        txt += "Tanggal    : " + tanggal + "\n";
+        txt += "Waktu      : " + waktu + "\n";
+        txt += "Tipe       : " + mode + "\n";
+        txt += "--------------------------------\n";
+
+        for(let id in items) {
+           if(id === 'extraBread') continue;
+           let m = list.find(x => x.id == id);
+           if(m) {
+               txt += m.name + "\n";
+               let qtyLine = items[id] + "x @" + m.price.toLocaleString('id-ID');
+               let subtotal = (m.price * items[id]).toLocaleString('id-ID');
+
+               let spaceCount = 32 - qtyLine.length - subtotal.length;
+               txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
+           }
+        }
+
+        if(extraBread && extraBread.length > 0) {
+            extraBread.forEach(bid => {
+                let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
+                txt += rn + "\n";
+                let qtyLine = "1x @0";
+                let subtotal = "0";
+                let spaceCount = 32 - qtyLine.length - subtotal.length;
+                txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
+            });
+        }
+
+        txt += "--------------------------------\n";
+
+        if(disc && disc > 0) {
+             let dLine = "Diskon:";
+             let dVal = "-Rp " + disc.toLocaleString('id-ID');
+             let spc = 32 - dLine.length - dVal.length;
+             txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n";
+        }
+
+        let tLine = "TOTAL:";
+        let tVal = "Rp " + total.toLocaleString('id-ID');
+        let spcT = 32 - tLine.length - tVal.length;
+        txt += "<b>" + tLine + " ".repeat(Math.max(1, spcT)) + tVal + "</b>\n";
+
+        txt += "--------------------------------\n";
+        txt += "<center>Terima Kasih</center>\n";
+        txt += "<center>@kopisetengahempat</center>\n";
+        txt += "\n\n\n"; 
+
+        window.rawbtPrintText = txt;
     }
-    if(extraBread && extraBread.length > 0) {
-        extraBread.forEach(bid => {
-            let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
-            p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x @0</td><td style="text-align:right; padding:0 0 4px 0;">0</td></tr>`;
-        });
-    }
-    p += `</table>`;
-    p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`;
 
-    if(disc && disc > 0) {
-         p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`;
-    }
-    p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>`;
-    p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div>`;
-    p += `<div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+    // --- FUNGSI PEMANGGIL RAWBT (KODULAR) ---
+    function cetakRawBT() {
+        if(!window.rawbtPrintText) return alert("Belum ada data struk!");
+        
+        let teksEncoded = encodeURIComponent(window.rawbtPrintText);
+        let rawbtLink = "rawbt:" + teksEncoded;
 
-    document.getElementById('print-area').innerHTML = p;
-
-
-    // 2. KODE UNTUK MESIN PRINTER RAWBT
-    // RawBT bisa membaca tag <center> untuk ke tengah, dan <b> untuk cetak tebal
-    let txt = "<center><b>KOPI SETENGAH 4</b></center>\n";
-    txt += "<center>" + branchName + "</center>\n";
-    txt += "--------------------------------\n";
-    txt += "ID Pesanan : " + idPesanan + "\n";
-    txt += "Tanggal    : " + tanggal + "\n";
-    txt += "Waktu      : " + waktu + "\n";
-    txt += "Tipe       : " + mode + "\n";
-    txt += "--------------------------------\n";
-
-    for(let id in items) {
-       if(id === 'extraBread') continue;
-       let m = list.find(x => x.id == id);
-       if(m) {
-           txt += m.name + "\n";
-           let qtyLine = items[id] + "x @" + m.price.toLocaleString('id-ID');
-           let subtotal = (m.price * items[id]).toLocaleString('id-ID');
-
-           let spaceCount = 32 - qtyLine.length - subtotal.length;
-           txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
-       }
+        if (window.AppInventor) {
+            window.AppInventor.setWebViewString(rawbtLink);
+        } else {
+            window.location.href = rawbtLink;
+        }
     }
 
-    if(extraBread && extraBread.length > 0) {
-        extraBread.forEach(bid => {
-            let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
-            txt += rn + "\n";
-            let qtyLine = "1x @0";
-            let subtotal = "0";
-            let spaceCount = 32 - qtyLine.length - subtotal.length;
-            txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
-        });
-    }
-
-    txt += "--------------------------------\n";
-
-    if(disc && disc > 0) {
-         let dLine = "Diskon:";
-         let dVal = "-Rp " + disc.toLocaleString('id-ID');
-         let spc = 32 - dLine.length - dVal.length;
-         txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n";
-    }
-
-    let tLine = "TOTAL:";
-    let tVal = "Rp " + total.toLocaleString('id-ID');
-    let spcT = 32 - tLine.length - tVal.length;
-    // Sengaja di-bold agar tulisan TOTAL dan harganya lebih hitam
-    txt += "<b>" + tLine + " ".repeat(Math.max(1, spcT)) + tVal + "</b>\n";
-
-    txt += "--------------------------------\n";
-    txt += "<center>Terima Kasih</center>\n";
-    txt += "<center>@kopisetengahempat</center>\n";
-    
-    // Memberikan ruang gulungan kertas agar mudah disobek
-    txt += "\n\n\n"; 
-
-    window.rawbtPrintText = txt;
-}
-
-// --- FUNGSI PEMANGGIL RAWBT (KHUSUS KODULAR) ---
-function cetakRawBT() {
-    if(!window.rawbtPrintText) return alert("Belum ada data struk!");
-    
-    let teksEncoded = encodeURIComponent(window.rawbtPrintText);
-    let rawbtLink = "rawbt:" + teksEncoded;
-
-    if (window.AppInventor) {
-        window.AppInventor.setWebViewString(rawbtLink);
-    } else {
-        window.location.href = rawbtLink;
-    }
-}
-
-function viewStruk(id) {
+    function viewStruk(id) {
         const t = allTransactions.find(x => x.id == id);
         
         // Buat untuk Modal di Layar HP
         let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
-        for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString()}</td></tr>`; }
+        for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; }
         if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; });
-        if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString()}</td></tr>`;
+        if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`;
 
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString();
-        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString();
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID');
+        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID');
         
         // Buat untuk Mesin Printer
         buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode);
@@ -763,7 +758,7 @@ function viewStruk(id) {
         ['ONLINE', 'DINEIN'].forEach(m => {
             list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`;
             localMenu[m].forEach(item => {
-                list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString()}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`;
+                list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString('id-ID')}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`;
             });
         });
     }
@@ -774,12 +769,12 @@ function viewStruk(id) {
     function openCheckout() { 
         if(Object.keys(cart).length === 0) return alert("Pilih menu!"); 
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode]; 
-        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString()}</td></tr>`; } 
+        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; } 
         if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString()}</td></tr>`;
+        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`;
 
         let finalTotal = Math.max(0, s-d);
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString(); 
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
         
         // Siapkan juga print area sementara sebelum konfirmasi
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode);
@@ -794,7 +789,6 @@ function viewStruk(id) {
         
         transRef.push(t).then(() => { 
             cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
-            // Ubah tombol jadi munculin tombol Cetak setelah sukses
             document.getElementById('modal-btns-confirm').style.display = 'none';
             document.getElementById('modal-btns-close').style.display = 'block';
             alert("Transaksi Berhasil! Silakan Cetak Struk."); 
@@ -835,4 +829,4 @@ function viewStruk(id) {
     }
 </script>
 </body>
-    </html>
+</html>
