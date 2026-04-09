@@ -611,19 +611,16 @@
 
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
-    // --- FUNGSI UPDATE RAWBT (DESAIN BARU REVISI) ---
+    // --- FUNGSI UPDATE RAWBT (DESAIN BARU TEKS MURNI) ---
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
         let d = new Date(dateStr);
         
-        // Membuat ID Pesanan otomatis (Diambil dari waktu transaksi agar selalu konsisten)
         let idPesanan = "ORD-" + d.getTime().toString().slice(-5);
-        
-        // Format Tanggal & Waktu
         let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'});
         let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
 
         // ==========================================
-        // 1. KODE TAMPILAN DI LAYAR HP
+        // 1. KODE TAMPILAN DI LAYAR HP (Tetap pakai HTML agar rapi di layar)
         // ==========================================
         let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
         p += `<div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div>`;
@@ -660,11 +657,18 @@
         document.getElementById('print-area').innerHTML = p;
 
         // ==========================================
-        // 2. KODE UNTUK MESIN PRINTER RAWBT
+        // 2. KODE UNTUK MESIN PRINTER RAWBT (BEBAS ERROR)
         // ==========================================
-        let txt = "<center><b>KOPI SETENGAH 4</b></center>\n";
-        // Mengubah nama cabang menjadi HURUF BESAR SEMUA (.toUpperCase())
-        txt += "<center>" + branchName.toUpperCase() + "</center>\n";
+        
+        // Fungsi rahasia untuk mendorong teks ke tengah (Kertas 58mm = 32 karakter)
+        function rataTengah(teks) {
+            let spasi = Math.max(0, Math.floor((32 - teks.length) / 2));
+            return " ".repeat(spasi) + teks + "\n";
+        }
+
+        // Sekarang kita rakit teksnya TANPA KODE HTML SAMA SEKALI
+        let txt = rataTengah("KOPI SETENGAH 4");
+        txt += rataTengah(branchName.toUpperCase());
         txt += "--------------------------------\n";
         txt += "ID Pesanan : " + idPesanan + "\n";
         txt += "Tanggal    : " + tanggal + " " + waktu + "\n";
@@ -676,7 +680,6 @@
            let m = list.find(x => x.id == id);
            if(m) {
                txt += m.name + "\n";
-               // Menambahkan kata "Rp"
                let qtyLine = items[id] + "x @Rp" + m.price.toLocaleString('id-ID');
                let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID');
 
@@ -708,12 +711,11 @@
         let tLine = "TOTAL:";
         let tVal = "Rp" + total.toLocaleString('id-ID');
         let spcT = 32 - tLine.length - tVal.length;
-        // Menebalkan area Total
-        txt += "<b>" + tLine + " ".repeat(Math.max(1, spcT)) + tVal + "</b>\n";
+        txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n";
 
         txt += "--------------------------------\n";
-        txt += "<center>Terima Kasih</center>\n";
-        txt += "<center>@kopisetengahempat</center>\n";
+        txt += rataTengah("Terima Kasih");
+        txt += rataTengah("@kopisetengahempat");
         txt += "\n\n\n"; 
 
         window.rawbtPrintText = txt;
