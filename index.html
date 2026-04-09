@@ -611,7 +611,7 @@
 
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
-    // --- FUNGSI UPDATE RAWBT (DENGAN LOGO GELAS KOPI GRATIS) ---
+    // --- FUNGSI UPDATE RAWBT (TANPA LOGO, TEKS MURNI, BERSIH) ---
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
         let d = new Date(dateStr);
         
@@ -622,15 +622,7 @@
         // ==========================================
         // 1. KODE TAMPILAN DI LAYAR HP 
         // ==========================================
-        let p = `<div style="text-align:center; font-family:monospace; margin-bottom:5px; line-height:1.2;">
-                    ( (<br>
-                     ) )<br>
-                  ........<br>
-                  |      |]<br>
-                  \\      /<br>
-                   \`----\`<br>
-                 </div>`;
-        p += `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
+        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
         p += `<div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div>`;
         p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
         p += `<div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}</div>`;
@@ -673,15 +665,6 @@
         }
 
         let txt = "\n";
-        // Cetak Logo Gelas Kopi dari teks (ASCII Art)
-        txt += rataTengah("  ( (   ");
-        txt += rataTengah("   ) )  ");
-        txt += rataTengah("........");
-        txt += rataTengah("|      |]");
-        txt += rataTengah("\\      /");
-        txt += rataTengah(" `----' ");
-        txt += "\n";
-        
         txt += rataTengah("KOPI SETENGAH 4");
         txt += rataTengah(branchName.toUpperCase());
         txt += "--------------------------------\n";
