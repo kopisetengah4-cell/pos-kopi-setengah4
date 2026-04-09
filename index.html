@@ -717,7 +717,22 @@ function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mod
 
     window.rawbtPrintText = txt;
 }
-    function viewStruk(id) {
+
+// --- FUNGSI PEMANGGIL RAWBT (KHUSUS KODULAR) ---
+function cetakRawBT() {
+    if(!window.rawbtPrintText) return alert("Belum ada data struk!");
+    
+    let teksEncoded = encodeURIComponent(window.rawbtPrintText);
+    let rawbtLink = "rawbt:" + teksEncoded;
+
+    if (window.AppInventor) {
+        window.AppInventor.setWebViewString(rawbtLink);
+    } else {
+        window.location.href = rawbtLink;
+    }
+}
+
+function viewStruk(id) {
         const t = allTransactions.find(x => x.id == id);
         
         // Buat untuk Modal di Layar HP
