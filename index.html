@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v51 (Susu Stats)</title>
+    <title>POS KS4 - Print Bluetooth v52 (Susu Admin Only)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -583,36 +583,38 @@
 
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
 
-        // Tambahkan Tabel Analisis Susu di paling bawah Rincian Menu
-        detailsHtml += `
-            <div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;">
-                <h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4>
-                <div class="table-container" style="overflow-x:auto;">
-                    <table style="text-align:center; width:100%; font-size:0.7rem;">
-                        <thead>
-                            <tr style="background:#f0f5f1; color:var(--primary);">
-                                <th style="text-align:center; padding:8px;">Cup Susu</th>
-                                <th style="text-align:center; padding:8px;">Cup Non Susu</th>
-                                <th style="text-align:center; padding:8px;">1L Susu</th>
-                                <th style="text-align:center; padding:8px;">1L Non Susu</th>
-                                <th style="text-align:center; padding:8px;">500ml Susu</th>
-                                <th style="text-align:center; padding:8px;">500ml Non</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td>
-                                <td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td>
-                                <td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td>
-                                <td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td>
-                                <td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td>
-                                <td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td>
-                            </tr>
-                        </tbody>
-                    </table>
+        // --- FILTER KHUSUS: TAMPILKAN STATISTIK SUSU HANYA UNTUK ADMIN ---
+        if(currentBranchId === "KS4-ADM") {
+            detailsHtml += `
+                <div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;">
+                    <h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4>
+                    <div class="table-container" style="overflow-x:auto;">
+                        <table style="text-align:center; width:100%; font-size:0.7rem;">
+                            <thead>
+                                <tr style="background:#f0f5f1; color:var(--primary);">
+                                    <th style="text-align:center; padding:8px;">Cup Susu</th>
+                                    <th style="text-align:center; padding:8px;">Cup Non Susu</th>
+                                    <th style="text-align:center; padding:8px;">1L Susu</th>
+                                    <th style="text-align:center; padding:8px;">1L Non Susu</th>
+                                    <th style="text-align:center; padding:8px;">500ml Susu</th>
+                                    <th style="text-align:center; padding:8px;">500ml Non</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td>
+                                    <td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td>
+                                    <td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td>
+                                    <td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td>
+                                    <td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td>
+                                    <td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
