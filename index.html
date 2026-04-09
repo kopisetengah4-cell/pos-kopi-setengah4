@@ -611,7 +611,7 @@
 
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
-    // --- FUNGSI UPDATE RAWBT (DESAIN BARU TEKS MURNI) ---
+    // --- FUNGSI UPDATE RAWBT (TANPA SIMBOL @ DI HARGA) ---
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
         let d = new Date(dateStr);
         
@@ -620,10 +620,9 @@
         let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
 
         // ==========================================
-        // 1. KODE TAMPILAN DI LAYAR HP (Tetap pakai HTML agar rapi di layar)
+        // 1. KODE TAMPILAN DI LAYAR HP 
         // ==========================================
-        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div>`;
-        p += `<div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div>`;
+        let p = `<div style="text-align:center; font-size:14px; font-weight:bold; margin-bottom:10px;">${branchName.toUpperCase()}</div>`;
         p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
         p += `<div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}</div>`;
         p += `<div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div>`;
@@ -635,13 +634,15 @@
            let m = list.find(x => x.id == id);
            if(m) {
                p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr>`;
-               p += `<tr><td style="padding:0 0 4px 0;">${items[id]}x @Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`;
+               // Simbol @ dihapus dari baris di bawah ini
+               p += `<tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`;
            }
         }
         if(extraBread && extraBread.length > 0) {
             extraBread.forEach(bid => {
                 let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
-                p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x @Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`;
+                // Simbol @ dihapus dari baris di bawah ini
+                p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`;
             });
         }
         p += `</table>`;
@@ -657,18 +658,14 @@
         document.getElementById('print-area').innerHTML = p;
 
         // ==========================================
-        // 2. KODE UNTUK MESIN PRINTER RAWBT (BEBAS ERROR)
+        // 2. KODE UNTUK MESIN PRINTER RAWBT
         // ==========================================
-        
-        // Fungsi rahasia untuk mendorong teks ke tengah (Kertas 58mm = 32 karakter)
         function rataTengah(teks) {
             let spasi = Math.max(0, Math.floor((32 - teks.length) / 2));
             return " ".repeat(spasi) + teks + "\n";
         }
 
-        // Sekarang kita rakit teksnya TANPA KODE HTML SAMA SEKALI
-        let txt = rataTengah("KOPI SETENGAH 4");
-        txt += rataTengah(branchName.toUpperCase());
+        let txt = rataTengah(branchName.toUpperCase());
         txt += "--------------------------------\n";
         txt += "ID Pesanan : " + idPesanan + "\n";
         txt += "Tanggal    : " + tanggal + " " + waktu + "\n";
@@ -680,7 +677,8 @@
            let m = list.find(x => x.id == id);
            if(m) {
                txt += m.name + "\n";
-               let qtyLine = items[id] + "x @Rp" + m.price.toLocaleString('id-ID');
+               // Simbol @ dihapus dari baris di bawah ini
+               let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID');
                let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID');
 
                let spaceCount = 32 - qtyLine.length - subtotal.length;
@@ -692,7 +690,8 @@
             extraBread.forEach(bid => {
                 let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry');
                 txt += rn + "\n";
-                let qtyLine = "1x @Rp0";
+                // Simbol @ dihapus dari baris di bawah ini
+                let qtyLine = "1x Rp0";
                 let subtotal = "Rp0";
                 let spaceCount = 32 - qtyLine.length - subtotal.length;
                 txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n";
