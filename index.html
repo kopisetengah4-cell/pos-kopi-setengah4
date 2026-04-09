@@ -2,8 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS KS4 - Final Anti-Refresh Pro v41</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a4d2e">
+    
+    <title>POS KS4 - Final Pro Max v45</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -12,86 +18,65 @@
         :root { --primary: #1a4d2e; --secondary: #f8f9fa; --text: #333; --admin: #d35400; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* ANTI REFRESH SUPER KUAT (PULL-TO-REFRESH DISABLED TOTALLY) */
+        /* HARD LOCKDOWN ANTI REFRESH & FULL SCREEN */
         html, body { 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; /* Wajib 100% bukan 100vh agar tidak tembus */
-            background: var(--secondary); 
-            overflow: hidden; /* Kunci mati scroll utama di background */
-            overscroll-behavior-y: none; /* Bunuh fitur tarik-refresh */
+            position: fixed; width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; 
+            overscroll-behavior: none !important; touch-action: none; background: var(--secondary);
+            font-family: 'Segoe UI', sans-serif;
         }
-        body { display: flex; flex-direction: column; }
-        
-        /* Area Scroll Utama yang Aman */
-        main { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            padding-bottom: 380px; 
-            overscroll-behavior-y: contain; /* Tahan efek membal agar tidak lari ke body */
-            -webkit-overflow-scrolling: touch; /* Bikin scroll mulus di HP */
-        }
-        
-        /* Login */
-        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
-        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        /* Header */
-        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); font-weight: 800; color: var(--primary); flex-shrink: 0; position: relative; }
+        body { display: flex; flex-direction: column; }
+
+        /* AREA SCROLL MAIN */
+        main { 
+            flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 400px; 
+            -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior-y: contain; 
+        }
+
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); font-weight: 800; color: var(--primary); flex-shrink: 0; position: relative; padding-top: env(safe-area-inset-top); }
         .branch-tag { position: absolute; left: 15px; top: 18px; font-size: 0.55rem; background: #eee; padding: 4px 8px; border-radius: 5px; font-weight: 800; }
         .logout-btn { position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; }
-
+        
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
         
-        /* Tabs Mode & Range */
-        .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; }
-        .m-tab, .r-tab { 
-            flex: 1; padding: 11px; border: none; border-radius: 10px; 
-            font-weight: 800; font-size: 0.7rem; cursor: pointer; 
-            background: #ddd; color: #777; transition: all 0.3s ease;
-        }
+        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; touch-action: auto; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #ddd; color: #777; transition: 0.2s; white-space: nowrap; }
         .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
 
         .nav-tabs { display: flex; background: white; padding: 10px; gap: 8px; border-bottom: 1px solid #eee; overflow-x: auto; scrollbar-width: none; }
-        .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; }
+        .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
-        /* Grid POS */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
         .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
         .card p { color: var(--primary); font-weight: bold; margin: 5px 0; font-size: 0.85rem; }
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
-        /* Tables */
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
         th { background: #f8f9fa; padding: 10px; text-align: left; border-bottom: 2px solid #eee; color: #666; font-weight: 800; }
         td { padding: 10px; border-bottom: 1px solid #eee; }
         .row-total { background: #fff3e0; font-weight: bold; }
 
-        /* Management Admin */
-        .admin-panel { background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px; }
-        .input-group { background: white; padding: 15px; border-radius: 15px; border: 2px dashed var(--admin); margin-bottom: 15px; }
-        .input-group input, .input-group select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; }
-        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-
-        /* Navigation Bottom */
-        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #eee; height: 70px; z-index: 3000; }
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #eee; height: 70px; z-index: 3000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 0.65rem; font-weight: 600; cursor: pointer; }
         .nav-btn.active { color: var(--primary); }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; }
+        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; touch-action: auto; }
         .modal.show { display: flex; }
         .modal-content { background: white; width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; }
+        
+        .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -101,7 +86,13 @@
         <h2 style="text-align:center; color:var(--primary)">POS KS4</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
-        <button onclick="handleLogin()" style="width:100%">MASUK</button>
+        
+        <div style="display:flex; align-items:center; width:100%; margin-bottom:20px; gap: 8px;">
+            <input type="checkbox" id="remember-me" style="width:20px; height:20px; cursor: pointer;">
+            <label for="remember-me" style="font-weight:bold; color:#666; font-size: 0.9rem; cursor: pointer;">Ingat Sandi & ID</label>
+        </div>
+
+        <button onclick="handleLogin()">MASUK</button>
     </div>
 </div>
 
@@ -111,7 +102,6 @@
     <button class="logout-btn" onclick="logout()">🚪</button>
 </div>
 
-<!-- PAGE POS -->
 <div id="page-pos" class="page active">
     <div class="mode-tabs">
         <button id="m-online" class="m-tab active" onclick="setMasterMode('ONLINE')">ORDER ONLINE</button>
@@ -126,16 +116,18 @@
     </div>
     <main><div class="product-grid" id="product-grid"></div></main>
     <div class="footer-cart">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:#f0f5f1; padding:8px 10px; border-radius:10px; border: 1px dashed var(--primary);">
             <span id="label-mode" style="font-size:0.7rem; font-weight:bold; color:var(--primary)">MODE: ONLINE</span>
-            <input type="number" id="discount-input" value="0" style="width:100px; text-align:right" oninput="updateUI()">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label for="discount-input" style="font-size:0.75rem; font-weight:bold; color:var(--admin);">Masukkan Diskon:</label>
+                <input type="number" id="discount-input" value="0" style="width:90px; text-align:right; padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:bold; font-size:1rem;" oninput="updateUI()">
+            </div>
         </div>
-        <div id="total-price-display" style="font-size:1.2rem; font-weight:800; text-align:right">Rp 0</div>
-        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px" onclick="openCheckout()">TINJAU & BAYAR</button>
+        <div id="total-price-display" style="font-size:1.3rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
+        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px; font-size:1rem;" onclick="openCheckout()">TINJAU & BAYAR</button>
     </div>
 </div>
 
-<!-- PAGE RIWAYAT -->
 <div id="page-history" class="page">
     <main>
         <h3>Riwayat Pesanan</h3>
@@ -148,11 +140,10 @@
     </main>
 </div>
 
-<!-- PAGE REPORT -->
 <div id="page-report" class="page">
     <main>
-        <div id="admin-panel" style="display:none" class="admin-panel">
-            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px">
+        <div id="admin-panel" style="display:none; background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; font-weight:bold;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON JERUK</option>
@@ -162,33 +153,32 @@
                 <option value="KS4-OT">OTISTA</option>
             </select>
             <div class="range-tabs">
-                <button id="r-day" class="r-tab active" onclick="setRange('day')">HARIAN</button>
-                <button id="r-week" class="r-tab" onclick="setRange('week')">MINGGUAN</button>
-                <button id="r-month" class="r-tab" onclick="setRange('month')">BULANAN</button>
+                <button id="r-today" class="r-tab active" onclick="setRange('today')">HARI INI</button>
+                <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button>
+                <button id="r-range" class="r-tab" onclick="openDateModal('range')">KUSTOM</button>
+                <button id="r-month" class="r-tab" onclick="openDateModal('month')">BULANAN</button>
             </div>
         </div>
-        <h3>Laporan <span id="rep-title">HARI INI</span></h3>
+        <h3 style="color:var(--primary);">Laporan: <span id="rep-title">HARI INI</span></h3>
         <div id="report-summary-box"></div>
         <div id="report-details-box"></div>
-        <!-- TOMBOL HAPUS LAPORAN ADMIN MUNCUL DI SINI NANTI -->
         <div id="admin-delete-report-box"></div> 
     </main>
 </div>
 
-<!-- PAGE MANAGEMENT -->
 <div id="page-mgmt" class="page">
     <main>
         <h3>Manajemen Menu</h3>
-        <div class="input-group">
-            <input type="text" id="new-name" placeholder="Nama Menu">
-            <input type="number" id="new-price" placeholder="Harga">
-            <select id="new-cat">
+        <div style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
+            <input type="text" id="new-name" placeholder="Nama Menu" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <input type="number" id="new-price" placeholder="Harga" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
-            <select id="new-mode">
+            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
-            <button onclick="addNewMenu()" style="background:var(--admin); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold">SIMPAN MENU BARU</button>
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU BARU</button>
         </div>
         <div id="mgmt-list"></div>
     </main>
@@ -201,41 +191,71 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')" style="display:none">Menu</button>
 </nav>
 
-<!-- Modals -->
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button></div></div>
-<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center"><h3 id="rec-header">STRUK</h3><div id="rec-branch" style="font-size:0.7rem"></div><table id="rec-table"></table><h4 id="rec-total" style="text-align:right"></h4><div id="modal-btns-confirm"><button style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:8px;font-weight:bold;margin-top:20px" onclick="confirmPayment()">KONFIRMASI BAYAR</button><button style="width:100%;padding:10px;color:#999;border:none;background:none" onclick="closeModal()">Kembali</button></div><div id="modal-btns-close" style="display:none"><button style="width:100%;padding:14px;background:#444;color:white;border:none;border-radius:8px;margin-top:20px" onclick="closeModal()">TUTUP</button></div></div></div>
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+
+<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center"><h3 id="rec-header">STRUK</h3><div id="rec-branch" style="font-size:0.7rem"></div><table id="rec-table"></table><h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4><div id="modal-btns-confirm"><button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button><button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="closeModal()">Kembali</button></div><div id="modal-btns-close" style="display:none"><button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;margin-top:20px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button></div></div></div>
+
+<div id="modal-date" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
+        <div id="date-input-container" style="margin-top:15px;"></div>
+        <div style="display:flex; gap:10px; margin-top:25px;">
+            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+        </div>
+    </div>
+</div>
 
 <script>
+    // ANTI REFRESH SCRIPTS
+    window.addEventListener('beforeunload', function (e) {
+        if (Object.keys(cart).length > 0) { e.preventDefault(); e.returnValue = ''; }
+    });
+
     const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const transRef = db.ref('transactions_master_v39'); // Tetap di v39 agar data Bos tidak hilang
+    const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v39');
 
     const users = { "KS4-TD": { name: "TANDUR", pass: "1245" }, "KS4-KB": { name: "KEBON JERUK", pass: "1425" }, "KS4-PI": { name: "PONDOK INDAH", pass: "3265" }, "KS4-MT": { name: "MENTENG", pass: "9865" }, "KS4-CP": { name: "CEMPUT", pass: "7845" }, "KS4-OT": { name: "OTISTA", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
-    const initialData = { 
-        ONLINE: [ 
-            { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" }, 
-            { id: 24, name: "Americano Hot", price: 24000, cat: "HOT" }, { id: 25, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 26, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 27, name: "Kopi Susu Hot", price: 25000, cat: "HOT" }, 
-            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" }, { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" }, 
-            { id: 41, name: "Roti Coklat", price: 18000, cat: "SNACKS" }, { id: 42, name: "Roti Vanila", price: 18000, cat: "SNACKS" }, { id: 43, name: "Roti Bluberry", price: 18000, cat: "SNACKS" }, 
-            { id: 44, name: "Cup Besar", price: 6000, cat: "EXTRA" }, { id: 45, name: "Jelly", price: 6000, cat: "EXTRA" }, { id: 46, name: "Cream", price: 6000, cat: "EXTRA" }, { id: 47, name: "Shoot Coffe", price: 6000, cat: "EXTRA" } 
-        ], 
-        DINEIN: [ 
-            { id: 101, name: "Americano", price: 22000, cat: "ICE" }, { id: 102, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 103, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 104, name: "Caramel", price: 25000, cat: "ICE" }, { id: 105, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 106, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 107, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 108, name: "Idealis", price: 25000, cat: "ICE" }, { id: 109, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 110, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 111, name: "Long Black", price: 24000, cat: "ICE" }, { id: 112, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 113, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 114, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 115, name: "Pandan", price: 25000, cat: "ICE" }, { id: 116, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 117, name: "Remon", price: 20000, cat: "ICE" }, { id: 118, name: "Rum", price: 25000, cat: "ICE" }, { id: 119, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 120, name: "Shaken", price: 25000, cat: "ICE" }, { id: 121, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 122, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 123, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 124, name: "Vanilla", price: 25000, cat: "ICE" }, 
-            { id: 125, name: "Americano Hot", price: 22000, cat: "HOT" }, { id: 126, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 127, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 128, name: "Kopi Susu Hot", price: 23000, cat: "HOT" }, 
-            { id: 129, name: "Roti Coklat", price: 10000, cat: "SNACKS" }, { id: 130, name: "Roti Vanila", price: 10000, cat: "SNACKS" }, { id: 131, name: "Roti Blueberry", price: 10000, cat: "SNACKS" }, 
-            { id: 132, name: "1 Liter Kopsu", price: 100000, cat: "PAKET" }, { id: 133, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 134, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 135, name: "500ML Kopsu", price: 65000, cat: "PAKET" }, { id: 136, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 137, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, 
-            { id: 138, name: "Cup Besar", price: 5000, cat: "EXTRA" }, { id: 139, name: "Jelly", price: 5000, cat: "EXTRA" }, { id: 140, name: "Cream", price: 5000, cat: "EXTRA" }, { id: 141, name: "Shoot Coffe", price: 5000, cat: "EXTRA" } 
-        ] 
+    const initialData = {
+        ONLINE: [
+            { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" },
+            { id: 24, name: "Americano Hot", price: 24000, cat: "HOT" }, { id: 25, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 26, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 27, name: "Kopi Susu Hot", price: 25000, cat: "HOT" },
+            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" }, { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
+            { id: 41, name: "Roti Coklat", price: 18000, cat: "SNACKS" }, { id: 42, name: "Roti Vanila", price: 18000, cat: "SNACKS" }, { id: 43, name: "Roti Blueberry", price: 18000, cat: "SNACKS" },
+            { id: 44, name: "Cup Besar", price: 6000, cat: "EXTRA" }, { id: 45, name: "Jelly", price: 6000, cat: "EXTRA" }, { id: 46, name: "Cream", price: 6000, cat: "EXTRA" }, { id: 47, name: "Shoot Coffe", price: 6000, cat: "EXTRA" }
+        ],
+        DINEIN: [
+            { id: 101, name: "Americano", price: 22000, cat: "ICE" }, { id: 102, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 103, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 104, name: "Caramel", price: 25000, cat: "ICE" }, { id: 105, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 106, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 107, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 108, name: "Idealis", price: 25000, cat: "ICE" }, { id: 109, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 110, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 111, name: "Long Black", price: 24000, cat: "ICE" }, { id: 112, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 113, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 114, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 115, name: "Pandan", price: 25000, cat: "ICE" }, { id: 116, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 117, name: "Remon", price: 20000, cat: "ICE" }, { id: 118, name: "Rum", price: 25000, cat: "ICE" }, { id: 119, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 120, name: "Shaken", price: 25000, cat: "ICE" }, { id: 121, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 122, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 123, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 124, name: "Vanilla", price: 25000, cat: "ICE" },
+            { id: 125, name: "Americano Hot", price: 22000, cat: "HOT" }, { id: 126, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 127, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 128, name: "Kopi Susu Hot", price: 23000, cat: "HOT" },
+            { id: 129, name: "Roti Coklat", price: 10000, cat: "SNACKS" }, { id: 130, name: "Roti Vanila", price: 10000, cat: "SNACKS" }, { id: 131, name: "Roti Blueberry", price: 10000, cat: "SNACKS" },
+            { id: 132, name: "1 Liter Kopsu", price: 100000, cat: "PAKET" }, { id: 133, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 134, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 135, name: "500ML Kopsu", price: 65000, cat: "PAKET" }, { id: 136, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 137, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" },
+            { id: 138, name: "Cup Besar", price: 5000, cat: "EXTRA" }, { id: 139, name: "Jelly", price: 5000, cat: "EXTRA" }, { id: 140, name: "Cream", price: 5000, cat: "EXTRA" }, { id: 141, name: "Shoot Coffe", price: 5000, cat: "EXTRA" }
+        ]
     };
 
-    let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [], activeRange = "day";
+    let localMenu = { ONLINE: [], DINEIN: [] }, masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [];
     let currentFilteredTransactions = [];
+    
+    // Variabel Filter Tanggal
+    let activeRange = "today"; 
+    let filterTypeTemp = "today"; 
+    let filterDate1 = ""; 
+    let filterDate2 = "";
 
-    // --- FITUR AUTO LOGIN 1 JAM ---
+    // --- FITUR AUTO LOGIN 1 JAM & REMEMBER ME ---
     function checkSession() {
+        const savedLogin = localStorage.getItem('ks4_saved_login');
+        if(savedLogin) {
+            const dataLogin = JSON.parse(savedLogin);
+            document.getElementById('login-user').value = dataLogin.u;
+            document.getElementById('login-pass').value = dataLogin.p;
+            document.getElementById('remember-me').checked = true;
+        }
+
         const session = localStorage.getItem('ks4_session');
         if (session) {
             const data = JSON.parse(session);
@@ -245,10 +265,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('branch-display').innerText = users[currentBranchId].name;
                 if(currentBranchId === "KS4-ADM") {
-                    document.getElementById('btn-nav-pos').style.display = 'none';
-                    document.getElementById('btn-nav-history').style.display = 'none';
                     document.getElementById('btn-nav-mgmt').style.display = 'flex';
-                    document.getElementById('admin-panel').style.display = 'block';
                     showPage('report');
                 } else { showPage('pos'); setMasterMode('ONLINE'); }
             } else {
@@ -274,38 +291,85 @@
         if (users[u] && users[u].pass === p) {
             currentBranchId = u;
             localStorage.setItem('ks4_session', JSON.stringify({ branchId: u, timestamp: new Date().getTime() }));
+            
+            // Simpan Remember Me
+            if(document.getElementById('remember-me').checked) {
+                localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p}));
+            } else {
+                localStorage.removeItem('ks4_saved_login');
+            }
 
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('branch-display').innerText = users[u].name;
             if(u === "KS4-ADM") {
-                document.getElementById('btn-nav-pos').style.display = 'none';
-                document.getElementById('btn-nav-history').style.display = 'none';
                 document.getElementById('btn-nav-mgmt').style.display = 'flex';
-                document.getElementById('admin-panel').style.display = 'block';
                 showPage('report');
             } else { showPage('pos'); setMasterMode('ONLINE'); }
         } else { alert("Login Gagal! ID atau Password Salah."); }
     }
 
     function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
-
-    function setMasterMode(m) { 
-        masterMode = m; cart = {}; 
-        document.getElementById('m-online').classList.toggle('active', m === 'ONLINE');
-        document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN');
-        renderMenu(); updateUI(); 
+    
+    function setMasterMode(m) { masterMode = m; cart = {}; document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); changeCategory('ICE'); updateUI(); }
+    
+    // --- FITUR MODAL TANGGAL ---
+    function setRange(r) { 
+        if(r === 'today') {
+            activeRange = 'today';
+            document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('r-today').classList.add('active');
+            document.getElementById('rep-title').innerText = "HARI INI";
+            updateReport();
+        }
     }
 
-    function setRange(r) {
-        activeRange = r;
-        document.getElementById('r-day').classList.toggle('active', r === 'day');
-        document.getElementById('r-week').classList.toggle('active', r === 'week');
-        document.getElementById('r-month').classList.toggle('active', r === 'month');
+    function openDateModal(type) {
+        filterTypeTemp = type;
+        const container = document.getElementById('date-input-container');
+        const title = document.getElementById('date-modal-title');
+        
+        if(type === 'day') {
+            title.innerText = "Laporan Harian";
+            container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`;
+        } else if(type === 'range') {
+            title.innerText = "Laporan Rentang Kustom";
+            container.innerHTML = `
+                <div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Mulai Tanggal:</div>
+                <input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">
+                <div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Hingga Tanggal:</div>
+                <input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">
+            `;
+        } else if(type === 'month') {
+            title.innerText = "Laporan Bulanan";
+            container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`;
+        }
+        document.getElementById('modal-date').classList.add('show');
+    }
+
+    function applyDateFilter() {
+        filterDate1 = document.getElementById('date-val1')?.value || '';
+        filterDate2 = document.getElementById('date-val2')?.value || '';
+        
+        if(!filterDate1) return alert("Pilih tanggal terlebih dahulu!");
+        if(filterTypeTemp === 'range' && !filterDate2) return alert("Pilih tanggal akhir!");
+
+        activeRange = filterTypeTemp;
+        
+        document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('r-' + (activeRange === 'range' ? 'range' : activeRange)).classList.add('active');
+
+        let titleStr = "";
+        if(activeRange === 'day') titleStr = filterDate1;
+        if(activeRange === 'range') titleStr = filterDate1 + " s/d " + filterDate2;
+        if(activeRange === 'month') titleStr = "Bulan " + filterDate1;
+        
+        document.getElementById('rep-title').innerText = titleStr;
+        closeModal();
         updateReport();
     }
 
-    // --- POS LOGIC ---
     function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
+    
     function renderMenu() {
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
         if(!localMenu[masterMode]) return;
@@ -315,29 +379,55 @@
                 <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
     }
+
     function updateCart(id, d) { if(localMenu[masterMode].find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); cart[id] = (cart[id] || 0) + d; if(cart[id] <= 0) delete cart[id]; renderMenu(); updateUI(); }
-    function updateUI() { let t = 0; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); if(m) t += m.price * cart[id]; } document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; }
     
-    // --- REPORT & DELETE REPORT BUTTON ---
+    function updateUI() { 
+        let t = 0; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; 
+        for(let id in cart) { 
+            if(id==='extraBread') continue; 
+            let m = list.find(x => x.id == id); if(m) t += m.price * cart[id]; 
+        } 
+        document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
+    }
+    
     function updateReport() {
-        const bF = document.getElementById('branch-filter').value, now = new Date();
+        const bF = document.getElementById('branch-filter').value;
+        const now = new Date();
+        const nowStr = now.toISOString().split('T')[0]; 
+
         const filtered = allTransactions.filter(t => {
             const d = new Date(t.date);
-            let dOk = (activeRange==='day') ? d.toDateString()===now.toDateString() : (activeRange==='week' ? (now-d)<604800000 : t.date.startsWith(now.toISOString().slice(0,7)));
+            const tDateStr = d.toISOString().split('T')[0];
+            const tMonthStr = tDateStr.slice(0, 7);
+
+            let dOk = false;
+            if (activeRange === 'today') dOk = (tDateStr === nowStr || d.toDateString() === now.toDateString());
+            else if (activeRange === 'day') dOk = (tDateStr === filterDate1);
+            else if (activeRange === 'range') dOk = (tDateStr >= filterDate1 && tDateStr <= filterDate2);
+            else if (activeRange === 'month') dOk = (tMonthStr === filterDate1);
+
             let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId;
             return dOk && bOk;
         });
 
         currentFilteredTransactions = filtered;
+        let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0;
+        
+        // FITUR KATEGORI TABEL
+        let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
 
-        let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, items={};
         filtered.forEach(t => {
             om += t.total;
             for(let id in t.items) {
                 if(id==='extraBread') continue;
                 let m = [...localMenu.ONLINE, ...localMenu.DINEIN].find(x => x.id == id);
                 if(!m) continue;
-                let q = t.items[id], name = m.name.toLowerCase(); items[m.name] = (items[m.name] || 0) + q;
+                let q = t.items[id], name = m.name.toLowerCase(); 
+                
+                let kategori = m.cat || "EXTRA";
+                catItems[kategori][m.name] = (catItems[kategori][m.name] || 0) + q;
+
                 if(name.includes("besar")) b += q; else if(name.includes("hot")) h += q;
                 else if(name.includes("roti coklat")) rc += q; else if(name.includes("roti vanila")) rv += q; else if(name.includes("roti blue")) rb += q;
                 else if(name.includes("buy3get1") || name.includes("4x")) { k_raw += (q * 4); r += q; }
@@ -345,37 +435,37 @@
                 else if(name.includes("5x")) k_raw += (q * 5); else if(name.includes("2x")) k_raw += (q * 2);
                 else if(m.cat === "ICE") { k_raw += q; if(name.includes("remon")) r += q; }
             }
-            if(t.extraBread) t.extraBread.forEach(bid => { if(bid==41) rc++; if(bid==42) rv++; if(bid==43) rb++; });
+            if(t.extraBread) t.extraBread.forEach(bid => { 
+                if(bid==41) { rc++; catItems["SNACKS"]["Roti Coklat"] = (catItems["SNACKS"]["Roti Coklat"] || 0) + 1; }
+                if(bid==42) { rv++; catItems["SNACKS"]["Roti Vanila"] = (catItems["SNACKS"]["Roti Vanila"] || 0) + 1; }
+                if(bid==43) { rb++; catItems["SNACKS"]["Roti Blueberry"] = (catItems["SNACKS"]["Roti Blueberry"] || 0) + 1; }
+            });
         });
 
-        document.getElementById('report-summary-box').innerHTML = `
-            <div class="report-card">
-                <h4>Total Omzet: Rp ${om.toLocaleString()}</h4>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>FISIK</th><th>QTY</th></tr></thead>
-                        <tbody>
-                            <tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr>
-                            <tr><td>Cup Besar</td><td><b>${b}</b></td></tr>
-                            <tr><td>Cup Hot</td><td><b>${h}</b></td></tr>
-                            <tr><td>Remon</td><td><b>${r}</b></td></tr>
-                            <tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr>
-                            <tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr>
-                            <tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr>
-                            <tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>`;
-        const sorted = Object.entries(items).sort((a,b)=>b[1]-a[1]);
-        document.getElementById('report-details-box').innerHTML = `<div class="report-card"><h4>Daftar Menu Terjual</h4><div class="table-container"><table>${sorted.map(p=>`<tr><td>${p[0]}</td><td style="text-align:right"><b>${p[1]}</b></td></tr>`).join('')}</table></div></div>`;
+        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Omzet: Rp ${om.toLocaleString()}</h4><div class="table-container"><table><thead><tr><th>FISIK</th><th>QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        
+        let detailsHtml = "";
+        const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"];
+        catNames.forEach(c => {
+            if(Object.keys(catItems[c]).length > 0) {
+                const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]);
+                detailsHtml += `<div class="cat-header">${c}</div>`;
+                detailsHtml += `<table style="width:100%; margin-bottom:15px;">`;
+                sorted.forEach(p => {
+                    detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`;
+                });
+                detailsHtml += `</table>`;
+            }
+        });
 
+        if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual.</p>";
+
+        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        
         const delBox = document.getElementById('admin-delete-report-box');
         if (currentBranchId === "KS4-ADM" && filtered.length > 0) {
-            delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3);">🗑️ KOSONGKAN DATA LAPORAN INI</button>`;
-        } else {
-            delBox.innerHTML = '';
-        }
+            delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI</button>`;
+        } else { delBox.innerHTML = ''; }
     }
 
     function clearReportData() {
@@ -396,86 +486,75 @@
                     alert("Seluruh data pada laporan tersebut berhasil dikosongkan!");
                 });
             });
-        } else if (warning !== null) {
-            alert("Penghapusan dibatalkan.");
         }
     }
 
-    // --- HISTORY (AUTO RESET HARIAN UNTUK CABANG) ---
     function updateHistory() {
         const now = new Date();
         const list = allTransactions.filter(t => {
             const txDate = new Date(t.date);
-            const isToday = txDate.toDateString() === now.toDateString();
-            
-            if (currentBranchId === "KS4-ADM") {
-                return true; 
-            } else {
-                return t.branchId === currentBranchId && isToday; 
-            }
+            return (currentBranchId === "KS4-ADM") ? true : (t.branchId === currentBranchId && txDate.toDateString() === now.toDateString());
         });
-
         document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => {
             const delBtn = (currentBranchId === "KS4-ADM") ? `<button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; margin-left:5px">HAPUS</button>` : '';
             return `<tr><td>${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td>Rp ${t.total.toLocaleString()}</td><td><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>${delBtn}</td></tr>`;
         }).join('');
     }
 
-    function deleteTrans(id) {
-        if(confirm("Hapus transaksi ini secara permanen?")) {
-            transRef.once('value', s => {
-                const data = s.val();
-                for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } }
-            });
-        }
-    }
+    function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
     function viewStruk(id) {
         const t = allTransactions.find(x => x.id == id);
         let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN];
         for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString()}</td></tr>`; }
         if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; });
+        
+        // TAMPILKAN DISKON DI STRUK JIKA ADA
+        if(t.disc && t.disc > 0) {
+            h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString()}</td></tr>`;
+        }
+
         document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString();
         document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString();
-        document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; document.getElementById('modal-receipt').classList.add('show');
+        document.getElementById('modal-receipt').classList.add('show');
+        document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block';
     }
 
-    // --- ADMIN EDITOR ---
     function addNewMenu() {
         const n = document.getElementById('new-name').value, p = parseInt(document.getElementById('new-price').value), c = document.getElementById('new-cat').value, m = document.getElementById('new-mode').value;
-        if(!n || !p) return alert("Isi form dengan lengkap!");
+        if(!n || !p) return alert("Lengkapi data!");
         localMenu[m].push({ id: Date.now(), name: n, price: p, cat: c });
-        menuRef.set(localMenu); alert("Menu Berhasil Ditambahkan!");
+        menuRef.set(localMenu); alert("Berhasil!");
     }
     function renderMgmt() {
         const list = document.getElementById('mgmt-list'); list.innerHTML = '';
         ['ONLINE', 'DINEIN'].forEach(m => {
             list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`;
             localMenu[m].forEach(item => {
-                list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString()}</div>
-                    <div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px; font-weight:bold" onclick="editM('${m}', ${item.id})">Edit</button>
-                    <button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px; font-weight:bold" onclick="delM('${m}', ${item.id})">X</button></div></div>`;
+                list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString()}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`;
             });
         });
     }
     function editM(m, id) { const p = prompt("Harga Baru:"); if(p){ let i = localMenu[m].findIndex(x=>x.id==id); localMenu[m][i].price = parseInt(p); menuRef.set(localMenu); } }
-    function delM(m, id) { if(confirm("Yakin ingin menghapus menu ini?")){ localMenu[m] = localMenu[m].filter(x=>x.id!=id); menuRef.set(localMenu); } }
+    function delM(m, id) { if(confirm("Hapus?")){ localMenu[m] = localMenu[m].filter(x=>x.id!=id); menuRef.set(localMenu); } }
+    
+    function openCheckout() { 
+        if(Object.keys(cart).length === 0) return alert("Pilih menu!"); 
+        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode]; 
+        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString()}</td></tr>`; } 
+        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
+        
+        // TAMPILKAN DISKON DI KONFIRMASI BAYAR JIKA ADA
+        if(d > 0) {
+            h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString()}</td></tr>`;
+        }
 
-    function openCheckout() {
-        if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode];
-        for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString()}</td></tr>`; }
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; });
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + (s-d).toLocaleString();
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show');
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + Math.max(0, s-d).toLocaleString(); 
+        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
     }
-
-    function confirmPayment() {
-        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 };
-        for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; }
-        t.total -= d; transRef.push(t).then(() => { closeModal(); cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); alert("Transaksi Berhasil!"); });
-    }
-
+    
+    function confirmPayment() { let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 }; for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; } t.total -= d; t.total = Math.max(0, t.total); transRef.push(t).then(() => { closeModal(); cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); alert("Transaksi Berhasil!"); }); }
+    
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
