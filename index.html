@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Admin Pro v46</title>
+    <title>POS KS4 - Final Branch Report v47</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -147,7 +147,7 @@
 <div id="page-report" class="page">
     <main>
         <div id="admin-panel" style="display:none; background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
-            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; font-weight:bold;">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON JERUK</option>
@@ -156,13 +156,15 @@
                 <option value="KS4-CP">CEMPUT</option>
                 <option value="KS4-OT">OTISTA</option>
             </select>
-            <div class="range-tabs">
-                <button id="r-today" class="r-tab active" onclick="setRange('today')">HARI INI</button>
-                <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button>
-                <button id="r-week" class="r-tab" onclick="openDateModal('range')">MINGGUAN</button>
-                <button id="r-month" class="r-tab" onclick="openDateModal('month')">BULANAN</button>
-            </div>
         </div>
+
+        <div class="range-tabs" style="margin-top: 10px;">
+            <button id="r-today" class="r-tab active" onclick="setRange('today')">HARI INI</button>
+            <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button>
+            <button id="r-week" class="r-tab" onclick="openDateModal('range')">MINGGUAN</button>
+            <button id="r-month" class="r-tab" onclick="openDateModal('month')">BULANAN</button>
+        </div>
+
         <h3 style="color:var(--primary);">Laporan: <span id="rep-title">HARI INI</span></h3>
         <div id="report-summary-box"></div>
         <div id="report-details-box"></div>
@@ -373,7 +375,6 @@
         if(!filterDate1) return alert("Pilih tanggal terlebih dahulu!");
         if(filterTypeTemp === 'range' && !filterDate2) return alert("Pilih tanggal akhir!");
 
-        // Ubah ID class active
         activeRange = filterTypeTemp;
         document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
         
@@ -485,7 +486,6 @@
 
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
-        // FITUR HISTORY PINDAH KE DALAM LAPORAN (KHUSUS ADMIN)
         if(currentBranchId === "KS4-ADM") {
             document.getElementById('admin-history-box').style.display = 'block';
             let histHtml = '';
@@ -533,9 +533,8 @@
         }
     }
 
-    // UPDATE HISTORY UNTUK CABANG (HANYA HARI INI)
     function updateHistory() {
-        if (currentBranchId === "KS4-ADM") return; // Admin diurus oleh Laporan
+        if (currentBranchId === "KS4-ADM") return; 
         const now = new Date();
         const list = allTransactions.filter(t => {
             const txDate = new Date(t.date);
