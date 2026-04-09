@@ -709,7 +709,7 @@
     function cetakRawBT() {
         if(!window.rawbtPrintText) return alert("Belum ada data struk!");
         let teksEncoded = encodeURIComponent(window.rawbtPrintText);
-        let rawbtLink = "intent:" + teksEncoded + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;";
+        let rawbtLink = "rawbt:" + teksEncoded;
         window.location.href = rawbtLink;
     }
 
