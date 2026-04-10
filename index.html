@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v55 (Fix Typo Roti)</title>
+    <title>POS KS4 - Print Bluetooth v55 (Hapus Struk Modal)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -245,7 +245,10 @@
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
-        <button style="width:100%;padding:15px;background:#2980b9;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;margin-bottom:10px;" onclick="cetakRawBT()">🖨️ CETAK BLUETOOTH (RawBT)</button>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
+            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
+        </div>
         <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
     </div>
 </div></div>
@@ -297,7 +300,10 @@
     let filterTypeTemp = "today"; 
     let filterDate1 = ""; 
     let filterDate2 = "";
+    
+    // VARIABLE UNTUK SIMPAN ID TRANSAKSI YG SEDANG DILIHAT/DIBUAT
     window.rawbtPrintText = "";
+    let currentViewedTransId = null;
 
     function checkSession() {
         const savedLogin = localStorage.getItem('ks4_saved_login');
@@ -429,7 +435,6 @@
                     else if(nameLower.includes("hot")) h += q; 
                     else if(nameLower.includes("roti coklat")) rc += q; 
                     else if(nameLower.includes("roti vanila")) rv += q; 
-                    // PERBAIKAN RUMUS ROTI BLUEBERRY AGAR KEBAL TYPO (blue / blub / bluberry)
                     else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
                     else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
                     else if(nameLower.includes("puas")) k_raw += q; else if(nameLower.includes("paling laku")) k_raw += (q * 2); 
@@ -479,8 +484,30 @@
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
+    
     function updateHistory() { if (currentBranchId === "KS4-ADM") return; const now = new Date(); const list = allTransactions.filter(t => { const txDate = new Date(t.date); return t.branchId === currentBranchId && txDate.toDateString() === now.toDateString(); }); document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { return `<tr><td style="text-align:left;">${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td style="text-align:left;"><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td style="text-align:left;">Rp ${t.total.toLocaleString()}</td><td style="text-align:left;"><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`; }).join(''); }
+    
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
+
+    // --- FUNGSI BARU HAPUS TRANSAKSI DARI DALAM MODAL STRUK ---
+    function deleteTransFromModal() {
+        if(!currentViewedTransId) return;
+        // Peringatan konfirmasi sebelum dihapus
+        if(confirm("Hapus transaksi ini?\n\nPastikan Anda menghapus data yang benar. Data yang sudah dihapus tidak bisa dikembalikan!")) {
+            transRef.once('value', s => { 
+                const data = s.val(); 
+                for (let k in data) { 
+                    if (data[k].id == currentViewedTransId) { 
+                        transRef.child(k).remove().then(() => {
+                            alert("Transaksi berhasil dibatalkan dan dihapus dari laporan.");
+                            closeModal();
+                        });
+                        break; 
+                    } 
+                } 
+            });
+        }
+    }
 
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
         let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
@@ -491,13 +518,34 @@
     }
 
     function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
-    function viewStruk(id) { const t = allTransactions.find(x => x.id == id); let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode); document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; }
+    
+    function viewStruk(id) { 
+        currentViewedTransId = id; // Simpan ID untuk fungsi Hapus
+        const t = allTransactions.find(x => x.id == id); let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode); document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+    }
+    
     function addNewMenu() { const n = document.getElementById('new-name').value, p = parseInt(document.getElementById('new-price').value), c = document.getElementById('new-cat').value, m = document.getElementById('new-mode').value; if(!n || !p) return alert("Lengkapi data!"); localMenu[m].push({ id: Date.now(), name: n, price: p, cat: c }); menuRef.set(localMenu); alert("Berhasil!"); }
     function renderMgmt() { const list = document.getElementById('mgmt-list'); list.innerHTML = ''; ['ONLINE', 'DINEIN'].forEach(m => { list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`; localMenu[m].forEach(item => { list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString('id-ID')}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`; }); }); }
     function editM(m, id) { const p = prompt("Harga Baru:"); if(p){ let i = localMenu[m].findIndex(x=>x.id==id); localMenu[m][i].price = parseInt(p); menuRef.set(localMenu); } }
     function delM(m, id) { if(confirm("Hapus?")){ localMenu[m] = localMenu[m].filter(x=>x.id!=id); menuRef.set(localMenu); } }
+    
     function openCheckout() { if(Object.keys(cart).length === 0) return alert("Pilih menu!"); let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode]; for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; } if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; let finalTotal = Math.max(0, s-d); document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode); document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); }
-    function confirmPayment() { let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 }; for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; } t.total -= d; t.total = Math.max(0, t.total); transRef.push(t).then(() => { cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; alert("Transaksi Berhasil! Silakan Cetak Struk."); }); }
+    
+    function confirmPayment() { 
+        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 }; 
+        for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
+        t.total -= d; t.total = Math.max(0, t.total); 
+        
+        currentViewedTransId = t.id; // Simpan ID saat transaksi baru dibuat
+
+        transRef.push(t).then(() => { 
+            cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
+            document.getElementById('modal-btns-confirm').style.display = 'none'; 
+            document.getElementById('modal-btns-close').style.display = 'block'; 
+            alert("Transaksi Berhasil! Silakan Cetak Struk."); 
+        }); 
+    }
+    
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
@@ -506,3 +554,4 @@
 </script>
 </body>
 </html>
+
