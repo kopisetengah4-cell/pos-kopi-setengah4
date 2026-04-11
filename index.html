@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v61 (Fix Admin Menu)</title>
+    <title>POS KS4 - Print Bluetooth v62 (Fix Daftar Menu Tampil)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -32,7 +32,6 @@
         body.admin-mode #branch-display { color: var(--admin); }
         body:not(.admin-mode) #branch-display { color: var(--primary); }
 
-        /* PERBAIKAN: Menampilkan Filter Manajemen Menu Khusus Admin */
         #admin-mgmt-filter { display: none; }
         body.admin-mode #admin-mgmt-filter { display: block; }
 
@@ -170,7 +169,7 @@
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
-                <option value="KS4-KB">KEBON JERUK</option>
+                <option value="KS4-KB">KEBON Jeruk</option>
                 <option value="KS4-PI">PONDOK INDAH</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
@@ -235,6 +234,7 @@
             </select>
             <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
         </div>
+        
         <div id="mgmt-list"></div>
     </main>
 </div>
@@ -319,17 +319,18 @@
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
 
+    // PENANGKAL ERROR FIREBASE (Ubah object jadi Array aman)
+    const getSafeArray = (obj) => obj ? Object.values(obj).filter(Boolean) : [];
+
     function getAllUniqueMenus() {
         let unique = [];
         let ids = new Set();
         for (let b in allMenusData) {
             if (!allMenusData[b]) continue;
             ['ONLINE', 'DINEIN'].forEach(m => {
-                if (allMenusData[b][m]) {
-                    allMenusData[b][m].forEach(item => {
-                        if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
-                    });
-                }
+                getSafeArray(allMenusData[b][m]).forEach(item => {
+                    if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
+                });
             });
         }
         return unique;
@@ -452,8 +453,12 @@
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
         if(!localMenu[masterMode]) return;
         const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
-        let displayList = localMenu[masterMode];
-        if(searchText !== '') { displayList = displayList.filter(m => m.name.toLowerCase().includes(searchText)); } else { displayList = displayList.filter(m => m.cat === activeCat); }
+        
+        let displayList = getSafeArray(localMenu[masterMode]);
+        
+        if(searchText !== '') { displayList = displayList.filter(m => m.name.toLowerCase().includes(searchText)); } 
+        else { displayList = displayList.filter(m => m.cat === activeCat); }
+        
         displayList.forEach(item => {
             const q = cart[item.id] || 0, act = item.name.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
@@ -461,8 +466,23 @@
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
-    function updateCart(id, d) { if(localMenu[masterMode].find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); cart[id] = (cart[id] || 0) + d; if(cart[id] <= 0) delete cart[id]; renderMenu(); updateUI(); }
-    function updateUI() { let t = 0; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); if(m) t += m.price * cart[id]; } document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; }
+    function updateCart(id, d) { 
+        if(getSafeArray(localMenu[masterMode]).find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); 
+        cart[id] = (cart[id] || 0) + d; 
+        if(cart[id] <= 0) delete cart[id]; 
+        renderMenu(); updateUI(); 
+    }
+    
+    function updateUI() { 
+        let t = 0; 
+        const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
+        for(let id in cart) { 
+            if(id==='extraBread') continue; 
+            let m = list.find(x => x.id == id); 
+            if(m) t += m.price * cart[id]; 
+        } 
+        document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
+    }
     
     function updateReport() {
         const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
@@ -568,7 +588,7 @@
 
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
         let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
         document.getElementById('print-area').innerHTML = p;
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
         let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "--------------------------------\n"; for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { txt += m.name + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } txt += "--------------------------------\n"; if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
@@ -583,7 +603,7 @@
         for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode); document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
-    // --- FUNGSI MANAJEMEN MENU SPESIFIK CABANG / GLOBAL ---
+    // --- MANAJEMEN MENU ---
     function changeMgmtBranch() { renderMgmt(); }
 
     function addNewMenu() { 
@@ -602,7 +622,9 @@
         let id = Date.now();
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
-            allMenusData[b][m].push({ id: id, name: n, price: p, cat: c });
+            let items = getSafeArray(allMenusData[b][m]);
+            items.push({ id: id, name: n, price: p, cat: c });
+            allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
@@ -615,7 +637,8 @@
         
         let viewBranch = currentBranchId;
         if (currentBranchId === "KS4-ADM") {
-            viewBranch = document.getElementById('mgmt-branch-select').value;
+            let selElem = document.getElementById('mgmt-branch-select');
+            viewBranch = selElem ? selElem.value : "ALL";
             if (viewBranch === "ALL") list.innerHTML += `<div style="background:#e74c3c; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini akan mengubah data di SELURUH CABANG!</div>`;
         }
 
@@ -623,8 +646,8 @@
 
         ['ONLINE', 'DINEIN'].forEach(m => { 
             list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`; 
-            // PERBAIKAN: Memastikan array menu tidak error saat loop
-            (mgmtMenu[m] || []).forEach(item => { 
+            
+            getSafeArray(mgmtMenu[m]).forEach(item => { 
                 list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString('id-ID')}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`; 
             }); 
         }); 
@@ -644,8 +667,12 @@
 
             targetMenus.forEach(b => {
                 if(allMenusData[b] && allMenusData[b][m]) {
-                    let idx = allMenusData[b][m].findIndex(x=>x.id==id);
-                    if(idx !== -1) allMenusData[b][m][idx].price = parseInt(p);
+                    let items = getSafeArray(allMenusData[b][m]);
+                    let idx = items.findIndex(x=>x.id==id);
+                    if(idx !== -1) {
+                        items[idx].price = parseInt(p);
+                        allMenusData[b][m] = items;
+                    }
                 }
             });
             
@@ -666,7 +693,8 @@
 
             targetMenus.forEach(b => {
                 if(allMenusData[b] && allMenusData[b][m]) {
-                    allMenusData[b][m] = allMenusData[b][m].filter(x=>x.id!=id);
+                    let items = getSafeArray(allMenusData[b][m]);
+                    allMenusData[b][m] = items.filter(x=>x.id!=id);
                 }
             });
 
@@ -674,11 +702,11 @@
         } 
     }
     
-    function openCheckout() { if(Object.keys(cart).length === 0) return alert("Pilih menu!"); let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = localMenu[masterMode]; for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; } if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; let finalTotal = Math.max(0, s-d); document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode); document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); }
+    function openCheckout() { if(Object.keys(cart).length === 0) return alert("Pilih menu!"); let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; } if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; let finalTotal = Math.max(0, s-d); document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode); document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); }
     
     function confirmPayment() { 
         let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 }; 
-        for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
+        for(let id in cart) { if(id==='extraBread') continue; let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
         t.total -= d; t.total = Math.max(0, t.total); 
         
         currentViewedTransId = t.id; 
@@ -694,7 +722,7 @@
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = localMenu[masterMode].find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
+    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
         let data = []; data.push(["TANGGAL & WAKTU", "CABANG", "MODE PESANAN", "DISKON (Rp)", "TOTAL OMZET (Rp)", "DETAIL ITEM TERJUAL"]); 
