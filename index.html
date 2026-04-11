@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v65 (Auto Refresh Menu)</title>
+    <title>POS KS4 - Print Bluetooth v66 (Auto Stok Fisik)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -418,7 +418,6 @@
                 localMenu = allMenusData["ALL"];
             }
 
-            // PERINTAH PAKSA REFRESH SETELAH LOGIN
             renderMenu();
             renderMgmt();
 
@@ -527,13 +526,18 @@
                 
                 if(!isPaketBotol) { 
                     if(nameLower.includes("besar")) b += q; 
-                    else if(nameLower.includes("hot")) h += q; 
+                    
+                    // PERBAIKAN: JIKA KARYAWAN MEMASUKAN MENU BARU KE KATEGORI "HOT", OTOMATIS DIHITUNG FISIK CUP HOT
+                    else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
+                    
                     else if(nameLower.includes("roti coklat")) rc += q; 
                     else if(nameLower.includes("roti vanila")) rv += q; 
                     else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
                     else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
                     else if(nameLower.includes("puas")) k_raw += q; else if(nameLower.includes("paling laku")) k_raw += (q * 2); 
                     else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
+                    
+                    // PERBAIKAN: JIKA MENU MASUK KATEGORI "ICE", OTOMATIS DIHITUNG FISIK CUP KECIL
                     else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
                 } 
                 
@@ -653,7 +657,7 @@
             if(!list) return;
             list.innerHTML = ''; 
             
-            if (!currentBranchId) return; // Cegah error jika belum login
+            if (!currentBranchId) return; 
 
             let viewBranch = currentBranchId;
             if (currentBranchId === "KS4-ADM") {
