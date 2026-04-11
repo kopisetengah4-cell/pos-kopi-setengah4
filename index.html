@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v62 (Fix Daftar Menu Tampil)</title>
+    <title>POS KS4 - Print Bluetooth v63 (Force Render Menu)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -83,7 +83,7 @@
 
         .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
 
-        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; touch-action: auto; }
         .modal.show { display: flex; }
@@ -169,7 +169,7 @@
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
-                <option value="KS4-KB">KEBON Jeruk</option>
+                <option value="KS4-KB">KEBON JERUK</option>
                 <option value="KS4-PI">PONDOK INDAH</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
@@ -289,6 +289,7 @@
     const db = firebase.database();
     
     const transRef = db.ref('transactions_master_v39'); 
+    // Kita panggil database menu v40 untuk sistem cabang yang independen
     const menuRef = db.ref('master_menu_v40'); 
 
     const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
@@ -319,8 +320,34 @@
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
 
-    // PENANGKAL ERROR FIREBASE (Ubah object jadi Array aman)
-    const getSafeArray = (obj) => obj ? Object.values(obj).filter(Boolean) : [];
+    // PENANGKAL ERROR FIREBASE: Memastikan format data yang ditarik selalu berwujud Array yang valid
+    const getSafeArray = (obj) => {
+        if (!obj) return [];
+        if (Array.isArray(obj)) return obj.filter(Boolean);
+        return Object.values(obj).filter(Boolean);
+    };
+
+    // INISIALISASI DATA KOSONG: Agar jika database kosong, langsung otomatis diisi data pabrik
+    function ensureMenuFormat(dataObj) {
+        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"];
+        branchKeys.forEach(b => {
+            if (!dataObj[b]) dataObj[b] = { ONLINE: [], DINEIN: [] };
+            
+            // Jika kosong, isi dengan data default pabrik
+            if (getSafeArray(dataObj[b].ONLINE).length === 0) {
+                dataObj[b].ONLINE = JSON.parse(JSON.stringify(initialData.ONLINE));
+            } else {
+                dataObj[b].ONLINE = getSafeArray(dataObj[b].ONLINE);
+            }
+            
+            if (getSafeArray(dataObj[b].DINEIN).length === 0) {
+                dataObj[b].DINEIN = JSON.parse(JSON.stringify(initialData.DINEIN));
+            } else {
+                dataObj[b].DINEIN = getSafeArray(dataObj[b].DINEIN);
+            }
+        });
+        return dataObj;
+    }
 
     function getAllUniqueMenus() {
         let unique = [];
@@ -368,12 +395,10 @@
 
     menuRef.on('value', snap => {
         if(snap.val()) { 
-            allMenusData = snap.val(); 
+            allMenusData = ensureMenuFormat(snap.val()); 
         } else { 
             let initObj = {};
-            ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"].forEach(b => {
-                initObj[b] = JSON.parse(JSON.stringify(initialData));
-            });
+            initObj = ensureMenuFormat(initObj);
             allMenusData = initObj;
             menuRef.set(initObj); 
         }
@@ -743,4 +768,4 @@
     }
 </script>
 </body>
-            </html>
+</html>
