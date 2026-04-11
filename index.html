@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v55 (Hapus Struk Modal)</title>
+    <title>POS KS4 - Print Bluetooth v56 (Search & Cabang Menu)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -28,8 +28,7 @@
         body { display: flex; flex-direction: column; }
         
         body.admin-mode #btn-nav-pos, body.admin-mode #btn-nav-history { display: none !important; }
-        body.admin-mode #btn-nav-mgmt { display: flex !important; }
-        body:not(.admin-mode) #btn-nav-mgmt { display: none !important; }
+        /* Tombol menu sekarang tampil untuk semua pengguna, baris CSS penyembunyi sudah dihapus */
 
         body.admin-mode #branch-bar #branch-display { color: var(--admin); }
         body:not(.admin-mode) #branch-bar #branch-display { color: var(--primary); }
@@ -130,6 +129,11 @@
         <button id="m-online" class="m-tab active" onclick="setMasterMode('ONLINE')">ORDER ONLINE</button>
         <button id="m-dinein" class="m-tab" onclick="setMasterMode('DINEIN')">DINE IN</button>
     </div>
+    
+    <div style="padding: 0 5px 10px 5px;">
+        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);" oninput="renderMenu()">
+    </div>
+
     <div id="cat-nav" class="nav-tabs">
         <button class="tab active" onclick="changeCategory('ICE')">ICE</button>
         <button class="tab" onclick="changeCategory('HOT')">HOT</button>
@@ -370,7 +374,22 @@
     }
 
     function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
-    function setMasterMode(m) { masterMode = m; cart = {}; document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); changeCategory('ICE'); updateUI(); }
+    
+    function setMasterMode(m) { 
+        masterMode = m; 
+        cart = {}; 
+        document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
+        document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
+        
+        // Reset search bar tiap pindah mode
+        if(document.getElementById('search-menu')) {
+            document.getElementById('search-menu').value = '';
+        }
+        
+        changeCategory('ICE'); 
+        updateUI(); 
+    }
+    
     function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
 
     function openDateModal(type) {
@@ -394,15 +413,40 @@
         document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
     }
 
-    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
+    function changeCategory(c) { 
+        activeCat = c; 
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); 
+        renderMenu(); 
+    }
     
+    // --- FUNGSI RENDER MENU DIPERBARUI UNTUK MENDUKUNG SEARCH ENGINE ---
     function renderMenu() {
-        const grid = document.getElementById('product-grid'); grid.innerHTML = '';
+        const grid = document.getElementById('product-grid'); 
+        grid.innerHTML = '';
         if(!localMenu[masterMode]) return;
-        localMenu[masterMode].filter(m => m.cat === activeCat).forEach(item => {
+        
+        const searchInput = document.getElementById('search-menu');
+        const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+        
+        let displayList = localMenu[masterMode];
+        
+        // Jika ada teks pencarian, hiraukan kategori dan cari di semua menu masterMode saat ini
+        if(searchText !== '') {
+            displayList = displayList.filter(m => m.name.toLowerCase().includes(searchText));
+        } else {
+            // Jika pencarian kosong, tampilkan berdasarkan kategori yang aktif
+            displayList = displayList.filter(m => m.cat === activeCat);
+        }
+
+        displayList.forEach(item => {
             const q = cart[item.id] || 0, act = item.name.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
+        
+        // Pesan jika pencarian tidak ditemukan
+        if(displayList.length === 0 && searchText !== '') {
+            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`;
+        }
     }
 
     function updateCart(id, d) { if(localMenu[masterMode].find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); cart[id] = (cart[id] || 0) + d; if(cart[id] <= 0) delete cart[id]; renderMenu(); updateUI(); }
@@ -489,10 +533,8 @@
     
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
-    // --- FUNGSI BARU HAPUS TRANSAKSI DARI DALAM MODAL STRUK ---
     function deleteTransFromModal() {
         if(!currentViewedTransId) return;
-        // Peringatan konfirmasi sebelum dihapus
         if(confirm("Hapus transaksi ini?\n\nPastikan Anda menghapus data yang benar. Data yang sudah dihapus tidak bisa dikembalikan!")) {
             transRef.once('value', s => { 
                 const data = s.val(); 
@@ -520,7 +562,7 @@
     function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
     
     function viewStruk(id) { 
-        currentViewedTransId = id; // Simpan ID untuk fungsi Hapus
+        currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; const list = [...localMenu.ONLINE, ...localMenu.DINEIN]; for(let i in t.items) { if(i==='extraBread') continue; let m = list.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode); document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
@@ -536,7 +578,7 @@
         for(let id in cart) { if(id==='extraBread') continue; let m = localMenu[masterMode].find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
         t.total -= d; t.total = Math.max(0, t.total); 
         
-        currentViewedTransId = t.id; // Simpan ID saat transaksi baru dibuat
+        currentViewedTransId = t.id; 
 
         transRef.push(t).then(() => { 
             cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
@@ -554,4 +596,3 @@
 </script>
 </body>
 </html>
-
