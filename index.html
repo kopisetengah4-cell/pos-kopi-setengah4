@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v58 (Cabang Only Header)</title>
+    <title>POS KS4 - Print Bluetooth v59 (Unlock Menu All)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -27,9 +27,8 @@
 
         body { display: flex; flex-direction: column; }
         
+        /* Hanya sembunyikan Kasir dan Riwayat untuk Admin. Tombol Menu terbuka untuk semua! */
         body.admin-mode #btn-nav-pos, body.admin-mode #btn-nav-history { display: none !important; }
-        body.admin-mode #btn-nav-mgmt { display: flex !important; }
-        body:not(.admin-mode) #btn-nav-mgmt { display: none !important; }
 
         /* Pewarnaan dinamis untuk Cabang di Header */
         body.admin-mode #branch-display { color: var(--admin); }
@@ -41,7 +40,7 @@
             -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior-y: contain; 
         }
 
-        /* --- DESAIN HEADER BARU --- */
+        /* --- DESAIN HEADER --- */
         .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; }
         
         .shop-name { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 2px; }
