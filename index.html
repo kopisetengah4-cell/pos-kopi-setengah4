@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v60 (Multi-Branch Menu System)</title>
+    <title>POS KS4 - Print Bluetooth v61 (Fix Admin Menu)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -31,6 +31,10 @@
 
         body.admin-mode #branch-display { color: var(--admin); }
         body:not(.admin-mode) #branch-display { color: var(--primary); }
+
+        /* PERBAIKAN: Menampilkan Filter Manajemen Menu Khusus Admin */
+        #admin-mgmt-filter { display: none; }
+        body.admin-mode #admin-mgmt-filter { display: block; }
 
         main { 
             flex: 1; overflow-y: auto; padding: 15px; 
@@ -207,7 +211,7 @@
     <main>
         <h3>Manajemen Menu</h3>
         
-        <div id="admin-mgmt-filter" style="display:none; background: #fff3e0; padding: 15px; border-radius:15px; border: 2px solid var(--admin); margin-bottom:15px;">
+        <div id="admin-mgmt-filter" style="background: #fff3e0; padding: 15px; border-radius:15px; border: 2px solid var(--admin); margin-bottom:15px;">
             <label style="font-weight:bold; color:var(--admin); font-size:0.8rem;">Pilih Target Cabang untuk Diedit:</label>
             <select id="mgmt-branch-select" onchange="changeMgmtBranch()" style="width:100%; padding:12px; margin-top:5px; border-radius:10px; border:1px solid #ddd; font-weight:bold;">
                 <option value="ALL">✅ SEMUA CABANG SEKALIGUS</option>
@@ -285,8 +289,6 @@
     const db = firebase.database();
     
     const transRef = db.ref('transactions_master_v39'); 
-    
-    // PERHATIAN: DATABASE MENU DIUBAH KE V40 AGAR MENDUKUNG MENU SPESIFIK PER CABANG
     const menuRef = db.ref('master_menu_v40'); 
 
     const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
@@ -309,7 +311,7 @@
     };
 
     let allMenusData = {}; 
-    let localMenu = { ONLINE: [], DINEIN: [] }; // Menu yang dipakai di Kasir
+    let localMenu = { ONLINE: [], DINEIN: [] }; 
     let masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [];
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
@@ -317,7 +319,6 @@
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
 
-    // FUNGSI BANTUAN UNTUK LAPORAN (MENGGABUNGKAN SEMUA MENU DARI SEMUA CABANG)
     function getAllUniqueMenus() {
         let unique = [];
         let ids = new Set();
@@ -376,7 +377,6 @@
             menuRef.set(initObj); 
         }
 
-        // Tentukan menu kasir cabang saat ini
         if (currentBranchId && currentBranchId !== "KS4-ADM") {
             localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
         } else {
@@ -401,7 +401,6 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('branch-display').innerText = users[u].name;
             
-            // Set menu untuk cabang yang baru login
             if (currentBranchId !== "KS4-ADM") {
                 localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
             }
@@ -474,7 +473,7 @@
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
         let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
         
-        let allItems = getAllUniqueMenus(); // Ambil semua menu dari database
+        let allItems = getAllUniqueMenus(); 
 
         filtered.forEach(t => { 
             om += t.total; 
@@ -624,7 +623,8 @@
 
         ['ONLINE', 'DINEIN'].forEach(m => { 
             list.innerHTML += `<h4 style="margin-top:20px; color:var(--admin)">MODE: ${m}</h4>`; 
-            mgmtMenu[m].forEach(item => { 
+            // PERBAIKAN: Memastikan array menu tidak error saat loop
+            (mgmtMenu[m] || []).forEach(item => { 
                 list.innerHTML += `<div class="mg-card"><div><b>${item.name}</b><br>Rp ${item.price.toLocaleString('id-ID')}</div><div><button style="background:#f1c40f; border:none; padding:8px; border-radius:5px" onclick="editM('${m}', ${item.id})">Edit</button><button style="background:#e74c3c; color:white; border:none; padding:8px; border-radius:5px; margin-left:5px" onclick="delM('${m}', ${item.id})">X</button></div></div>`; 
             }); 
         }); 
