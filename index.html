@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Payment Method v67</title>
+    <title>POS KS4 - Payment History v68</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -92,7 +92,6 @@
         .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
         .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        /* Style untuk tombol metode pembayaran */
         .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #ddd; background: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
         .btn-pay-method.selected { border-color: var(--primary); background: #e8f5e9; color: var(--primary); }
 
@@ -160,7 +159,7 @@
         <h3>Riwayat Pesanan Hari Ini</h3>
         <div class="table-container">
             <table>
-                <thead><tr><th style="text-align:left;">WAKTU</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
+                <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
                 <tbody id="history-tbody"></tbody>
             </table>
         </div>
@@ -200,7 +199,7 @@
             <h3 style="color:var(--admin); border-bottom: 2px solid var(--admin); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
             <div class="table-container">
                 <table>
-                    <thead><tr><th style="text-align:left;">WAKTU</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
+                    <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
                     <tbody id="admin-history-tbody"></tbody>
                 </table>
             </div>
@@ -517,12 +516,10 @@
         document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
     }
 
-    // FUNGSI UNTUK MEMILIH METODE PEMBAYARAN SEBELUM CHECKOUT
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
-        closeModal(); // Tutup modal lain jika ada
+        closeModal(); 
         document.querySelectorAll('.btn-pay-method').forEach(btn => btn.classList.remove('selected'));
-        // Pilih default
         selectedPaymentMethod = "Tunai";
         document.querySelectorAll('.btn-pay-method').forEach(btn => {
             if(btn.innerText === "Tunai") btn.classList.add('selected');
@@ -536,7 +533,7 @@
             btn.classList.toggle('selected', btn.innerText === method);
         });
         closeModal();
-        openCheckout(); // Lanjut ke struk checkout
+        openCheckout(); 
     }
     
     function updateReport() {
@@ -548,14 +545,12 @@
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
         let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
         
-        // VARIABEL REKAP METODE PEMBAYARAN
         let payMethods = { "Grab": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
         
         let allItems = getAllUniqueMenus(); 
 
         filtered.forEach(t => { 
             om += t.total; 
-            // Tambahkan ke rekap metode pembayaran
             let method = t.paymentMethod || "Tunai";
             if(payMethods[method] !== undefined) payMethods[method] += t.total;
 
@@ -616,7 +611,6 @@
             }); 
         });
 
-        // HTML UNTUK RINCIAN PEMBAYARAN
         let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">`;
         if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
@@ -630,13 +624,64 @@
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#f0f5f1; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
-        if(currentBranchId === "KS4-ADM") { document.getElementById('admin-history-box').style.display = 'block'; let histHtml = ''; filtered.forEach(t => { histHtml += `<tr><td style="text-align:left;">${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td style="text-align:left;"><b>${t.branchName}</b></td><td style="text-align:left;">Rp ${t.total.toLocaleString()}</td><td style="text-align:left;"><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button><button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button></td></tr>`; }); if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; document.getElementById('admin-history-tbody').innerHTML = histHtml; } else { document.getElementById('admin-history-box').style.display = 'none'; }
+        
+        // PEMBARUAN: METODE PEMBAYARAN DITAMBAHKAN DI TABEL RIWAYAT ADMIN
+        if(currentBranchId === "KS4-ADM") { 
+            document.getElementById('admin-history-box').style.display = 'block'; 
+            let histHtml = ''; 
+            filtered.forEach(t => { 
+                histHtml += `<tr>
+                    <td style="text-align:left;">
+                        ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> 
+                        ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
+                        <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                    </td>
+                    <td style="text-align:left;">
+                        <b>${t.branchName}</b><br>
+                        <span style="font-size:0.65rem; color:#888;">${t.mode}</span>
+                    </td>
+                    <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
+                    <td style="text-align:left;">
+                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
+                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                    </td>
+                </tr>`; 
+            }); 
+            if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
+            document.getElementById('admin-history-tbody').innerHTML = histHtml; 
+        } else { 
+            document.getElementById('admin-history-box').style.display = 'none'; 
+        }
+        
         const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
     
-    function updateHistory() { if (currentBranchId === "KS4-ADM") return; const now = new Date(); const list = allTransactions.filter(t => { const txDate = new Date(t.date); return t.branchId === currentBranchId && txDate.toDateString() === now.toDateString(); }); document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { return `<tr><td style="text-align:left;">${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td><td style="text-align:left;"><span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span></td><td style="text-align:left;">Rp ${t.total.toLocaleString()}</td><td style="text-align:left;"><button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td></tr>`; }).join(''); }
+    // PEMBARUAN: METODE PEMBAYARAN DITAMBAHKAN DI TABEL RIWAYAT CABANG
+    function updateHistory() { 
+        if (currentBranchId === "KS4-ADM") return; 
+        const now = new Date(); 
+        const list = allTransactions.filter(t => { 
+            const txDate = new Date(t.date); 
+            return t.branchId === currentBranchId && txDate.toDateString() === now.toDateString(); 
+        }); 
+        document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
+            return `<tr>
+                <td style="text-align:left;">
+                    ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
+                    <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                </td>
+                <td style="text-align:left;">
+                    <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#1a4d2e'}">${t.mode}</span>
+                </td>
+                <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
+                <td style="text-align:left;">
+                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                </td>
+            </tr>`; 
+        }).join(''); 
+    }
     
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
 
@@ -871,4 +916,4 @@
     }
 </script>
 </body>
-</html>
+        </html>
