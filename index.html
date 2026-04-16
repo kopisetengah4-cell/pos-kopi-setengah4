@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Print Bluetooth v66 (Auto Stok Fisik)</title>
+    <title>POS KS4 - Payment Method v67</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -92,6 +92,10 @@
         .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
         .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
+        /* Style untuk tombol metode pembayaran */
+        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #ddd; background: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        .btn-pay-method.selected { border-color: var(--primary); background: #e8f5e9; color: var(--primary); }
+
         #print-area { display: none; }
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { display: block; position: absolute; left: 0; top: 0; width: 58mm; margin: 0; padding: 0; color: #000; font-family: 'Courier New', monospace; } @page { margin: 0; } }
     </style>
@@ -147,7 +151,7 @@
             </div>
         </div>
         <div id="total-price-display" style="font-size:1.3rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
-        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px; font-size:1rem;" onclick="openCheckout()">TINJAU & BAYAR</button>
+        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
     </div>
 </div>
 
@@ -248,15 +252,28 @@
 
 <div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
 
+<div id="modal-payment" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 style="color:var(--primary); margin-bottom:15px;">Pilih Metode Pembayaran</h3>
+        <button class="btn-pay-method" onclick="selectPayment('Grab')">Grab</button>
+        <button class="btn-pay-method" onclick="selectPayment('Gojek')">Gojek</button>
+        <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
+        <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
+        <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
+        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+    </div>
+</div>
+
 <div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center">
     <h3 id="rec-header">STRUK</h3>
     <div id="rec-branch" style="font-size:0.7rem"></div>
-    <table id="rec-table"></table>
+    <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
+    <table id="rec-table" style="margin-top:10px;"></table>
     <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
         <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="closeModal()">Kembali</button>
+        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
@@ -316,6 +333,7 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
+    let selectedPaymentMethod = "Tunai"; // Default payment method
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
 
@@ -498,6 +516,28 @@
         } 
         document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
     }
+
+    // FUNGSI UNTUK MEMILIH METODE PEMBAYARAN SEBELUM CHECKOUT
+    function openPaymentMethod() {
+        if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
+        closeModal(); // Tutup modal lain jika ada
+        document.querySelectorAll('.btn-pay-method').forEach(btn => btn.classList.remove('selected'));
+        // Pilih default
+        selectedPaymentMethod = "Tunai";
+        document.querySelectorAll('.btn-pay-method').forEach(btn => {
+            if(btn.innerText === "Tunai") btn.classList.add('selected');
+        });
+        document.getElementById('modal-payment').classList.add('show');
+    }
+
+    function selectPayment(method) {
+        selectedPaymentMethod = method;
+        document.querySelectorAll('.btn-pay-method').forEach(btn => {
+            btn.classList.toggle('selected', btn.innerText === method);
+        });
+        closeModal();
+        openCheckout(); // Lanjut ke struk checkout
+    }
     
     function updateReport() {
         const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
@@ -508,10 +548,17 @@
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
         let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
         
+        // VARIABEL REKAP METODE PEMBAYARAN
+        let payMethods = { "Grab": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
+        
         let allItems = getAllUniqueMenus(); 
 
         filtered.forEach(t => { 
             om += t.total; 
+            // Tambahkan ke rekap metode pembayaran
+            let method = t.paymentMethod || "Tunai";
+            if(payMethods[method] !== undefined) payMethods[method] += t.total;
+
             for(let id in t.items) { 
                 if(id==='extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
@@ -526,18 +573,13 @@
                 
                 if(!isPaketBotol) { 
                     if(nameLower.includes("besar")) b += q; 
-                    
-                    // PERBAIKAN: JIKA KARYAWAN MEMASUKAN MENU BARU KE KATEGORI "HOT", OTOMATIS DIHITUNG FISIK CUP HOT
                     else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
-                    
                     else if(nameLower.includes("roti coklat")) rc += q; 
                     else if(nameLower.includes("roti vanila")) rv += q; 
                     else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
                     else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
                     else if(nameLower.includes("puas")) k_raw += q; else if(nameLower.includes("paling laku")) k_raw += (q * 2); 
                     else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
-                    
-                    // PERBAIKAN: JIKA MENU MASUK KATEGORI "ICE", OTOMATIS DIHITUNG FISIK CUP KECIL
                     else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
                 } 
                 
@@ -573,7 +615,17 @@
                 if(bid==43) { rb++; catItems["SNACKS"]["Roti Blueberry"] = (catItems["SNACKS"]["Roti Blueberry"] || 0) + 1; } 
             }); 
         });
-        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4><div class="table-container"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+
+        // HTML UNTUK RINCIAN PEMBAYARAN
+        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">`;
+        if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Shopee"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Shopee: <b>Rp ${payMethods["Shopee"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["QRIS"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">QRIS: <b>Rp ${payMethods["QRIS"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Tunai"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Tunai: <b>Rp ${payMethods["Tunai"].toLocaleString('id-ID')}</b></div>`;
+        paymentHtml += `</div>`;
+
+        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
         let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#f0f5f1; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
@@ -606,12 +658,25 @@
         }
     }
 
-    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode) {
+    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode, paymentMethod) {
         let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+        
+        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}<br>Bayar via: ${paymentMethod.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; 
+        const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } 
+        if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } 
+        p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; 
+        if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
+        p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
         document.getElementById('print-area').innerHTML = p;
+        
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
-        let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "--------------------------------\n"; for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { txt += m.name + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } txt += "--------------------------------\n"; if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
+        let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { txt += m.name + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } 
+        if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } 
+        txt += "--------------------------------\n"; 
+        if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
+        let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
     }
 
     function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
@@ -620,10 +685,15 @@
         currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; 
         let allItems = getAllUniqueMenus();
-        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode); document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        document.getElementById('rec-table').innerHTML = h; 
+        document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); 
+        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
+        document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
+        buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai")); 
+        document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
-    // --- FUNGSI MANAJEMEN MENU YANG SUDAH DIBUAT ANTI-BADAI ---
     function changeMgmtBranch() { renderMgmt(); }
 
     function addNewMenu() { 
@@ -743,10 +813,26 @@
         } 
     }
     
-    function openCheckout() { if(Object.keys(cart).length === 0) return alert("Pilih menu!"); let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); for(let id in cart) { if(id==='extraBread') continue; let m = list.find(x => x.id == id); s += m.price * cart[id]; h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; } if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; let finalTotal = Math.max(0, s-d); document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode); document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); }
+    function openCheckout() { 
+        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
+        for(let id in cart) { 
+            if(id==='extraBread') continue; 
+            let m = list.find(x => x.id == id); 
+            s += m.price * cart[id]; 
+            h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; 
+        } 
+        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
+        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
+        let finalTotal = Math.max(0, s-d); 
+        document.getElementById('rec-table').innerHTML = h; 
+        document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
+        document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
+        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod); 
+        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
+    }
     
     function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0 }; 
+        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod }; 
         for(let id in cart) { if(id==='extraBread') continue; let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
         t.total -= d; t.total = Math.max(0, t.total); 
         
@@ -764,9 +850,10 @@
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
     function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
+    
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
-        let data = []; data.push(["TANGGAL & WAKTU", "CABANG", "MODE PESANAN", "DISKON (Rp)", "TOTAL OMZET (Rp)", "DETAIL ITEM TERJUAL"]); 
+        let data = []; data.push(["TANGGAL & WAKTU", "CABANG", "MODE PESANAN", "PEMBAYARAN", "DISKON (Rp)", "TOTAL OMZET (Rp)", "DETAIL ITEM TERJUAL"]); 
         let allItems = getAllUniqueMenus();
         currentFilteredTransactions.forEach(t => { 
             let waktu = new Date(t.date).toLocaleString('id-ID'); let itemsStr = []; 
@@ -776,9 +863,9 @@
                 if(m) itemsStr.push(`${m.name} (x${t.items[id]})`); 
             } 
             if(t.extraBread) { t.extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); itemsStr.push(`${rn} (x1)`); }); } 
-            data.push([ waktu, t.branchName, t.mode, t.disc || 0, t.total, itemsStr.join(", ") ]); 
+            data.push([ waktu, t.branchName, t.mode, (t.paymentMethod || "Tunai"), t.disc || 0, t.total, itemsStr.join(", ") ]); 
         }); 
-        let ws = XLSX.utils.aoa_to_sheet(data); ws['!cols'] = [ {wpx: 130}, {wpx: 100}, {wpx: 100}, {wpx: 80}, {wpx: 100}, {wpx: 400} ]; 
+        let ws = XLSX.utils.aoa_to_sheet(data); ws['!cols'] = [ {wpx: 130}, {wpx: 100}, {wpx: 100}, {wpx: 80}, {wpx: 80}, {wpx: 100}, {wpx: 400} ]; 
         let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Riwayat Transaksi"); 
         let judulLaporan = document.getElementById('rep-title').innerText.replace(/[^a-zA-Z0-9]/g, '_'); XLSX.writeFile(wb, "Laporan_KS4_" + judulLaporan + ".xlsx"); 
     }
