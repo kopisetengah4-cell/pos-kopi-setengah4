@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Payment History v68</title>
+    <title>POS KS4 - Sunter Branch v69</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -177,6 +177,7 @@
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
                 <option value="KS4-OT">OTISTA</option>
+                <option value="KS4-ST">SUNTER</option>
             </select>
         </div>
 
@@ -223,6 +224,7 @@
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
                 <option value="KS4-OT">OTISTA</option>
+                <option value="KS4-ST">SUNTER</option>
             </select>
         </div>
 
@@ -307,7 +309,7 @@
     const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v40'); 
 
-    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
     const initialData = {
         ONLINE: [
@@ -344,7 +346,7 @@
 
     function parseFirebaseMenus(data) {
         let result = {};
-        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"];
+        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         if (!data) data = {};
         branchKeys.forEach(b => {
             result[b] = {
@@ -625,7 +627,6 @@
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#f0f5f1; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
-        // PEMBARUAN: METODE PEMBAYARAN DITAMBAHKAN DI TABEL RIWAYAT ADMIN
         if(currentBranchId === "KS4-ADM") { 
             document.getElementById('admin-history-box').style.display = 'block'; 
             let histHtml = ''; 
@@ -658,7 +659,6 @@
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
     
-    // PEMBARUAN: METODE PEMBAYARAN DITAMBAHKAN DI TABEL RIWAYAT CABANG
     function updateHistory() { 
         if (currentBranchId === "KS4-ADM") return; 
         const now = new Date(); 
@@ -748,7 +748,7 @@
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
             let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"];
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
             else targetMenus = [sel];
         } else {
             targetMenus = [currentBranchId];
@@ -815,7 +815,7 @@
             let targetMenus = [];
             if (currentBranchId === "KS4-ADM") {
                 let sel = document.getElementById('mgmt-branch-select').value;
-                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"];
+                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
                 else targetMenus = [sel];
             } else {
                 targetMenus = [currentBranchId];
@@ -841,7 +841,7 @@
             let targetMenus = [];
             if (currentBranchId === "KS4-ADM") {
                 let sel = document.getElementById('mgmt-branch-select').value;
-                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT"];
+                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
                 else targetMenus = [sel];
             } else {
                 targetMenus = [currentBranchId];
@@ -916,4 +916,4 @@
     }
 </script>
 </body>
-        </html>
+</html>
