@@ -265,6 +265,18 @@
     </div>
 </div>
 
+<div id="modal-cash" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai</h3>
+        <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
+        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #ddd; text-align:center; margin-bottom:20px;">
+        <div style="display:flex; gap:10px;">
+            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+        </div>
+    </div>
+</div>
+
 <div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center">
     <h3 id="rec-header">STRUK</h3>
     <div id="rec-branch" style="font-size:0.7rem"></div>
@@ -334,7 +346,10 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
-    let selectedPaymentMethod = "Tunai"; // Default payment method
+    let selectedPaymentMethod = "Tunai";
+    let currentCashReceived = 0; // Variabel tunai baru
+    let currentCashChange = 0;   // Variabel kembalian baru
+    
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
 
@@ -402,13 +417,11 @@
     menuRef.on('value', snap => {
         try {
             allMenusData = parseFirebaseMenus(snap.val());
-
             if (currentBranchId && currentBranchId !== "KS4-ADM") {
                 localMenu = allMenusData[currentBranchId];
             } else {
                 localMenu = allMenusData["ALL"];
             }
-
             renderMenu(); 
             renderMgmt();
         } catch (e) {
@@ -529,13 +542,62 @@
         document.getElementById('modal-payment').classList.add('show');
     }
 
+    // MODIFIKASI: Menambahkan alur khusus untuk TUNAI
     function selectPayment(method) {
         selectedPaymentMethod = method;
         document.querySelectorAll('.btn-pay-method').forEach(btn => {
             btn.classList.toggle('selected', btn.innerText === method);
         });
         closeModal();
-        openCheckout(); 
+        
+        if (method === "Tunai") {
+            openCashModal(); // Panggil pop-up uang tunai
+        } else {
+            currentCashReceived = 0;
+            currentCashChange = 0;
+            openCheckout(); // Langsung ke checkout untuk payment digital
+        }
+    }
+
+    // FUNGSI BARU: Buka pop-up input uang tunai
+    function openCashModal() {
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let id in cart) {
+            if(id==='extraBread') continue;
+            let m = list.find(x => x.id == id);
+            if(m) s += m.price * cart[id];
+        }
+        let finalTotal = Math.max(0, s - d);
+        
+        document.getElementById('cash-total-display').innerText = "Total Belanja: Rp " + finalTotal.toLocaleString('id-ID');
+        document.getElementById('cash-input-val').value = '';
+        document.getElementById('modal-cash').classList.add('show');
+        
+        setTimeout(() => { document.getElementById('cash-input-val').focus(); }, 100);
+    }
+
+    // FUNGSI BARU: Proses kembalian dari pop-up
+    function processCash() {
+        let cash = parseInt(document.getElementById('cash-input-val').value) || 0;
+        
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let id in cart) {
+            if(id==='extraBread') continue;
+            let m = list.find(x => x.id == id);
+            if(m) s += m.price * cart[id];
+        }
+        let finalTotal = Math.max(0, s - d);
+
+        if (cash < finalTotal) {
+            alert("Nominal uang tunai kurang dari total belanja!");
+            return;
+        }
+
+        currentCashReceived = cash;
+        currentCashChange = cash - finalTotal;
+        
+        closeModal();
+        openCheckout();
     }
     
     function updateReport() {
@@ -703,7 +765,8 @@
         }
     }
 
-    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode, paymentMethod) {
+    // MODIFIKASI: Menambahkan Parameter cashReceived & cashChange untuk struk
+    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode, paymentMethod, cashReceived, cashChange) {
         let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
         
         let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}<br>Bayar via: ${paymentMethod.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; 
@@ -712,7 +775,15 @@
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } 
         p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; 
         if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
-        p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+        p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>`;
+        
+        // MODIFIKASI PRINT HTML (TUNAI & KEMBALIAN)
+        if (paymentMethod === "Tunai" && cashReceived) {
+            p += `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:3px;"><span>Tunai:</span><span>Rp ${cashReceived.toLocaleString('id-ID')}</span></div>`;
+            p += `<div style="display:flex; justify-content:space-between; font-size:12px;"><span>Kembali:</span><span>Rp ${cashChange.toLocaleString('id-ID')}</span></div>`;
+        }
+        
+        p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
         document.getElementById('print-area').innerHTML = p;
         
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
@@ -721,21 +792,36 @@
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } 
         txt += "--------------------------------\n"; 
         if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
-        let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
+        let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; 
+        
+        // MODIFIKASI RAWBT THERMAL PRINT (TUNAI & KEMBALIAN)
+        if (paymentMethod === "Tunai" && cashReceived) {
+            let cLine = "Tunai:"; let cVal = "Rp" + cashReceived.toLocaleString('id-ID'); let spcC = 32 - cLine.length - cVal.length; txt += cLine + " ".repeat(Math.max(1, spcC)) + cVal + "\n";
+            let kLine = "Kembali:"; let kVal = "Rp" + cashChange.toLocaleString('id-ID'); let spcK = 32 - kLine.length - kVal.length; txt += kLine + " ".repeat(Math.max(1, spcK)) + kVal + "\n";
+        }
+        
+        txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
     }
 
     function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
     
+    // MODIFIKASI: viewStruk memanggil rincian Tunai dan Kembali
     function viewStruk(id) { 
         currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; 
         let allItems = getAllUniqueMenus();
         for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        
+        if (t.paymentMethod === "Tunai" && t.cashReceived) {
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
+        }
+        
         document.getElementById('rec-table').innerHTML = h; 
         document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); 
         document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
         document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
-        buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai")); 
+        buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai"), t.cashReceived || 0, t.cashChange || 0); 
         document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
@@ -858,6 +944,7 @@
         } 
     }
     
+    // MODIFIKASI: openCheckout menampilkan rincian tunai
     function openCheckout() { 
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
         for(let id in cart) { 
@@ -868,16 +955,33 @@
         } 
         if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
         if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
+        
         let finalTotal = Math.max(0, s-d); 
+        
+        if (selectedPaymentMethod === "Tunai") {
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
+        }
+
         document.getElementById('rec-table').innerHTML = h; 
         document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
         document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod); 
+        
+        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
         document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
     }
     
+    // MODIFIKASI: confirmPayment untuk mengirim data tunai ke database
     function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0, t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod }; 
+        let d = parseInt(document.getElementById('discount-input').value) || 0;
+        let t = { 
+            id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, 
+            items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, 
+            paymentMethod: selectedPaymentMethod,
+            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0,
+            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0
+        }; 
+        
         for(let id in cart) { if(id==='extraBread') continue; let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
         t.total -= d; t.total = Math.max(0, t.total); 
         
