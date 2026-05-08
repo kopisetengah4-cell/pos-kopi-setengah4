@@ -169,7 +169,7 @@
 <div id="page-report" class="page">
     <main>
         <div id="admin-panel" style="display:none; background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
-            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold;">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON JERUK</option>
@@ -179,6 +179,7 @@
                 <option value="KS4-OT">OTISTA</option>
                 <option value="KS4-ST">SUNTER</option>
             </select>
+            <button onclick="restore2xKopsu()" style="width:100%; padding:10px; background:#2980b9; color:white; border:none; border-radius:8px; font-weight:bold; font-size:0.85rem;">🔄 PULIHKAN MENU "2X KOPSU"</button>
         </div>
 
         <div class="range-tabs" style="margin-top: 10px;">
@@ -347,8 +348,8 @@
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
     let selectedPaymentMethod = "Tunai";
-    let currentCashReceived = 0; // Variabel tunai baru
-    let currentCashChange = 0;   // Variabel kembalian baru
+    let currentCashReceived = 0; 
+    let currentCashChange = 0;   
     
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
@@ -542,7 +543,6 @@
         document.getElementById('modal-payment').classList.add('show');
     }
 
-    // MODIFIKASI: Menambahkan alur khusus untuk TUNAI
     function selectPayment(method) {
         selectedPaymentMethod = method;
         document.querySelectorAll('.btn-pay-method').forEach(btn => {
@@ -551,15 +551,14 @@
         closeModal();
         
         if (method === "Tunai") {
-            openCashModal(); // Panggil pop-up uang tunai
+            openCashModal(); 
         } else {
             currentCashReceived = 0;
             currentCashChange = 0;
-            openCheckout(); // Langsung ke checkout untuk payment digital
+            openCheckout(); 
         }
     }
 
-    // FUNGSI BARU: Buka pop-up input uang tunai
     function openCashModal() {
         let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
         for(let id in cart) {
@@ -576,7 +575,6 @@
         setTimeout(() => { document.getElementById('cash-input-val').focus(); }, 100);
     }
 
-    // FUNGSI BARU: Proses kembalian dari pop-up
     function processCash() {
         let cash = parseInt(document.getElementById('cash-input-val').value) || 0;
         
@@ -637,7 +635,7 @@
                     else if(nameLower.includes("roti vanila")) rv += q; 
                     else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
                     else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
-                    else if(nameLower.includes("puas")) k_raw += q; else if(nameLower.includes("paling laku")) k_raw += (q * 2); 
+                    else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
                     else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
                     else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
                 } 
@@ -655,6 +653,8 @@
                         cupSusu += (1 * q); 
                     } else if (nameLower.includes("paling laku")) { 
                         cupSusu += (1 * q); cupNonSusu += (1 * q); 
+                    } else if (nameLower.includes("favorite")) { 
+                        cupSusu += (2 * q); 
                     } else if (nameLower.includes("5x")) { 
                         if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon")) cupNonSusu += (5 * q); 
                         else cupSusu += (5 * q); 
@@ -765,7 +765,6 @@
         }
     }
 
-    // MODIFIKASI: Menambahkan Parameter cashReceived & cashChange untuk struk
     function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode, paymentMethod, cashReceived, cashChange) {
         let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
         
@@ -777,7 +776,6 @@
         if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
         p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>`;
         
-        // MODIFIKASI PRINT HTML (TUNAI & KEMBALIAN)
         if (paymentMethod === "Tunai" && cashReceived) {
             p += `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:3px;"><span>Tunai:</span><span>Rp ${cashReceived.toLocaleString('id-ID')}</span></div>`;
             p += `<div style="display:flex; justify-content:space-between; font-size:12px;"><span>Kembali:</span><span>Rp ${cashChange.toLocaleString('id-ID')}</span></div>`;
@@ -794,7 +792,6 @@
         if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
         let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; 
         
-        // MODIFIKASI RAWBT THERMAL PRINT (TUNAI & KEMBALIAN)
         if (paymentMethod === "Tunai" && cashReceived) {
             let cLine = "Tunai:"; let cVal = "Rp" + cashReceived.toLocaleString('id-ID'); let spcC = 32 - cLine.length - cVal.length; txt += cLine + " ".repeat(Math.max(1, spcC)) + cVal + "\n";
             let kLine = "Kembali:"; let kVal = "Rp" + cashChange.toLocaleString('id-ID'); let spcK = 32 - kLine.length - kVal.length; txt += kLine + " ".repeat(Math.max(1, spcK)) + kVal + "\n";
@@ -805,7 +802,6 @@
 
     function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
     
-    // MODIFIKASI: viewStruk memanggil rincian Tunai dan Kembali
     function viewStruk(id) { 
         currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; 
@@ -944,7 +940,6 @@
         } 
     }
     
-    // MODIFIKASI: openCheckout menampilkan rincian tunai
     function openCheckout() { 
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
         for(let id in cart) { 
@@ -971,7 +966,6 @@
         document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
     }
     
-    // MODIFIKASI: confirmPayment untuk mengirim data tunai ke database
     function confirmPayment() { 
         let d = parseInt(document.getElementById('discount-input').value) || 0;
         let t = { 
@@ -993,6 +987,26 @@
             document.getElementById('modal-btns-close').style.display = 'block'; 
             alert("Transaksi Berhasil! Silakan Cetak Struk."); 
         }); 
+    }
+
+    // FUNGSI BARU: Mengembalikan menu 2x Kopsu (ID: 37) yang terhapus
+    function restore2xKopsu() {
+        if(!confirm("Anda akan mengembalikan menu '2x Kopsu' ke dalam sistem. Lanjutkan?")) return;
+        let cabang = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+        cabang.forEach(c => {
+            if(allMenusData[c] && allMenusData[c].ONLINE) {
+                let items = getSafeArray(allMenusData[c].ONLINE);
+                if(!items.find(x => x.id === 37)) {
+                    items.push({ id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" });
+                    allMenusData[c].ONLINE = items;
+                }
+            }
+        });
+        menuRef.set(allMenusData).then(() => {
+            alert("Selesai! Menu '2x Kopsu' berhasil dipulihkan. Silakan cek laporan Anda.");
+            renderMenu();
+            renderMgmt();
+        });
     }
     
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
