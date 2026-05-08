@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- Anti Cache Super Kuat -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -13,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v73</title>
+    <title>POS KS4 - Sunter Branch v74</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -109,7 +110,7 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <h2 style="text-align:center; color:var(--primary)">POS KS4 v73</h2>
+        <h2 style="text-align:center; color:var(--primary)">POS KS4 v74</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
         
@@ -176,7 +177,7 @@
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
-                <option value="KS4-KB">KEBON Jeruk</option>
+                <option value="KS4-KB">KEBON JERUK</option>
                 <option value="KS4-PI">PONDOK INDAH</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
@@ -244,6 +245,7 @@
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
+            <!-- Tampilan Normal (Ice, Hot, dll) -->
             <div id="form-normal-details">
                 <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                     <option value="">-- Pilih Komponen (Wajib) --</option>
@@ -254,6 +256,7 @@
                 <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             </div>
 
+            <!-- Tampilan Mode PAKET -->
             <div id="form-paket-details" style="display:none;">
                 <button type="button" style="width:100%; padding:12px; margin-bottom:10px; border:2px dashed var(--primary); background:#e8f5e9; color:var(--primary); border-radius:10px; font-weight:bold; cursor:pointer;" onclick="openBundleModal()">Pilih Komponen (Isi Paket)</button>
                 <div id="bundle-preview"></div>
@@ -273,6 +276,7 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
+<!-- MODAL PEMBUAT PAKET DINAMIS -->
 <div id="modal-bundle" class="modal">
     <div class="modal-content" style="display:flex; flex-direction:column; padding:20px 15px; max-height:85vh; text-align:center;">
         <h3 style="color:var(--primary); margin-bottom:10px; flex-shrink:0;">Pilih Isi Komponen Paket</h3>
@@ -392,7 +396,7 @@
     // CART BUNDLE UNTUK PEMBUAT PAKET DINAMIS
     let currentBundleCart = {};
 
-    // VARIABEL PELACAK ID MENU "PUAS"
+    // ID PELACAK PAKET PUAS
     let currentPuasId = null;
 
     const getSafeArray = (obj) => {
@@ -569,8 +573,8 @@
         displayList.forEach(item => {
             let displayName = (item.name || "").split(' | ')[0];
             const q = cart[item.id] || 0;
-            // UPDATE: Gunakan item.id secara langsung untuk openBreadModal
-            const act = displayName.includes("Puas") ? `openBreadModal(${item.id})` : `updateCart(${item.id}, 1)`;
+            // PERBAIKAN LOGIKA: Sekarang kita mengoper item.id ke fungsi openBreadModal
+            const act = displayName.toLowerCase().includes("puas") ? `openBreadModal(${item.id})` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
@@ -578,7 +582,7 @@
 
     function updateCart(id, d) { 
         let targetMenu = getSafeArray(localMenu[masterMode]).find(x=>x.id==id);
-        if(targetMenu && (targetMenu.name || "").split(' | ')[0].includes("Puas") && d<0 && cart.extraBread) {
+        if(targetMenu && (targetMenu.name || "").split(' | ')[0].toLowerCase().includes("puas") && d<0 && cart.extraBread) {
             cart.extraBread.pop(); 
         }
         cart[id] = (cart[id] || 0) + d; 
@@ -1181,14 +1185,17 @@
         if(p==='history') updateHistory(); 
     }
 
+    // FUNGSI BARU UNTUK MENGINGAT ID PUAS YANG DIKLIK
     function openBreadModal(id) { 
         currentPuasId = id; 
         document.getElementById('modal-bread').classList.add('show'); 
     }
 
+    // FUNGSI ROTI MEMASUKKAN ID PUAS YANG TEPAT KE KERANJANG
     function selectBread(id, name) { 
         if(!cart.extraBread) cart.extraBread = []; 
         cart.extraBread.push(id); 
+        
         if(currentPuasId) {
             updateCart(currentPuasId, 1);
             currentPuasId = null; 
