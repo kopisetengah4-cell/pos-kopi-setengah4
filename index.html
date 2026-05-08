@@ -179,7 +179,7 @@
                 <option value="KS4-OT">OTISTA</option>
                 <option value="KS4-ST">SUNTER</option>
             </select>
-            <button onclick="restore2xKopsu()" style="width:100%; padding:10px; background:#2980b9; color:white; border:none; border-radius:8px; font-weight:bold; font-size:0.85rem;">🔄 PULIHKAN MENU "2X KOPSU"</button>
+            <!-- Tombol pulihkan 2x kopsu dihapus -->
         </div>
 
         <div class="range-tabs" style="margin-top: 10px;">
@@ -230,14 +230,26 @@
         </div>
 
         <div style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
-            <input type="text" id="new-name" placeholder="Nama Menu" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             <input type="number" id="new-price" placeholder="Harga" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            
             <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
+            
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
+
+            <!-- Wajib Diisi Untuk Format Rincian Menu -->
+            <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+                <option value="">-- Pilih Komponen (Wajib) --</option>
+                <option value="Susu">Susu</option>
+                <option value="Non Susu">Non Susu</option>
+                <option value="Mix">Mix (Susu & Non Susu)</option>
+            </select>
+            <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil / Susu 1, Non 1)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+
             <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
         </div>
         
@@ -328,7 +340,7 @@
         ONLINE: [
             { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" },
             { id: 24, name: "Americano Hot", price: 24000, cat: "HOT" }, { id: 25, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 26, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 27, name: "Kopi Susu Hot", price: 25000, cat: "HOT" },
-            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" }, { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
+            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, /* 2x kopsu dihapus */ { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
             { id: 41, name: "Roti Coklat", price: 18000, cat: "SNACKS" }, { id: 42, name: "Roti Vanila", price: 18000, cat: "SNACKS" }, { id: 43, name: "Roti Blueberry", price: 18000, cat: "SNACKS" },
             { id: 44, name: "Cup Besar", price: 6000, cat: "EXTRA" }, { id: 45, name: "Jelly", price: 6000, cat: "EXTRA" }, { id: 46, name: "Cream", price: 6000, cat: "EXTRA" }, { id: 47, name: "Shoot Coffe", price: 6000, cat: "EXTRA" }
         ],
@@ -365,9 +377,16 @@
         let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         if (!data) data = {};
         branchKeys.forEach(b => {
+            let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : JSON.parse(JSON.stringify(initialData.ONLINE));
+            let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : JSON.parse(JSON.stringify(initialData.DINEIN));
+            
+            // Filter paksa ID 37 (2x Kopsu) agar terhapus dari tampilan kasir semua cabang
+            onlineData = onlineData.filter(x => x.id !== 37);
+            dineinData = dineinData.filter(x => x.id !== 37);
+
             result[b] = {
-                ONLINE: (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : JSON.parse(JSON.stringify(initialData.ONLINE)),
-                DINEIN: (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : JSON.parse(JSON.stringify(initialData.DINEIN))
+                ONLINE: onlineData,
+                DINEIN: dineinData
             };
         });
         return result;
@@ -382,6 +401,13 @@
                 });
             });
         }
+
+        // Fallback History: Agar laporan cabang lama yang punya transaksi 2x Kopsu tetap terhitung utuh
+        let historyFallback = [ { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" } ];
+        historyFallback.forEach(item => {
+            if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
+        });
+
         return unique;
     }
 
@@ -443,7 +469,7 @@
             if(document.getElementById('remember-me').checked) { localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); } 
             else { localStorage.removeItem('ks4_saved_login'); }
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('branch-display').innerText = users[u].name;
+            document.getElementById('branch-display').innerText = users[currentBranchId].name;
             
             if (currentBranchId !== "KS4-ADM") {
                 localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
@@ -642,10 +668,10 @@
                 
                 if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
                     if (nameLower.includes("1 liter")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh")) l1NonSusu += q; 
+                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
                         else l1Susu += q; 
                     } else if (nameLower.includes("500ml")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh")) ml500NonSusu += q; 
+                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
                         else ml500Susu += q; 
                     } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
                         cupSusu += (3 * q); cupNonSusu += (1 * q); 
@@ -656,13 +682,13 @@
                     } else if (nameLower.includes("favorite")) { 
                         cupSusu += (2 * q); 
                     } else if (nameLower.includes("5x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon")) cupNonSusu += (5 * q); 
+                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
                         else cupSusu += (5 * q); 
                     } else if (nameLower.includes("2x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon")) cupNonSusu += (2 * q); 
+                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
                         else cupSusu += (2 * q); 
                     } else { 
-                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit"].some(ns => nameLower.includes(ns)); 
+                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
                         if (isNonSusu) cupNonSusu += q; 
                         else cupSusu += q; 
                     } 
@@ -824,9 +850,20 @@
     function changeMgmtBranch() { renderMgmt(); }
 
     function addNewMenu() { 
-        const n = document.getElementById('new-name').value, p = parseInt(document.getElementById('new-price').value), c = document.getElementById('new-cat').value, m = document.getElementById('new-mode').value; 
-        if(!n || !p) return alert("Lengkapi data!"); 
+        const n = document.getElementById('new-name').value;
+        const p = parseInt(document.getElementById('new-price').value);
+        const c = document.getElementById('new-cat').value;
+        const m = document.getElementById('new-mode').value;
+        const milk = document.getElementById('new-milk').value;
+        const details = document.getElementById('new-details').value;
         
+        if(!n || !p || !milk || !details || !m) {
+            return alert("Harap lengkapi semua data (Nama, Harga, Mode, Komponen Susu, dan Rincian)!");
+        } 
+        
+        // Format otomatis penggabungan string
+        let finalName = `${n} | ${c} | ${milk} | ${details}`;
+
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
             let sel = document.getElementById('mgmt-branch-select').value;
@@ -840,12 +877,18 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: id, name: n, price: p, cat: c });
+            items.push({ id: id, name: finalName, price: p, cat: c });
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!"); 
+        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan:\n" + finalName); 
+
+        // Reset input fields
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-price').value = '';
+        document.getElementById('new-milk').value = '';
+        document.getElementById('new-details').value = '';
     }
     
     function renderMgmt() { 
@@ -876,7 +919,7 @@
                 } else {
                     items.forEach(item => { 
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
-                            <div><b>${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
+                            <div style="flex:1;"><b>${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
                             <div>
                                 <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>
                                 <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>
@@ -892,30 +935,44 @@
     }
 
     function editM(m, id) { 
-        const p = prompt("Harga Baru:"); 
-        if(p) { 
-            let targetMenus = [];
-            if (currentBranchId === "KS4-ADM") {
-                let sel = document.getElementById('mgmt-branch-select').value;
-                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
-                else targetMenus = [sel];
-            } else {
-                targetMenus = [currentBranchId];
-            }
+        let targetMenus = [];
+        if (currentBranchId === "KS4-ADM") {
+            let sel = document.getElementById('mgmt-branch-select').value;
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+            else targetMenus = [sel];
+        } else {
+            targetMenus = [currentBranchId];
+        }
 
-            targetMenus.forEach(b => {
-                if(allMenusData[b] && allMenusData[b][m]) {
-                    let items = getSafeArray(allMenusData[b][m]);
-                    let idx = items.findIndex(x=>x.id==id);
-                    if(idx !== -1) {
-                        items[idx].price = parseInt(p);
-                        allMenusData[b][m] = items;
-                    }
+        let currentItem = null;
+        for (let b of targetMenus) {
+            if(allMenusData[b] && allMenusData[b][m]) {
+                currentItem = getSafeArray(allMenusData[b][m]).find(x => x.id == id);
+                if(currentItem) break;
+            }
+        }
+        
+        if(!currentItem) return;
+
+        const newName = prompt("Edit Nama Menu:", currentItem.name);
+        if(newName === null || newName.trim() === "") return;
+
+        const newPrice = prompt("Edit Harga Baru:", currentItem.price);
+        if(newPrice === null || newPrice.trim() === "") return;
+
+        targetMenus.forEach(b => {
+            if(allMenusData[b] && allMenusData[b][m]) {
+                let items = getSafeArray(allMenusData[b][m]);
+                let idx = items.findIndex(x=>x.id==id);
+                if(idx !== -1) {
+                    items[idx].name = newName;
+                    items[idx].price = parseInt(newPrice);
+                    allMenusData[b][m] = items;
                 }
-            });
-            
-            menuRef.set(allMenusData); 
-        } 
+            }
+        });
+        
+        menuRef.set(allMenusData); 
     }
 
     function delM(m, id) { 
@@ -987,26 +1044,6 @@
             document.getElementById('modal-btns-close').style.display = 'block'; 
             alert("Transaksi Berhasil! Silakan Cetak Struk."); 
         }); 
-    }
-
-    // FUNGSI BARU: Mengembalikan menu 2x Kopsu (ID: 37) yang terhapus
-    function restore2xKopsu() {
-        if(!confirm("Anda akan mengembalikan menu '2x Kopsu' ke dalam sistem. Lanjutkan?")) return;
-        let cabang = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
-        cabang.forEach(c => {
-            if(allMenusData[c] && allMenusData[c].ONLINE) {
-                let items = getSafeArray(allMenusData[c].ONLINE);
-                if(!items.find(x => x.id === 37)) {
-                    items.push({ id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" });
-                    allMenusData[c].ONLINE = items;
-                }
-            }
-        });
-        menuRef.set(allMenusData).then(() => {
-            alert("Selesai! Menu '2x Kopsu' berhasil dipulihkan. Silakan cek laporan Anda.");
-            renderMenu();
-            renderMgmt();
-        });
     }
     
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
