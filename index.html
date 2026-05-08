@@ -240,13 +240,40 @@
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
-            <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-                <option value="">-- Pilih Komponen (Wajib) --</option>
-                <option value="Susu">Susu</option>
-                <option value="Non Susu">Non Susu</option>
-                <option value="Mix">Mix (Susu & Non Susu)</option>
-            </select>
-            <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil / Susu 1, Non 1)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#f0f5f1; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen & Laporan (Klik Disini)</button>
+            
+            <div id="komponen-panel" style="display:none; background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px;">
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--primary); margin-bottom:10px; display:block;">Pengaturan Laporan (Otomatis Dihitung)</label>
+                
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Jenis Wadah</label>
+                        <select id="new-wadah" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                            <option value="Cup Kecil">Cup Kecil</option>
+                            <option value="Cup Besar">Cup Besar</option>
+                            <option value="Cup Hot">Cup Hot</option>
+                            <option value="1 Liter">Botol 1 Liter</option>
+                            <option value="500 ML">Botol 500 ML</option>
+                            <option value="Tanpa Wadah">Tanpa Wadah (Roti dll)</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Total Cup Keluar</label>
+                        <input type="number" id="new-qty-wadah" placeholder="Cth: 3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Susu</label>
+                        <input type="number" id="new-qty-susu" placeholder="Cth: 2" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Non-Susu</label>
+                        <input type="number" id="new-qty-non" placeholder="Cth: 1" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                </div>
+            </div>
 
             <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
         </div>
@@ -652,51 +679,99 @@
                 let m = allItems.find(x => x.id == id); 
                 if(!m) continue; 
                 let q = t.items[id], nameLower = m.name.toLowerCase(); 
-                let displayName = m.name.split(' | ')[0]; // Ambil nama asli untuk dilaporan
+                let displayName = m.name.split(' | ')[0]; 
                 let kategori = m.cat || "EXTRA"; 
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
-                
-                let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
-                if(nameLower.includes("1 liter")) l1 += q; 
-                if(nameLower.includes("500ml")) ml500 += q; 
-                
-                if(!isPaketBotol) { 
-                    if(nameLower.includes("besar")) b += q; 
-                    else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
-                    else if(nameLower.includes("roti coklat")) rc += q; 
-                    else if(nameLower.includes("roti vanila")) rv += q; 
-                    else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
-                    else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
-                    else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
-                    else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
-                    else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
-                } 
-                
-                if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
-                    if (nameLower.includes("1 liter")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
-                        else l1Susu += q; 
-                    } else if (nameLower.includes("500ml")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
-                        else ml500Susu += q; 
-                    } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
-                        cupSusu += (3 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("puas")) { 
-                        cupSusu += (1 * q); 
-                    } else if (nameLower.includes("paling laku")) { 
-                        cupSusu += (1 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("favorite")) { 
-                        cupSusu += (2 * q); 
-                    } else if (nameLower.includes("5x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
-                        else cupSusu += (5 * q); 
-                    } else if (nameLower.includes("2x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
-                        else cupSusu += (2 * q); 
-                    } else { 
-                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
-                        if (isNonSusu) cupNonSusu += q; 
-                        else cupSusu += q; 
+
+                // ===============================================
+                // PEMBACAAN SISTEM KOMPONEN BARU
+                // ===============================================
+                if (m.isNewCustom && m.name.includes("WADAH:")) {
+                    let parts = m.name.split(' | ');
+                    let metadata = parts[2] || ""; 
+                    
+                    let wType = "Cup Kecil", wQty = 0, sQty = 0, nQty = 0;
+                    let metaParts = metadata.split(',');
+                    metaParts.forEach(mp => {
+                        if(mp.startsWith("WADAH:")) wType = mp.replace("WADAH:", "");
+                        if(mp.startsWith("QTY:")) wQty = parseInt(mp.replace("QTY:", "")) || 0;
+                        if(mp.startsWith("SUSU:")) sQty = parseInt(mp.replace("SUSU:", "")) || 0;
+                        if(mp.startsWith("NON:")) nQty = parseInt(mp.replace("NON:", "")) || 0;
+                    });
+
+                    let totalWadah = wQty * q; // Dikali dengan jumlah orderan pesanan
+                    let totalSusu = sQty * q;
+                    let totalNon = nQty * q;
+
+                    if (wType === "Cup Kecil") {
+                        k_raw += totalWadah; 
+                        cupSusu += totalSusu;
+                        cupNonSusu += totalNon;
+                    } else if (wType === "Cup Besar") {
+                        b += totalWadah;
+                        k_raw += totalWadah; 
+                        cupSusu += totalSusu;
+                        cupNonSusu += totalNon;
+                    } else if (wType === "Cup Hot") {
+                        h += totalWadah;
+                        cupSusu += totalSusu;
+                        cupNonSusu += totalNon;
+                    } else if (wType === "1 Liter") {
+                        l1 += totalWadah;
+                        l1Susu += totalSusu;
+                        l1NonSusu += totalNon;
+                    } else if (wType === "500 ML") {
+                        ml500 += totalWadah;
+                        ml500Susu += totalSusu;
+                        ml500NonSusu += totalNon;
+                    }
+
+                } else {
+                    // ===============================================
+                    // LOGIKA LAMA MENU BAWAAN (TETAP AMAN)
+                    // ===============================================
+                    let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
+                    if(nameLower.includes("1 liter")) l1 += q; 
+                    if(nameLower.includes("500ml")) ml500 += q; 
+                    
+                    if(!isPaketBotol) { 
+                        if(nameLower.includes("besar")) b += q; 
+                        else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
+                        else if(nameLower.includes("roti coklat")) rc += q; 
+                        else if(nameLower.includes("roti vanila")) rv += q; 
+                        else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
+                        else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
+                        else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
+                        else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
+                        else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
+                    } 
+                    
+                    if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
+                        if (nameLower.includes("1 liter")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
+                            else l1Susu += q; 
+                        } else if (nameLower.includes("500ml")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
+                            else ml500Susu += q; 
+                        } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
+                            cupSusu += (3 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("puas")) { 
+                            cupSusu += (1 * q); 
+                        } else if (nameLower.includes("paling laku")) { 
+                            cupSusu += (1 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("favorite")) { 
+                            cupSusu += (2 * q); 
+                        } else if (nameLower.includes("5x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
+                            else cupSusu += (5 * q); 
+                        } else if (nameLower.includes("2x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
+                            else cupSusu += (2 * q); 
+                        } else { 
+                            let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
+                            if (isNonSusu) cupNonSusu += q; 
+                            else cupSusu += q; 
+                        } 
                     } 
                 } 
             } 
@@ -716,9 +791,12 @@
         paymentHtml += `</div>`;
 
         document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        
         let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
+        
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#f0f5f1; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
+        
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
         if(currentBranchId === "KS4-ADM") { 
@@ -860,14 +938,30 @@
         const p = parseInt(document.getElementById('new-price').value);
         const c = document.getElementById('new-cat').value;
         const m = document.getElementById('new-mode').value;
-        const milk = document.getElementById('new-milk').value;
-        const details = document.getElementById('new-details').value;
         
-        if(!n || !p || !milk || !details || !m) {
-            return alert("Harap lengkapi semua data (Nama, Harga, Mode, Komponen Susu, dan Rincian)!");
+        let finalName = "";
+        
+        // Cek panel komponen
+        const panel = document.getElementById('komponen-panel');
+        if (panel.style.display === 'block') {
+            const wadah = document.getElementById('new-wadah').value;
+            const qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0;
+            const qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0;
+            const qtyNon = parseInt(document.getElementById('new-qty-non').value) || 0;
+            
+            if (qtyWadah > 0 && (qtySusu + qtyNon) > qtyWadah) {
+                return alert("Total Cup Susu + Non-Susu tidak boleh melebihi Total Cup Keluar!");
+            }
+            // Simpan format rahasia di nama
+            finalName = `${n} | ${c} | WADAH:${wadah},QTY:${qtyWadah},SUSU:${qtySusu},NON:${qtyNon}`;
+        } else {
+            // Jika lupa buka panel komponen, default tanpa cup
+            finalName = `${n} | ${c} | WADAH:Tanpa Wadah,QTY:0,SUSU:0,NON:0`;
+        }
+
+        if(!n || !p || !m) {
+            return alert("Harap lengkapi Nama dan Harga Menu!");
         } 
-        
-        let finalName = `${n} | ${c} | ${milk} | ${details}`;
 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -887,12 +981,15 @@
         });
         
         menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan (di Database): " + finalName + "\n\nNamun di Kasir hanya akan tampil: " + n); 
+        alert("Menu Baru Berhasil Ditambahkan!\nData telah terintegrasi dengan laporan Admin."); 
 
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
-        document.getElementById('new-milk').value = '';
-        document.getElementById('new-details').value = '';
+        if(panel.style.display === 'block') {
+            document.getElementById('new-qty-wadah').value = '';
+            document.getElementById('new-qty-susu').value = '';
+            document.getElementById('new-qty-non').value = '';
+        }
     }
     
     function renderMgmt() { 
