@@ -363,6 +363,7 @@
     
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
+    let currentPuasId = null;
 
     const getSafeArray = (obj) => {
         if (!obj) return [];
@@ -538,7 +539,7 @@
         
         displayList.forEach(item => {
             let displayName = item.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI HALAMAN KASIR
-            const q = cart[item.id] || 0, act = displayName.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
+            const q = cart[item.id] || 0, act = displayName.includes("Puas") ? `openBreadModal(${item.id})` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
@@ -1058,8 +1059,8 @@
     
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-    function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.split(' | ')[0].includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
+    function openBreadModal(paketId) { currentPuasId = paketId; document.getElementById('modal-bread').classList.add('show'); }
+    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { updateCart(currentPuasId, 1); currentPuasId = null; } closeModal(); }
     
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
