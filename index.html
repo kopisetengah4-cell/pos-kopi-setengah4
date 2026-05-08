@@ -69,7 +69,7 @@
         .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
         .card p { color: var(--primary); font-weight: bold; margin: 5px 0; font-size: 0.85rem; }
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; color:white; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
@@ -297,7 +297,7 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<!-- MODAL PILIH HARGA PLATFORM (BARU) -->
+<!-- MODAL PILIH HARGA PLATFORM (HANYA MUNCUL DI MODE ONLINE) -->
 <div id="modal-price" class="modal">
     <div class="modal-content" style="text-align:center">
         <h3 id="price-modal-title" style="color:var(--primary); margin-bottom:15px; text-transform:uppercase;">Pilih Platform Harga</h3>
@@ -419,7 +419,7 @@
         return Object.values(obj).filter(Boolean);
     };
 
-    // Fungsi Baru: Membaca ID keranjang yang bergabung dengan platform (Misal: "123_Grab")
+    // Membaca ID keranjang yang bergabung dengan platform (Misal: "123_Grab")
     function parseCartKey(key) {
         if(key.includes('_')) {
             let p = key.split('_');
@@ -428,7 +428,7 @@
         return { id: key, platform: 'Normal' };
     }
 
-    // Fungsi Baru: Mendapatkan harga yang sesuai dengan platform
+    // Mendapatkan harga yang sesuai dengan platform
     function getItemPrice(item, platform) {
         if (!item) return 0;
         if (platform === 'Grab') return item.priceGrab || item.price;
@@ -602,8 +602,9 @@
         
         displayList.forEach(item => {
             let displayName = item.name.split(' | ')[0]; 
+            let isPuas = displayName.includes("Puas");
             
-            // Hitung total dari seluruh platform di keranjang untuk item ini
+            // Hitung total kuantitas menu ini di keranjang
             let q = 0;
             for(let k in cart) {
                 if(k === 'extraBread') continue;
@@ -611,20 +612,48 @@
                 if(parsed.id == item.id) q += cart[k];
             }
             
-            // Saat diklik, tidak langsung updateCart, tetapi memanggil Modal Harga
-            const act = `openPriceModal(${item.id}, ${displayName.includes("Puas")})`;
-            
-            grid.innerHTML += `<div class="card" onclick="${act}">
-                <h4>${displayName}</h4>
-                <p>Rp ${item.price.toLocaleString()}</p>
-                ${q > 0 ? `<div style="background:var(--primary); color:white; border-radius:10px; padding:2px 5px; font-weight:bold; font-size:0.75rem; margin-top:5px;">Terpilih: ${q}</div>` : ''}
-            </div>`;
+            let act = "";
+            let innerContent = "";
+
+            if (masterMode === 'ONLINE') {
+                // Tampilan ONLINE: Klik memunculkan Modal Harga Platform
+                act = `openPriceModal(${item.id}, ${isPuas})`;
+                innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
+                ${q > 0 ? `<div style="background:var(--primary); color:white; border-radius:10px; padding:2px 5px; font-weight:bold; font-size:0.75rem; margin-top:5px;">Terpilih: ${q}</div>` : ''}`;
+            } else {
+                // Tampilan DINE IN: Langsung tambahkan ke keranjang (Bypass Modal)
+                act = isPuas ? `openBreadModalDineIn(${item.id})` : `updateCartNormal(${item.id}, 1, false)`;
+                innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
+                <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
+                    <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
+                    <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
+                    <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
+                </div>`;
+            }
+
+            grid.innerHTML += `<div class="card" onclick="${act}">${innerContent}</div>`;
         });
+        
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
-    // MODAL PILIH HARGA PLATFORM
+    // UPDATE KERANJANG KHUSUS DINE IN
+    function updateCartNormal(id, d, isPuas) { 
+        if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
+        cart[id] = (cart[id] || 0) + d; 
+        if(cart[id] <= 0) delete cart[id]; 
+        renderMenu(); updateUI(); 
+    }
+
+    // MODAL ROTI KHUSUS DINE IN
+    function openBreadModalDineIn(id) {
+        currentPuasId = String(id);
+        document.getElementById('modal-bread').classList.add('show');
+    }
+
+    // MODAL PILIH HARGA PLATFORM (HANYA ONLINE)
     function openPriceModal(id, isPuas) {
+        if (masterMode !== 'ONLINE') return;
         currentPriceItemId = id;
         currentPriceItemIsPuas = isPuas;
         let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id);
@@ -639,9 +668,12 @@
             let key = plat === 'Normal' ? String(id) : `${id}_${plat}`;
             let qty = cart[key] || 0;
             
+            // Label khusus agar tidak ada tulisan "Dine In" pada Online Mode
+            let platLabel = plat === 'Normal' ? 'Harga Normal' : plat;
+            
             html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; background:${qty>0?'#e8f5e9':'white'}; border-radius:8px; margin-bottom:5px;">
                 <div style="text-align:left; font-weight:bold; font-size:1rem; color:var(--text);">
-                    ${plat === 'Normal' ? 'Normal / Dine-in' : plat}<br>
+                    ${platLabel}<br>
                     <span style="color:var(--primary); font-size:0.85rem;">Rp ${p.toLocaleString('id-ID')}</span>
                 </div>
                 <div class="qty-controls">
@@ -655,11 +687,11 @@
         document.getElementById('modal-price').classList.add('show');
     }
 
-    // UPDATE KERANJANG BERDASARKAN PLATFORM
+    // UPDATE KERANJANG PLATFORM ONLINE
     function updateCartPlatform(key, d) {
         if(currentPriceItemIsPuas && d > 0) {
             closeModal(); 
-            currentPuasId = key; // Simpan key beserta platform
+            currentPuasId = key; 
             document.getElementById('modal-bread').classList.add('show');
             return;
         }
@@ -673,7 +705,6 @@
         renderMenu();
         updateUI();
         
-        // Refresh isi modal secara real-time
         openPriceModal(currentPriceItemId, currentPriceItemIsPuas);
     }
     
@@ -781,7 +812,7 @@
                 let m = allItems.find(x => x.id == id); 
                 if(!m) continue; 
                 
-                let q = t.items[key]; // Jumlah dari platform tertentu
+                let q = t.items[key]; 
                 let nameLower = m.name.toLowerCase(); 
                 let displayName = m.name.split(' | ')[0]; 
                 let kategori = m.cat || "EXTRA"; 
