@@ -378,11 +378,9 @@
             let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : JSON.parse(JSON.stringify(initialData.ONLINE));
             let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : JSON.parse(JSON.stringify(initialData.DINEIN));
             
-            // LOGIKA FILTER OTOMATIS: Semua menu custom lama (ID besar yang tidak ditandai sbg menu baru) akan di-tag isHidden
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
 
-            // Tetap pastikan 2x Kopsu terhapus dari kasir (ID 37) sesuai arahan awal
             onlineData = onlineData.filter(x => x.id !== 37);
             dineinData = dineinData.filter(x => x.id !== 37);
 
@@ -396,7 +394,6 @@
 
     function getAllUniqueMenus() {
         let unique = []; let ids = new Set();
-        // Fungsi ini membaca SEMUA menu (termasuk yang isHidden = true) agar Laporan tetap 100% aman
         for (let b in allMenusData) {
             ['ONLINE', 'DINEIN'].forEach(m => {
                 getSafeArray(allMenusData[b][m]).forEach(item => {
@@ -405,7 +402,6 @@
             });
         }
 
-        // Fallback untuk 2x Kopsu (ID 37) agar riwayat lama tetap utuh
         let historyFallback = [ { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" } ];
         historyFallback.forEach(item => {
             if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
@@ -531,21 +527,25 @@
         if(!localMenu || !localMenu[masterMode]) return;
         const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
         
-        // Hanya tampilkan menu yang tidak memiliki flag isHidden
         let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
         
-        if(searchText !== '') { displayList = displayList.filter(m => m.name.toLowerCase().includes(searchText)); } 
-        else { displayList = displayList.filter(m => m.cat === activeCat); }
+        // MENGAMBIL NAMA PENDEK DARI NAMA LENGKAP UNTUK PENCARIAN & TAMPILAN
+        if(searchText !== '') { 
+            displayList = displayList.filter(m => m.name.split(' | ')[0].toLowerCase().includes(searchText)); 
+        } else { 
+            displayList = displayList.filter(m => m.cat === activeCat); 
+        }
         
         displayList.forEach(item => {
-            const q = cart[item.id] || 0, act = item.name.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
-            grid.innerHTML += `<div class="card" onclick="${act}"><h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
+            let displayName = item.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI HALAMAN KASIR
+            const q = cart[item.id] || 0, act = displayName.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
+            grid.innerHTML += `<div class="card" onclick="${act}"><h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
     function updateCart(id, d) { 
-        if(getSafeArray(localMenu[masterMode]).find(x=>x.id==id)?.name.includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); 
+        if(getSafeArray(localMenu[masterMode]).find(x=>x.id==id)?.name.split(' | ')[0].includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); 
         cart[id] = (cart[id] || 0) + d; 
         if(cart[id] <= 0) delete cart[id]; 
         renderMenu(); updateUI(); 
@@ -651,8 +651,9 @@
                 let m = allItems.find(x => x.id == id); 
                 if(!m) continue; 
                 let q = t.items[id], nameLower = m.name.toLowerCase(); 
+                let displayName = m.name.split(' | ')[0]; // Ambil nama asli untuk dilaporan
                 let kategori = m.cat || "EXTRA"; 
-                catItems[kategori][m.name] = (catItems[kategori][m.name] || 0) + q; 
+                catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
                 
                 let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
                 if(nameLower.includes("1 liter")) l1 += q; 
@@ -800,7 +801,7 @@
         
         let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}<br>Bayar via: ${paymentMethod.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; 
         const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
-        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { p += `<tr><td colspan="2" style="padding:2px 0;">${m.name}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = m.name.split(' | ')[0]; p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } 
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } 
         p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; 
         if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
@@ -816,7 +817,7 @@
         
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
         let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
-        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { txt += m.name + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = m.name.split(' | ')[0]; txt += displayName + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } 
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } 
         txt += "--------------------------------\n"; 
         if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
@@ -836,7 +837,7 @@
         currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; 
         let allItems = getAllUniqueMenus();
-        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) h += `<tr><td>${m.name}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) { let displayName = m.name.split(' | ')[0]; h += `<tr><td>${displayName}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
@@ -880,13 +881,12 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            // isNewCustom ditambahkan agar lolos dari filter penyembunyian menu lama
             items.push({ id: id, name: finalName, price: p, cat: c, isNewCustom: true });
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan:\n" + finalName); 
+        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan (di Database): " + finalName + "\n\nNamun di Kasir hanya akan tampil: " + n); 
 
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
@@ -916,15 +916,15 @@
             ['ONLINE', 'DINEIN'].forEach(m => { 
                 let html = `<h4 style="margin-top:20px; color:var(--admin); border-bottom:2px solid #ddd; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
                 
-                // Hanya tampilkan yang tidak di-hide
                 let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
                 
                 if (items.length === 0) {
                     html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
                 } else {
                     items.forEach(item => { 
+                        // Di Manajemen, tetap tampilkan Nama Lengkap beserta rinciannya agar Admin bisa mengecek
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
-                            <div style="flex:1;"><b>${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
+                            <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
                             <div>
                                 <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>
                                 <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>
@@ -959,7 +959,7 @@
         
         if(!currentItem) return;
 
-        const newName = prompt("Edit Nama Menu:", currentItem.name);
+        const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name);
         if(newName === null || newName.trim() === "") return;
 
         const newPrice = prompt("Edit Harga Baru:", currentItem.price);
@@ -994,7 +994,6 @@
             targetMenus.forEach(b => {
                 if(allMenusData[b] && allMenusData[b][m]) {
                     let items = getSafeArray(allMenusData[b][m]);
-                    // Kita jadikan isHidden saja agar tidak benar-benar terhapus dari database laporan
                     let idx = items.findIndex(x=>x.id==id);
                     if(idx !== -1) {
                         items[idx].isHidden = true;
@@ -1013,7 +1012,8 @@
             if(id==='extraBread') continue; 
             let m = list.find(x => x.id == id); 
             s += m.price * cart[id]; 
-            h += `<tr><td>${m.name}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; 
+            let displayName = m.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI CHECKOUT
+            h += `<tr><td>${displayName}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; 
         } 
         if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
         if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
@@ -1059,7 +1059,7 @@
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
+    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.split(' | ')[0].includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
     
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
@@ -1070,7 +1070,7 @@
             for(let id in t.items) { 
                 if(id === 'extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
-                if(m) itemsStr.push(`${m.name} (x${t.items[id]})`); 
+                if(m) itemsStr.push(`${m.name} (x${t.items[id]})`); // Excel tetap menampilkan format full name
             } 
             if(t.extraBread) { t.extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); itemsStr.push(`${rn} (x1)`); }); } 
             data.push([ waktu, t.branchName, t.mode, (t.paymentMethod || "Tunai"), t.disc || 0, t.total, itemsStr.join(", ") ]); 
