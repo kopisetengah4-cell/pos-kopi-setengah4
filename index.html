@@ -229,10 +229,10 @@
         </div>
 
         <div style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
-            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos / Paket Mabar)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             <input type="number" id="new-price" placeholder="Harga" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
-            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleCatForm()">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
             
@@ -240,13 +240,20 @@
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
-            <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-                <option value="">-- Pilih Komponen (Wajib) --</option>
-                <option value="Susu">Susu</option>
-                <option value="Non Susu">Non Susu</option>
-                <option value="Mix">Mix (Susu & Non Susu)</option>
-            </select>
-            <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil / Susu 1, Non 1)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <div id="form-normal-details">
+                <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+                    <option value="">-- Pilih Komponen (Wajib) --</option>
+                    <option value="Susu">Susu</option>
+                    <option value="Non Susu">Non Susu</option>
+                    <option value="Mix">Mix (Susu & Non Susu)</option>
+                </select>
+                <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            </div>
+
+            <div id="form-paket-details" style="display:none;">
+                <button type="button" style="width:100%; padding:12px; margin-bottom:10px; border:2px dashed var(--primary); background:#e8f5e9; color:var(--primary); border-radius:10px; font-weight:bold; cursor:pointer;" onclick="openBundleModal()">Pilih Komponen (Isi Paket)</button>
+                <div id="bundle-preview"></div>
+            </div>
 
             <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
         </div>
@@ -261,6 +268,16 @@
     <button class="nav-btn" id="btn-nav-report" onclick="showPage('report')">Laporan</button>
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
+
+<div id="modal-bundle" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 style="color:var(--primary); margin-bottom:10px;">Pilih Isi Komponen Paket</h3>
+        <p style="font-size:0.75rem; color:#666; margin-top:0;">Isi jumlah menu yang akan masuk ke dalam paket ini.</p>
+        <div id="bundle-list" style="max-height: 50vh; overflow-y: auto; text-align:left; margin-bottom:15px; padding: 10px; border: 1px solid #eee; border-radius: 10px;"></div>
+        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="saveBundle()">Selesai & Simpan Isi</button>
+        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+    </div>
+</div>
 
 <div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
 
@@ -363,6 +380,9 @@
     
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
+
+    // CART BUNDLE UNTUK PEMBUAT PAKET DINAMIS
+    let currentBundleCart = {};
 
     const getSafeArray = (obj) => {
         if (!obj) return [];
@@ -529,7 +549,6 @@
         
         let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
         
-        // MENGAMBIL NAMA PENDEK DARI NAMA LENGKAP UNTUK PENCARIAN & TAMPILAN
         if(searchText !== '') { 
             displayList = displayList.filter(m => m.name.split(' | ')[0].toLowerCase().includes(searchText)); 
         } else { 
@@ -537,7 +556,7 @@
         }
         
         displayList.forEach(item => {
-            let displayName = item.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI HALAMAN KASIR
+            let displayName = item.name.split(' | ')[0];
             const q = cart[item.id] || 0, act = displayName.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
@@ -651,53 +670,92 @@
                 let m = allItems.find(x => x.id == id); 
                 if(!m) continue; 
                 let q = t.items[id], nameLower = m.name.toLowerCase(); 
-                let displayName = m.name.split(' | ')[0]; // Ambil nama asli untuk dilaporan
+                let displayName = m.name.split(' | ')[0]; 
                 let kategori = m.cat || "EXTRA"; 
+                
+                // Tambahkan ke laporan omzet menu
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
                 
-                let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
-                if(nameLower.includes("1 liter")) l1 += q; 
-                if(nameLower.includes("500ml")) ml500 += q; 
-                
-                if(!isPaketBotol) { 
-                    if(nameLower.includes("besar")) b += q; 
-                    else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
-                    else if(nameLower.includes("roti coklat")) rc += q; 
-                    else if(nameLower.includes("roti vanila")) rv += q; 
-                    else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
-                    else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
-                    else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
-                    else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
-                    else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
+                // JIKA MENU MERUPAKAN CUSTOM BUNDLE PAKET
+                if (m.cat === 'PAKET' && m.bundle && Object.keys(m.bundle).length > 0) {
+                    for (let bId in m.bundle) {
+                        let bItem = allItems.find(x => x.id == bId);
+                        if (bItem) {
+                            let bq = q * m.bundle[bId];
+                            let bNameLower = bItem.name.toLowerCase();
+                            let bDisplayName = bItem.name.split(' | ')[0];
+                            
+                            // Masukkan ke detail item terjual (dengan tanda Isi Paket agar jelas)
+                            catItems[bItem.cat][bDisplayName + " (Isi Paket)"] = (catItems[bItem.cat][bDisplayName + " (Isi Paket)"] || 0) + bq;
+
+                            // Perhitungan Fisik Cup/Botol/Roti
+                            let isPaketBotol = bNameLower.includes("1 liter") || bNameLower.includes("500ml"); 
+                            if(bNameLower.includes("1 liter")) l1 += bq; 
+                            if(bNameLower.includes("500ml")) ml500 += bq; 
+                            
+                            if(!isPaketBotol) { 
+                                if(bNameLower.includes("besar")) b += bq; 
+                                else if(bNameLower.includes("hot") || bItem.cat === "HOT") h += bq; 
+                                else if(bNameLower.includes("roti coklat")) rc += bq; 
+                                else if(bNameLower.includes("roti vanila")) rv += bq; 
+                                else if(bNameLower.includes("roti blue") || bNameLower.includes("roti blub") || bNameLower.includes("bluberry")) rb += bq; 
+                                else if(bItem.cat === "ICE") { k_raw += bq; if(bNameLower.includes("remon")) r += bq; } 
+                            } 
+                            
+                            if (bItem.cat !== "SNACKS" && bItem.cat !== "EXTRA") { 
+                                let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => bNameLower.includes(ns)); 
+                                if (isNonSusu) cupNonSusu += bq; 
+                                else cupSusu += bq; 
+                            } 
+                        }
+                    }
                 } 
-                
-                if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
-                    if (nameLower.includes("1 liter")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
-                        else l1Susu += q; 
-                    } else if (nameLower.includes("500ml")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
-                        else ml500Susu += q; 
-                    } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
-                        cupSusu += (3 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("puas")) { 
-                        cupSusu += (1 * q); 
-                    } else if (nameLower.includes("paling laku")) { 
-                        cupSusu += (1 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("favorite")) { 
-                        cupSusu += (2 * q); 
-                    } else if (nameLower.includes("5x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
-                        else cupSusu += (5 * q); 
-                    } else if (nameLower.includes("2x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
-                        else cupSusu += (2 * q); 
-                    } else { 
-                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
-                        if (isNonSusu) cupNonSusu += q; 
-                        else cupSusu += q; 
+                else {
+                    // LOGIKA FISIK LAMA UNTUK MENU BAWAAN
+                    let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
+                    if(nameLower.includes("1 liter")) l1 += q; 
+                    if(nameLower.includes("500ml")) ml500 += q; 
+                    
+                    if(!isPaketBotol) { 
+                        if(nameLower.includes("besar")) b += q; 
+                        else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
+                        else if(nameLower.includes("roti coklat")) rc += q; 
+                        else if(nameLower.includes("roti vanila")) rv += q; 
+                        else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
+                        else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
+                        else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
+                        else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
+                        else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
                     } 
-                } 
+                    
+                    if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
+                        if (nameLower.includes("1 liter")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
+                            else l1Susu += q; 
+                        } else if (nameLower.includes("500ml")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
+                            else ml500Susu += q; 
+                        } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
+                            cupSusu += (3 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("puas")) { 
+                            cupSusu += (1 * q); 
+                        } else if (nameLower.includes("paling laku")) { 
+                            cupSusu += (1 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("favorite")) { 
+                            cupSusu += (2 * q); 
+                        } else if (nameLower.includes("5x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
+                            else cupSusu += (5 * q); 
+                        } else if (nameLower.includes("2x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
+                            else cupSusu += (2 * q); 
+                        } else { 
+                            let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
+                            if (isNonSusu) cupNonSusu += q; 
+                            else cupSusu += q; 
+                        } 
+                    } 
+                }
             } 
             if(t.extraBread) t.extraBread.forEach(bid => { 
                 if(bid==41) { rc++; catItems["SNACKS"]["Roti Coklat"] = (catItems["SNACKS"]["Roti Coklat"] || 0) + 1; } 
@@ -854,19 +912,100 @@
     
     function changeMgmtBranch() { renderMgmt(); }
 
+    function toggleCatForm() {
+        let cat = document.getElementById('new-cat').value;
+        if (cat === "PAKET") {
+            document.getElementById('form-normal-details').style.display = 'none';
+            document.getElementById('form-paket-details').style.display = 'block';
+        } else {
+            document.getElementById('form-normal-details').style.display = 'block';
+            document.getElementById('form-paket-details').style.display = 'none';
+            currentBundleCart = {}; 
+            document.getElementById('bundle-preview').innerHTML = '';
+        }
+    }
+
+    function openBundleModal() {
+        currentBundleCart = {};
+        renderBundleList();
+        document.getElementById('modal-bundle').classList.add('show');
+    }
+
+    function renderBundleList() {
+        const list = document.getElementById('bundle-list');
+        list.innerHTML = '';
+        let allItems = getAllUniqueMenus().filter(m => !m.isHidden && (m.cat === 'ICE' || m.cat === 'HOT' || m.cat === 'SNACKS'));
+        
+        let uniqueNames = [];
+        let displayItems = [];
+        allItems.forEach(m => {
+            let dName = m.name.split(' | ')[0];
+            if(!uniqueNames.includes(dName)) {
+                uniqueNames.push(dName);
+                displayItems.push(m);
+            }
+        });
+
+        displayItems.forEach(item => {
+            let q = currentBundleCart[item.id] || 0;
+            let dName = item.name.split(' | ')[0];
+            list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                <div style="font-weight:bold; font-size:0.85rem;">${dName} <span style="color:#888; font-size:0.7rem;">(${item.cat})</span></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button style="width:25px;height:25px;border-radius:5px;border:none;background:var(--primary);color:white;font-weight:bold;cursor:pointer;" onclick="updateBundleCart(${item.id}, -1)">-</button>
+                    <b style="width:20px;text-align:center;">${q}</b>
+                    <button style="width:25px;height:25px;border-radius:5px;border:none;background:var(--primary);color:white;font-weight:bold;cursor:pointer;" onclick="updateBundleCart(${item.id}, 1)">+</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function updateBundleCart(id, delta) {
+        currentBundleCart[id] = (currentBundleCart[id] || 0) + delta;
+        if (currentBundleCart[id] <= 0) delete currentBundleCart[id];
+        renderBundleList();
+    }
+
+    function saveBundle() {
+        let preview = [];
+        let allItems = getAllUniqueMenus();
+        for(let id in currentBundleCart) {
+            let m = allItems.find(x => x.id == id);
+            if(m) {
+                preview.push(`${currentBundleCart[id]}x ${m.name.split(' | ')[0]}`);
+            }
+        }
+        document.getElementById('bundle-preview').innerHTML = preview.length > 0 ? `<div style="padding:10px; background:#e8f5e9; border:1px dashed var(--primary); border-radius:8px; margin-bottom:10px; font-size:0.8rem; font-weight:bold; color:var(--primary);">Isi Paket: <br>${preview.join(', ')}</div>` : '';
+        closeModal();
+    }
+
     function addNewMenu() { 
         const n = document.getElementById('new-name').value;
         const p = parseInt(document.getElementById('new-price').value);
         const c = document.getElementById('new-cat').value;
         const m = document.getElementById('new-mode').value;
-        const milk = document.getElementById('new-milk').value;
-        const details = document.getElementById('new-details').value;
         
-        if(!n || !p || !milk || !details || !m) {
-            return alert("Harap lengkapi semua data (Nama, Harga, Mode, Komponen Susu, dan Rincian)!");
-        } 
-        
-        let finalName = `${n} | ${c} | ${milk} | ${details}`;
+        let finalName = "";
+        let bundleData = null;
+
+        if (c === "PAKET") {
+            if(Object.keys(currentBundleCart).length === 0) return alert("Pilih isi komponen paket terlebih dahulu!");
+            let preview = [];
+            let allItems = getAllUniqueMenus();
+            for(let id in currentBundleCart) {
+                let mItem = allItems.find(x => x.id == id);
+                if(mItem) preview.push(`${currentBundleCart[id]}x ${mItem.name.split(' | ')[0]}`);
+            }
+            finalName = `${n} | ${c} | Paket | ${preview.join(', ')}`;
+            bundleData = currentBundleCart;
+        } else {
+            const milk = document.getElementById('new-milk').value;
+            const details = document.getElementById('new-details').value;
+            if(!n || !p || !milk || !details || !m) {
+                return alert("Harap lengkapi semua data form!");
+            }
+            finalName = `${n} | ${c} | ${milk} | ${details}`;
+        }
 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -881,17 +1020,21 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: id, name: finalName, price: p, cat: c, isNewCustom: true });
+            let newItem = { id: id, name: finalName, price: p, cat: c, isNewCustom: true };
+            if (bundleData) newItem.bundle = bundleData;
+            items.push(newItem);
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan (di Database): " + finalName + "\n\nNamun di Kasir hanya akan tampil: " + n); 
+        alert("Menu Baru Berhasil Ditambahkan!\n\nMenu Tersimpan: " + n); 
 
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
         document.getElementById('new-milk').value = '';
         document.getElementById('new-details').value = '';
+        currentBundleCart = {};
+        document.getElementById('bundle-preview').innerHTML = '';
     }
     
     function renderMgmt() { 
@@ -922,7 +1065,6 @@
                     html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
                 } else {
                     items.forEach(item => { 
-                        // Di Manajemen, tetap tampilkan Nama Lengkap beserta rinciannya agar Admin bisa mengecek
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
                             <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
                             <div>
@@ -1006,61 +1148,6 @@
         } 
     }
     
-    function openCheckout() { 
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
-        for(let id in cart) { 
-            if(id==='extraBread') continue; 
-            let m = list.find(x => x.id == id); 
-            s += m.price * cart[id]; 
-            let displayName = m.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI CHECKOUT
-            h += `<tr><td>${displayName}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; 
-        } 
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
-        
-        let finalTotal = Math.max(0, s-d); 
-        
-        if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
-        }
-
-        document.getElementById('rec-table').innerHTML = h; 
-        document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
-        document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
-    }
-    
-    function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { 
-            id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, 
-            items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, 
-            paymentMethod: selectedPaymentMethod,
-            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0,
-            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0
-        }; 
-        
-        for(let id in cart) { if(id==='extraBread') continue; let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
-        t.total -= d; t.total = Math.max(0, t.total); 
-        
-        currentViewedTransId = t.id; 
-
-        transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
-            document.getElementById('modal-btns-confirm').style.display = 'none'; 
-            document.getElementById('modal-btns-close').style.display = 'block'; 
-            alert("Transaksi Berhasil! Silakan Cetak Struk."); 
-        }); 
-    }
-    
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
-    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-    function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.split(' | ')[0].includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
-    
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
         let data = []; data.push(["TANGGAL & WAKTU", "CABANG", "MODE PESANAN", "PEMBAYARAN", "DISKON (Rp)", "TOTAL OMZET (Rp)", "DETAIL ITEM TERJUAL"]); 
@@ -1070,7 +1157,7 @@
             for(let id in t.items) { 
                 if(id === 'extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
-                if(m) itemsStr.push(`${m.name} (x${t.items[id]})`); // Excel tetap menampilkan format full name
+                if(m) itemsStr.push(`${m.name.split(' | ')[0]} (x${t.items[id]})`); 
             } 
             if(t.extraBread) { t.extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); itemsStr.push(`${rn} (x1)`); }); } 
             data.push([ waktu, t.branchName, t.mode, (t.paymentMethod || "Tunai"), t.disc || 0, t.total, itemsStr.join(", ") ]); 
