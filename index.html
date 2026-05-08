@@ -179,7 +179,6 @@
                 <option value="KS4-OT">OTISTA</option>
                 <option value="KS4-ST">SUNTER</option>
             </select>
-            <!-- Tombol pulihkan 2x kopsu dihapus -->
         </div>
 
         <div class="range-tabs" style="margin-top: 10px;">
@@ -241,7 +240,6 @@
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
-            <!-- Wajib Diisi Untuk Format Rincian Menu -->
             <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="">-- Pilih Komponen (Wajib) --</option>
                 <option value="Susu">Susu</option>
@@ -340,7 +338,7 @@
         ONLINE: [
             { id: 1, name: "Americano", price: 24000, cat: "ICE" }, { id: 2, name: "Belgian Coklat", price: 23000, cat: "ICE" }, { id: 3, name: "Cappuccino", price: 26000, cat: "ICE" }, { id: 4, name: "Caramel", price: 25000, cat: "ICE" }, { id: 5, name: "Caramel Machiato", price: 27000, cat: "ICE" }, { id: 6, name: "Creamy Latte", price: 20000, cat: "ICE" }, { id: 7, name: "Hazelnut", price: 25000, cat: "ICE" }, { id: 8, name: "Idealis", price: 27000, cat: "ICE" }, { id: 9, name: "Kopi Susu", price: 25000, cat: "ICE" }, { id: 10, name: "Kurma Latte", price: 25000, cat: "ICE" }, { id: 11, name: "Long Black", price: 24000, cat: "ICE" }, { id: 12, name: "Lemon Tea", price: 17000, cat: "ICE" }, { id: 13, name: "Matcha Latte", price: 29000, cat: "ICE" }, { id: 14, name: "Mocachino", price: 25000, cat: "ICE" }, { id: 15, name: "Pandan", price: 25000, cat: "ICE" }, { id: 16, name: "Rahasia", price: 25000, cat: "ICE" }, { id: 17, name: "Remon", price: 20000, cat: "ICE" }, { id: 18, name: "Rum", price: 25000, cat: "ICE" }, { id: 19, name: "Salted Caramel", price: 25000, cat: "ICE" }, { id: 20, name: "Shaken", price: 25000, cat: "ICE" }, { id: 21, name: "Sugar Cane Tea", price: 13000, cat: "ICE" }, { id: 22, name: "Teh Tarik", price: 19000, cat: "ICE" }, { id: 221, name: "Teh Susu Legit", price: 21000, cat: "ICE" }, { id: 23, name: "Vanilla", price: 25000, cat: "ICE" },
             { id: 24, name: "Americano Hot", price: 24000, cat: "HOT" }, { id: 25, name: "Belgian Coklat Hot", price: 23000, cat: "HOT" }, { id: 26, name: "Cappuccino Hot", price: 26000, cat: "HOT" }, { id: 27, name: "Kopi Susu Hot", price: 25000, cat: "HOT" },
-            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, /* 2x kopsu dihapus */ { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
+            { id: 28, name: "1 Liter Kopsu", price: 120000, cat: "PAKET" }, { id: 29, name: "1 Liter Americano", price: 80000, cat: "PAKET" }, { id: 30, name: "1 Liter Belgian Coklat", price: 90000, cat: "PAKET" }, { id: 31, name: "500ML Kopsu", price: 70000, cat: "PAKET" }, { id: 32, name: "500ML Americano", price: 50000, cat: "PAKET" }, { id: 33, name: "500ML Belgian Coklat", price: 55000, cat: "PAKET" }, { id: 34, name: "5x Americano", price: 105000, cat: "PAKET" }, { id: 35, name: "5x Idealis", price: 130000, cat: "PAKET" }, { id: 36, name: "5x Kopsu", price: 120000, cat: "PAKET" }, { id: 38, name: "4x Buy3Get1", price: 81000, cat: "PAKET" }, { id: 39, name: "Paket Puas", price: 38500, cat: "PAKET" }, { id: 40, name: "Paling Laku", price: 45500, cat: "PAKET" },
             { id: 41, name: "Roti Coklat", price: 18000, cat: "SNACKS" }, { id: 42, name: "Roti Vanila", price: 18000, cat: "SNACKS" }, { id: 43, name: "Roti Blueberry", price: 18000, cat: "SNACKS" },
             { id: 44, name: "Cup Besar", price: 6000, cat: "EXTRA" }, { id: 45, name: "Jelly", price: 6000, cat: "EXTRA" }, { id: 46, name: "Cream", price: 6000, cat: "EXTRA" }, { id: 47, name: "Shoot Coffe", price: 6000, cat: "EXTRA" }
         ],
@@ -380,7 +378,11 @@
             let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : JSON.parse(JSON.stringify(initialData.ONLINE));
             let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : JSON.parse(JSON.stringify(initialData.DINEIN));
             
-            // Filter paksa ID 37 (2x Kopsu) agar terhapus dari tampilan kasir semua cabang
+            // LOGIKA FILTER OTOMATIS: Semua menu custom lama (ID besar yang tidak ditandai sbg menu baru) akan di-tag isHidden
+            onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
+            dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
+
+            // Tetap pastikan 2x Kopsu terhapus dari kasir (ID 37) sesuai arahan awal
             onlineData = onlineData.filter(x => x.id !== 37);
             dineinData = dineinData.filter(x => x.id !== 37);
 
@@ -394,6 +396,7 @@
 
     function getAllUniqueMenus() {
         let unique = []; let ids = new Set();
+        // Fungsi ini membaca SEMUA menu (termasuk yang isHidden = true) agar Laporan tetap 100% aman
         for (let b in allMenusData) {
             ['ONLINE', 'DINEIN'].forEach(m => {
                 getSafeArray(allMenusData[b][m]).forEach(item => {
@@ -402,7 +405,7 @@
             });
         }
 
-        // Fallback History: Agar laporan cabang lama yang punya transaksi 2x Kopsu tetap terhitung utuh
+        // Fallback untuk 2x Kopsu (ID 37) agar riwayat lama tetap utuh
         let historyFallback = [ { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" } ];
         historyFallback.forEach(item => {
             if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
@@ -528,7 +531,8 @@
         if(!localMenu || !localMenu[masterMode]) return;
         const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
         
-        let displayList = getSafeArray(localMenu[masterMode]);
+        // Hanya tampilkan menu yang tidak memiliki flag isHidden
+        let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
         
         if(searchText !== '') { displayList = displayList.filter(m => m.name.toLowerCase().includes(searchText)); } 
         else { displayList = displayList.filter(m => m.cat === activeCat); }
@@ -861,7 +865,6 @@
             return alert("Harap lengkapi semua data (Nama, Harga, Mode, Komponen Susu, dan Rincian)!");
         } 
         
-        // Format otomatis penggabungan string
         let finalName = `${n} | ${c} | ${milk} | ${details}`;
 
         let targetMenus = [];
@@ -877,14 +880,14 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: id, name: finalName, price: p, cat: c });
+            // isNewCustom ditambahkan agar lolos dari filter penyembunyian menu lama
+            items.push({ id: id, name: finalName, price: p, cat: c, isNewCustom: true });
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
         alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan:\n" + finalName); 
 
-        // Reset input fields
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
         document.getElementById('new-milk').value = '';
@@ -912,7 +915,9 @@
 
             ['ONLINE', 'DINEIN'].forEach(m => { 
                 let html = `<h4 style="margin-top:20px; color:var(--admin); border-bottom:2px solid #ddd; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
-                let items = getSafeArray(mgmtMenu[m]);
+                
+                // Hanya tampilkan yang tidak di-hide
+                let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
                 
                 if (items.length === 0) {
                     html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
@@ -976,7 +981,7 @@
     }
 
     function delM(m, id) { 
-        if(confirm("Hapus Menu Ini?")) { 
+        if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
             let targetMenus = [];
             if (currentBranchId === "KS4-ADM") {
                 let sel = document.getElementById('mgmt-branch-select').value;
@@ -989,7 +994,12 @@
             targetMenus.forEach(b => {
                 if(allMenusData[b] && allMenusData[b][m]) {
                     let items = getSafeArray(allMenusData[b][m]);
-                    allMenusData[b][m] = items.filter(x=>x.id!=id);
+                    // Kita jadikan isHidden saja agar tidak benar-benar terhapus dari database laporan
+                    let idx = items.findIndex(x=>x.id==id);
+                    if(idx !== -1) {
+                        items[idx].isHidden = true;
+                        allMenusData[b][m] = items;
+                    }
                 }
             });
 
