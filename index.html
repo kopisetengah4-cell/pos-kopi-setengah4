@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v69</title>
+    <title>POS KS4 - Sunter Branch v73</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -105,7 +109,7 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <h2 style="text-align:center; color:var(--primary)">POS KS4</h2>
+        <h2 style="text-align:center; color:var(--primary)">POS KS4 v73</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
         
@@ -172,7 +176,7 @@
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
-                <option value="KS4-KB">KEBON JERUK</option>
+                <option value="KS4-KB">KEBON Jeruk</option>
                 <option value="KS4-PI">PONDOK INDAH</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
@@ -229,10 +233,10 @@
         </div>
 
         <div style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
-            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos / Paket Mabar)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             <input type="number" id="new-price" placeholder="Harga" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
-            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleCatForm()">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
             
@@ -240,15 +244,22 @@
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
-            <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-                <option value="">-- Pilih Komponen (Wajib) --</option>
-                <option value="Susu">Susu</option>
-                <option value="Non Susu">Non Susu</option>
-                <option value="Mix">Mix (Susu & Non Susu)</option>
-            </select>
-            <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil / Susu 1, Non 1)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <div id="form-normal-details">
+                <select id="new-milk" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+                    <option value="">-- Pilih Komponen (Wajib) --</option>
+                    <option value="Susu">Susu</option>
+                    <option value="Non Susu">Non Susu</option>
+                    <option value="Mix">Mix (Susu & Non Susu)</option>
+                </select>
+                <input type="text" id="new-details" placeholder="Rincian (Cth: 1 cup kecil)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            </div>
 
-            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
+            <div id="form-paket-details" style="display:none;">
+                <button type="button" style="width:100%; padding:12px; margin-bottom:10px; border:2px dashed var(--primary); background:#e8f5e9; color:var(--primary); border-radius:10px; font-weight:bold; cursor:pointer;" onclick="openBundleModal()">Pilih Komponen (Isi Paket)</button>
+                <div id="bundle-preview"></div>
+            </div>
+
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">SIMPAN MENU</button>
         </div>
         
         <div id="mgmt-list"></div>
@@ -262,7 +273,21 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+<div id="modal-bundle" class="modal">
+    <div class="modal-content" style="display:flex; flex-direction:column; padding:20px 15px; max-height:85vh; text-align:center;">
+        <h3 style="color:var(--primary); margin-bottom:10px; flex-shrink:0;">Pilih Isi Komponen Paket</h3>
+        <p style="font-size:0.75rem; color:#666; margin-top:0; flex-shrink:0;">Isi jumlah menu yang akan masuk ke dalam paket ini.</p>
+        
+        <div id="bundle-list" style="flex:1; overflow-y:auto; text-align:left; margin-bottom:15px; padding:10px; border:1px solid #eee; border-radius:10px; -webkit-overflow-scrolling:touch;"></div>
+        
+        <div style="flex-shrink:0;">
+            <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem; cursor:pointer; pointer-events:auto;" onclick="saveBundle()">Selesai & Simpan Isi</button>
+            <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer; pointer-events:auto;" onclick="closeModal()">Batal</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
@@ -272,7 +297,7 @@
         <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
         <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
         <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
-        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer;" onclick="closeModal()">Batal</button>
     </div>
 </div>
 
@@ -282,8 +307,8 @@
         <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
         <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #ddd; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
-            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
-            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="processCash()">Proses</button>
         </div>
     </div>
 </div>
@@ -296,16 +321,16 @@
     <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
-        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
+        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem; cursor:pointer;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
+        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold; cursor:pointer;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
-            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="cetakRawBT()">🖨️ CETAK</button>
+            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
         </div>
-        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
+        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem; cursor:pointer;" onclick="closeModal()">TUTUP STRUK</button>
     </div>
 </div></div>
 
@@ -314,8 +339,8 @@
         <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
         <div id="date-input-container" style="margin-top:15px;"></div>
         <div style="display:flex; gap:10px; margin-top:25px;">
-            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
-            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="applyDateFilter()">Terapkan</button>
         </div>
     </div>
 </div>
@@ -363,6 +388,12 @@
     
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
+
+    // CART BUNDLE UNTUK PEMBUAT PAKET DINAMIS
+    let currentBundleCart = {};
+
+    // VARIABEL PELACAK ID MENU "PUAS"
+    let currentPuasId = null;
 
     const getSafeArray = (obj) => {
         if (!obj) return [];
@@ -529,23 +560,27 @@
         
         let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
         
-        // MENGAMBIL NAMA PENDEK DARI NAMA LENGKAP UNTUK PENCARIAN & TAMPILAN
         if(searchText !== '') { 
-            displayList = displayList.filter(m => m.name.split(' | ')[0].toLowerCase().includes(searchText)); 
+            displayList = displayList.filter(m => (m.name || "").split(' | ')[0].toLowerCase().includes(searchText)); 
         } else { 
             displayList = displayList.filter(m => m.cat === activeCat); 
         }
         
         displayList.forEach(item => {
-            let displayName = item.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI HALAMAN KASIR
-            const q = cart[item.id] || 0, act = displayName.includes("Puas") ? `openBreadModal()` : `updateCart(${item.id}, 1)`;
+            let displayName = (item.name || "").split(' | ')[0];
+            const q = cart[item.id] || 0;
+            // UPDATE: Gunakan item.id secara langsung untuk openBreadModal
+            const act = displayName.includes("Puas") ? `openBreadModal(${item.id})` : `updateCart(${item.id}, 1)`;
             grid.innerHTML += `<div class="card" onclick="${act}"><h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p><div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}"><button class="btn-q" onclick="event.stopPropagation(); updateCart(${item.id}, -1)">-</button><b>${q}</b><button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button></div></div>`;
         });
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
     function updateCart(id, d) { 
-        if(getSafeArray(localMenu[masterMode]).find(x=>x.id==id)?.name.split(' | ')[0].includes("Puas") && d<0 && cart.extraBread) cart.extraBread.pop(); 
+        let targetMenu = getSafeArray(localMenu[masterMode]).find(x=>x.id==id);
+        if(targetMenu && (targetMenu.name || "").split(' | ')[0].includes("Puas") && d<0 && cart.extraBread) {
+            cart.extraBread.pop(); 
+        }
         cart[id] = (cart[id] || 0) + d; 
         if(cart[id] <= 0) delete cart[id]; 
         renderMenu(); updateUI(); 
@@ -635,8 +670,8 @@
         currentFilteredTransactions = filtered;
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, l1=0, ml500=0;
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
-        let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
         
+        let catItems = {};
         let payMethods = { "Grab": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
         
         let allItems = getAllUniqueMenus(); 
@@ -650,56 +685,95 @@
                 if(id==='extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
                 if(!m) continue; 
-                let q = t.items[id], nameLower = m.name.toLowerCase(); 
-                let displayName = m.name.split(' | ')[0]; // Ambil nama asli untuk dilaporan
+
+                let q = t.items[id], nameLower = (m.name || "").toLowerCase(); 
+                let displayName = (m.name || "Menu Tanpa Nama").split(' | ')[0]; 
                 let kategori = m.cat || "EXTRA"; 
+                
+                if (!catItems[kategori]) catItems[kategori] = {};
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
                 
-                let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
-                if(nameLower.includes("1 liter")) l1 += q; 
-                if(nameLower.includes("500ml")) ml500 += q; 
-                
-                if(!isPaketBotol) { 
-                    if(nameLower.includes("besar")) b += q; 
-                    else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
-                    else if(nameLower.includes("roti coklat")) rc += q; 
-                    else if(nameLower.includes("roti vanila")) rv += q; 
-                    else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
-                    else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
-                    else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
-                    else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
-                    else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
+                if (m.cat === 'PAKET' && m.bundle && Object.keys(m.bundle).length > 0) {
+                    for (let bId in m.bundle) {
+                        let bItem = allItems.find(x => x.id == bId);
+                        if (bItem) {
+                            let bq = q * m.bundle[bId];
+                            let bNameLower = (bItem.name || "").toLowerCase();
+                            let bDisplayName = (bItem.name || "Item").split(' | ')[0];
+                            let bCat = bItem.cat || "EXTRA";
+
+                            if (!catItems[bCat]) catItems[bCat] = {};
+                            catItems[bCat][bDisplayName + " (Isi Paket)"] = (catItems[bCat][bDisplayName + " (Isi Paket)"] || 0) + bq;
+
+                            let isPaketBotol = bNameLower.includes("1 liter") || bNameLower.includes("500ml"); 
+                            if(bNameLower.includes("1 liter")) l1 += bq; 
+                            if(bNameLower.includes("500ml")) ml500 += bq; 
+                            
+                            if(!isPaketBotol) { 
+                                if(bNameLower.includes("besar")) b += bq; 
+                                else if(bNameLower.includes("hot") || bCat === "HOT") h += bq; 
+                                else if(bNameLower.includes("roti coklat")) rc += bq; 
+                                else if(bNameLower.includes("roti vanila")) rv += bq; 
+                                else if(bNameLower.includes("roti blue") || bNameLower.includes("roti blub") || bNameLower.includes("bluberry")) rb += bq; 
+                                else if(bCat === "ICE") { k_raw += bq; if(bNameLower.includes("remon")) r += bq; } 
+                            } 
+                            
+                            if (bCat !== "SNACKS" && bCat !== "EXTRA") { 
+                                let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => bNameLower.includes(ns)); 
+                                if (isNonSusu) cupNonSusu += bq; 
+                                else cupSusu += bq; 
+                            } 
+                        }
+                    }
                 } 
-                
-                if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
-                    if (nameLower.includes("1 liter")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
-                        else l1Susu += q; 
-                    } else if (nameLower.includes("500ml")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
-                        else ml500Susu += q; 
-                    } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
-                        cupSusu += (3 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("puas")) { 
-                        cupSusu += (1 * q); 
-                    } else if (nameLower.includes("paling laku")) { 
-                        cupSusu += (1 * q); cupNonSusu += (1 * q); 
-                    } else if (nameLower.includes("favorite")) { 
-                        cupSusu += (2 * q); 
-                    } else if (nameLower.includes("5x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
-                        else cupSusu += (5 * q); 
-                    } else if (nameLower.includes("2x")) { 
-                        if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
-                        else cupSusu += (2 * q); 
-                    } else { 
-                        let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
-                        if (isNonSusu) cupNonSusu += q; 
-                        else cupSusu += q; 
+                else {
+                    let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
+                    if(nameLower.includes("1 liter")) l1 += q; 
+                    if(nameLower.includes("500ml")) ml500 += q; 
+                    
+                    if(!isPaketBotol) { 
+                        if(nameLower.includes("besar")) b += q; 
+                        else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
+                        else if(nameLower.includes("roti coklat")) rc += q; 
+                        else if(nameLower.includes("roti vanila")) rv += q; 
+                        else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
+                        else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
+                        else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
+                        else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
+                        else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
                     } 
-                } 
+                    
+                    if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
+                        if (nameLower.includes("1 liter")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
+                            else l1Susu += q; 
+                        } else if (nameLower.includes("500ml")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
+                            else ml500Susu += q; 
+                        } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
+                            cupSusu += (3 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("puas")) { 
+                            cupSusu += (1 * q); 
+                        } else if (nameLower.includes("paling laku")) { 
+                            cupSusu += (1 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("favorite")) { 
+                            cupSusu += (2 * q); 
+                        } else if (nameLower.includes("5x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
+                            else cupSusu += (5 * q); 
+                        } else if (nameLower.includes("2x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
+                            else cupSusu += (2 * q); 
+                        } else { 
+                            let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
+                            if (isNonSusu) cupNonSusu += q; 
+                            else cupSusu += q; 
+                        } 
+                    } 
+                }
             } 
             if(t.extraBread) t.extraBread.forEach(bid => { 
+                if(!catItems["SNACKS"]) catItems["SNACKS"] = {};
                 if(bid==41) { rc++; catItems["SNACKS"]["Roti Coklat"] = (catItems["SNACKS"]["Roti Coklat"] || 0) + 1; } 
                 if(bid==42) { rv++; catItems["SNACKS"]["Roti Vanila"] = (catItems["SNACKS"]["Roti Vanila"] || 0) + 1; } 
                 if(bid==43) { rb++; catItems["SNACKS"]["Roti Blueberry"] = (catItems["SNACKS"]["Roti Blueberry"] || 0) + 1; } 
@@ -715,7 +789,15 @@
         paymentHtml += `</div>`;
 
         document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
-        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
+        let detailsHtml = ""; 
+        Object.keys(catItems).forEach(c => { 
+            if(Object.keys(catItems[c]).length > 0) { 
+                const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); 
+                detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; 
+                sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); 
+                detailsHtml += `</table>`; 
+            } 
+        });
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#f0f5f1; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
@@ -736,8 +818,8 @@
                     </td>
                     <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
                     <td style="text-align:left;">
-                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
-                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%; cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button>
+                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%; cursor:pointer;">HAPUS</button>
                     </td>
                 </tr>`; 
             }); 
@@ -747,7 +829,7 @@
             document.getElementById('admin-history-box').style.display = 'none'; 
         }
         
-        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
+        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; cursor:pointer;">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
@@ -770,7 +852,7 @@
                 </td>
                 <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
                 <td style="text-align:left;">
-                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button>
                 </td>
             </tr>`; 
         }).join(''); 
@@ -801,7 +883,7 @@
         
         let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}<br>Bayar via: ${paymentMethod.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; 
         const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
-        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = m.name.split(' | ')[0]; p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = (m.name || "").split(' | ')[0]; p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[id]}x Rp ${m.price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(m.price*items[id]).toLocaleString('id-ID')}</td></tr>`; } } 
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } 
         p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; 
         if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
@@ -817,7 +899,7 @@
         
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
         let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
-        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = m.name.split(' | ')[0]; txt += displayName + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } 
+        for(let id in items) { if(id === 'extraBread') continue; let m = list.find(x => x.id == id); if(m) { let displayName = (m.name || "").split(' | ')[0]; txt += displayName + "\n"; let qtyLine = items[id] + "x Rp" + m.price.toLocaleString('id-ID'); let subtotal = "Rp" + (m.price * items[id]).toLocaleString('id-ID'); let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; } } 
         if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } 
         txt += "--------------------------------\n"; 
         if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
@@ -837,7 +919,7 @@
         currentViewedTransId = id; 
         const t = allTransactions.find(x => x.id == id); let h = ''; 
         let allItems = getAllUniqueMenus();
-        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) { let displayName = m.name.split(' | ')[0]; h += `<tr><td>${displayName}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        for(let i in t.items) { if(i==='extraBread') continue; let m = allItems.find(x => x.id == i); if(m) { let displayName = (m.name || "").split(' | ')[0]; h += `<tr><td>${displayName}</td><td>x${t.items[i]}</td><td style="text-align:right">${(m.price*t.items[i]).toLocaleString('id-ID')}</td></tr>`; } } if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
@@ -854,19 +936,100 @@
     
     function changeMgmtBranch() { renderMgmt(); }
 
+    function toggleCatForm() {
+        let cat = document.getElementById('new-cat').value;
+        if (cat === "PAKET") {
+            document.getElementById('form-normal-details').style.display = 'none';
+            document.getElementById('form-paket-details').style.display = 'block';
+        } else {
+            document.getElementById('form-normal-details').style.display = 'block';
+            document.getElementById('form-paket-details').style.display = 'none';
+            currentBundleCart = {}; 
+            document.getElementById('bundle-preview').innerHTML = '';
+        }
+    }
+
+    function openBundleModal() {
+        currentBundleCart = {};
+        renderBundleList();
+        document.getElementById('modal-bundle').classList.add('show');
+    }
+
+    function renderBundleList() {
+        const list = document.getElementById('bundle-list');
+        list.innerHTML = '';
+        let allItems = getAllUniqueMenus().filter(m => !m.isHidden && (m.cat === 'ICE' || m.cat === 'HOT' || m.cat === 'SNACKS'));
+        
+        let uniqueNames = [];
+        let displayItems = [];
+        allItems.forEach(m => {
+            let dName = (m.name || "").split(' | ')[0];
+            if(!uniqueNames.includes(dName)) {
+                uniqueNames.push(dName);
+                displayItems.push(m);
+            }
+        });
+
+        displayItems.forEach(item => {
+            let q = currentBundleCart[item.id] || 0;
+            let dName = (item.name || "").split(' | ')[0];
+            list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;">
+                <div style="font-weight:bold; font-size:0.85rem;">${dName} <span style="color:#888; font-size:0.7rem;">(${item.cat})</span></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button style="width:25px;height:25px;border-radius:5px;border:none;background:var(--primary);color:white;font-weight:bold;cursor:pointer;" onclick="updateBundleCart(${item.id}, -1)">-</button>
+                    <b style="width:20px;text-align:center;">${q}</b>
+                    <button style="width:25px;height:25px;border-radius:5px;border:none;background:var(--primary);color:white;font-weight:bold;cursor:pointer;" onclick="updateBundleCart(${item.id}, 1)">+</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function updateBundleCart(id, delta) {
+        currentBundleCart[id] = (currentBundleCart[id] || 0) + delta;
+        if (currentBundleCart[id] <= 0) delete currentBundleCart[id];
+        renderBundleList();
+    }
+
+    function saveBundle() {
+        let preview = [];
+        let allItems = getAllUniqueMenus();
+        for(let id in currentBundleCart) {
+            let m = allItems.find(x => x.id == id);
+            if(m) {
+                preview.push(`${currentBundleCart[id]}x ${(m.name || "").split(' | ')[0]}`);
+            }
+        }
+        document.getElementById('bundle-preview').innerHTML = preview.length > 0 ? `<div style="padding:10px; background:#e8f5e9; border:1px dashed var(--primary); border-radius:8px; margin-bottom:10px; font-size:0.8rem; font-weight:bold; color:var(--primary);">Isi Paket: <br>${preview.join(', ')}</div>` : '';
+        closeModal();
+    }
+
     function addNewMenu() { 
         const n = document.getElementById('new-name').value;
         const p = parseInt(document.getElementById('new-price').value);
         const c = document.getElementById('new-cat').value;
         const m = document.getElementById('new-mode').value;
-        const milk = document.getElementById('new-milk').value;
-        const details = document.getElementById('new-details').value;
         
-        if(!n || !p || !milk || !details || !m) {
-            return alert("Harap lengkapi semua data (Nama, Harga, Mode, Komponen Susu, dan Rincian)!");
-        } 
-        
-        let finalName = `${n} | ${c} | ${milk} | ${details}`;
+        let finalName = "";
+        let bundleData = null;
+
+        if (c === "PAKET") {
+            if(Object.keys(currentBundleCart).length === 0) return alert("Pilih isi komponen paket terlebih dahulu!");
+            let preview = [];
+            let allItems = getAllUniqueMenus();
+            for(let id in currentBundleCart) {
+                let mItem = allItems.find(x => x.id == id);
+                if(mItem) preview.push(`${currentBundleCart[id]}x ${(mItem.name || "").split(' | ')[0]}`);
+            }
+            finalName = `${n} | ${c} | Paket | ${preview.join(', ')}`;
+            bundleData = currentBundleCart;
+        } else {
+            const milk = document.getElementById('new-milk').value;
+            const details = document.getElementById('new-details').value;
+            if(!n || !p || !milk || !details || !m) {
+                return alert("Harap lengkapi semua data form!");
+            }
+            finalName = `${n} | ${c} | ${milk} | ${details}`;
+        }
 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -881,17 +1044,21 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: id, name: finalName, price: p, cat: c, isNewCustom: true });
+            let newItem = { id: id, name: finalName, price: p, cat: c, isNewCustom: true };
+            if (bundleData) newItem.bundle = bundleData;
+            items.push(newItem);
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!\n\nFormat Tersimpan (di Database): " + finalName + "\n\nNamun di Kasir hanya akan tampil: " + n); 
+        alert("Menu Baru Berhasil Ditambahkan!\n\nMenu Tersimpan: " + n); 
 
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
         document.getElementById('new-milk').value = '';
         document.getElementById('new-details').value = '';
+        currentBundleCart = {};
+        document.getElementById('bundle-preview').innerHTML = '';
     }
     
     function renderMgmt() { 
@@ -922,12 +1089,11 @@
                     html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
                 } else {
                     items.forEach(item => { 
-                        // Di Manajemen, tetap tampilkan Nama Lengkap beserta rinciannya agar Admin bisa mengecek
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
                             <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
                             <div>
-                                <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>
-                                <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>
+                                <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>
+                                <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="delM('${m}', ${item.id})">X</button>
                             </div>
                         </div>`; 
                     }); 
@@ -1006,61 +1172,30 @@
         } 
     }
     
-    function openCheckout() { 
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
-        for(let id in cart) { 
-            if(id==='extraBread') continue; 
-            let m = list.find(x => x.id == id); 
-            s += m.price * cart[id]; 
-            let displayName = m.name.split(' | ')[0]; // MENGHILANGKAN TEKS KOMPONEN DI CHECKOUT
-            h += `<tr><td>${displayName}</td><td>x${cart[id]}</td><td style="text-align:right">${(m.price*cart[id]).toLocaleString('id-ID')}</td></tr>`; 
-        } 
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
-        
-        let finalTotal = Math.max(0, s-d); 
-        
-        if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
+    function showPage(p) { 
+        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); 
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
+        document.getElementById('page-'+p).classList.add('active'); 
+        document.getElementById('btn-nav-'+p).classList.add('active'); 
+        if(p==='report') updateReport(); 
+        if(p==='history') updateHistory(); 
+    }
+
+    function openBreadModal(id) { 
+        currentPuasId = id; 
+        document.getElementById('modal-bread').classList.add('show'); 
+    }
+
+    function selectBread(id, name) { 
+        if(!cart.extraBread) cart.extraBread = []; 
+        cart.extraBread.push(id); 
+        if(currentPuasId) {
+            updateCart(currentPuasId, 1);
+            currentPuasId = null; 
         }
-
-        document.getElementById('rec-table').innerHTML = h; 
-        document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
-        document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
+        closeModal(); 
     }
-    
-    function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { 
-            id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, 
-            items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, 
-            paymentMethod: selectedPaymentMethod,
-            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0,
-            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0
-        }; 
-        
-        for(let id in cart) { if(id==='extraBread') continue; let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); if(m) t.total += m.price * cart[id]; } 
-        t.total -= d; t.total = Math.max(0, t.total); 
-        
-        currentViewedTransId = t.id; 
 
-        transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
-            document.getElementById('modal-btns-confirm').style.display = 'none'; 
-            document.getElementById('modal-btns-close').style.display = 'block'; 
-            alert("Transaksi Berhasil! Silakan Cetak Struk."); 
-        }); 
-    }
-    
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
-    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-    function openBreadModal() { document.getElementById('modal-bread').classList.add('show'); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); let pId = getSafeArray(localMenu[masterMode]).find(x=>x.name.split(' | ')[0].includes("Puas"))?.id; if(pId) updateCart(pId, 1); closeModal(); }
-    
     function exportToExcel() { 
         if(!currentFilteredTransactions || currentFilteredTransactions.length === 0) return alert("Tidak ada data transaksi untuk diexport!"); 
         let data = []; data.push(["TANGGAL & WAKTU", "CABANG", "MODE PESANAN", "PEMBAYARAN", "DISKON (Rp)", "TOTAL OMZET (Rp)", "DETAIL ITEM TERJUAL"]); 
@@ -1070,7 +1205,7 @@
             for(let id in t.items) { 
                 if(id === 'extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
-                if(m) itemsStr.push(`${m.name} (x${t.items[id]})`); // Excel tetap menampilkan format full name
+                if(m) itemsStr.push(`${(m.name || "").split(' | ')[0]} (x${t.items[id]})`); 
             } 
             if(t.extraBread) { t.extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); itemsStr.push(`${rn} (x1)`); }); } 
             data.push([ waktu, t.branchName, t.mode, (t.paymentMethod || "Tunai"), t.disc || 0, t.total, itemsStr.join(", ") ]); 
