@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Mencegah Cache Browser agar kode baru selalu terbaca -->
+    <!-- Mencegah Cache Browser -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v71</title>
+    <title>POS KS4 - Sunter Branch v72</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -110,7 +110,7 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <h2 style="text-align:center; color:var(--primary)">POS KS4 v71</h2>
+        <h2 style="text-align:center; color:var(--primary)">POS KS4 v72</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
         
@@ -262,7 +262,7 @@
                 <div id="bundle-preview"></div>
             </div>
 
-            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">SIMPAN MENU</button>
         </div>
         
         <div id="mgmt-list"></div>
@@ -276,18 +276,24 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<!-- MODAL PEMBUAT PAKET DINAMIS -->
+<!-- MODAL PEMBUAT PAKET DINAMIS (DIPERBAIKI STRUKTURNYA AGAR TOMBOL BISA DIKLIK) -->
 <div id="modal-bundle" class="modal">
-    <div class="modal-content" style="text-align:center">
-        <h3 style="color:var(--primary); margin-bottom:10px;">Pilih Isi Komponen Paket</h3>
-        <p style="font-size:0.75rem; color:#666; margin-top:0;">Isi jumlah menu yang akan masuk ke dalam paket ini.</p>
-        <div id="bundle-list" style="max-height: 50vh; overflow-y: auto; text-align:left; margin-bottom:15px; padding: 10px; border: 1px solid #eee; border-radius: 10px;"></div>
-        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="saveBundle()">Selesai & Simpan Isi</button>
-        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+    <div class="modal-content" style="display:flex; flex-direction:column; padding:20px 15px; max-height:85vh; text-align:center;">
+        <h3 style="color:var(--primary); margin-bottom:10px; flex-shrink:0;">Pilih Isi Komponen Paket</h3>
+        <p style="font-size:0.75rem; color:#666; margin-top:0; flex-shrink:0;">Isi jumlah menu yang akan masuk ke dalam paket ini.</p>
+        
+        <!-- Area list yang bisa discroll -->
+        <div id="bundle-list" style="flex:1; overflow-y:auto; text-align:left; margin-bottom:15px; padding:10px; border:1px solid #eee; border-radius:10px; -webkit-overflow-scrolling:touch;"></div>
+        
+        <!-- Area tombol yang selalu menempel di bawah (pinned) -->
+        <div style="flex-shrink:0;">
+            <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem; cursor:pointer; pointer-events:auto;" onclick="saveBundle()">Selesai & Simpan Isi</button>
+            <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer; pointer-events:auto;" onclick="closeModal()">Batal</button>
+        </div>
     </div>
 </div>
 
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; cursor:pointer;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
@@ -297,7 +303,7 @@
         <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
         <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
         <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
-        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px; cursor:pointer;" onclick="closeModal()">Batal</button>
     </div>
 </div>
 
@@ -307,8 +313,8 @@
         <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
         <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #ddd; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
-            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
-            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="processCash()">Proses</button>
         </div>
     </div>
 </div>
@@ -321,16 +327,16 @@
     <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
-        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
+        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem; cursor:pointer;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
+        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold; cursor:pointer;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
-            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="cetakRawBT()">🖨️ CETAK</button>
+            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
         </div>
-        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
+        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem; cursor:pointer;" onclick="closeModal()">TUTUP STRUK</button>
     </div>
 </div></div>
 
@@ -339,8 +345,8 @@
         <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
         <div id="date-input-container" style="margin-top:15px;"></div>
         <div style="display:flex; gap:10px; margin-top:25px;">
-            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
-            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="applyDateFilter()">Terapkan</button>
         </div>
     </div>
 </div>
@@ -666,9 +672,7 @@
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, l1=0, ml500=0;
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
         
-        // MENGHINDARI ERROR UNDEFINED CATEGORY JIKA ADA KATEGORI ANEH
         let catItems = {};
-        
         let payMethods = { "Grab": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
         
         let allItems = getAllUniqueMenus(); 
@@ -681,7 +685,7 @@
             for(let id in t.items) { 
                 if(id==='extraBread') continue; 
                 let m = allItems.find(x => x.id == id); 
-                if(!m) continue; // Jangan error walau menu di DB terhapus
+                if(!m) continue; 
 
                 let q = t.items[id], nameLower = (m.name || "").toLowerCase(); 
                 let displayName = (m.name || "Menu Tanpa Nama").split(' | ')[0]; 
@@ -690,7 +694,6 @@
                 if (!catItems[kategori]) catItems[kategori] = {};
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
                 
-                // JIKA MENU MERUPAKAN CUSTOM BUNDLE PAKET
                 if (m.cat === 'PAKET' && m.bundle && Object.keys(m.bundle).length > 0) {
                     for (let bId in m.bundle) {
                         let bItem = allItems.find(x => x.id == bId);
@@ -725,7 +728,6 @@
                     }
                 } 
                 else {
-                    // LOGIKA FISIK LAMA UNTUK MENU BAWAAN
                     let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
                     if(nameLower.includes("1 liter")) l1 += q; 
                     if(nameLower.includes("500ml")) ml500 += q; 
@@ -817,8 +819,8 @@
                     </td>
                     <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
                     <td style="text-align:left;">
-                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
-                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%; cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button>
+                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%; cursor:pointer;">HAPUS</button>
                     </td>
                 </tr>`; 
             }); 
@@ -828,7 +830,7 @@
             document.getElementById('admin-history-box').style.display = 'none'; 
         }
         
-        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
+        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; cursor:pointer;">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
@@ -851,7 +853,7 @@
                 </td>
                 <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
                 <td style="text-align:left;">
-                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button>
                 </td>
             </tr>`; 
         }).join(''); 
@@ -1091,8 +1093,8 @@
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
                             <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">Rp ${item.price.toLocaleString('id-ID')}</span></div>
                             <div>
-                                <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>
-                                <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>
+                                <button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>
+                                <button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="delM('${m}', ${item.id})">X</button>
                             </div>
                         </div>`; 
                     }); 
