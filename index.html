@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v70</title>
+    <title>POS KS4 - Sunter Branch v71</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -172,7 +172,7 @@
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
-                <option value="KS4-KB">KEBON JERUK</option>
+                <option value="KS4-KB">KEBON Jeruk</option>
                 <option value="KS4-PI">PONDOK INDAH</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
@@ -930,9 +930,8 @@
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id); 
             if(m) { 
-                // Untuk mencetak struk lama secara akurat, tentukan platform yg digunakan (legacy support) atau method saat ini
                 let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
-                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let displayName = m.name.split(' | ')[0]; 
                 let p_price = getItemPrice(m, platformToUse);
                 p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[key]}x Rp ${p_price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(p_price*items[key]).toLocaleString('id-ID')}</td></tr>`; 
             } 
@@ -958,7 +957,7 @@
             let m = list.find(x => x.id == parsed.id); 
             if(m) { 
                 let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
-                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let displayName = m.name.split(' | ')[0]; 
                 let p_price = getItemPrice(m, platformToUse);
                 txt += displayName + "\n"; 
                 let qtyLine = items[key] + "x Rp" + p_price.toLocaleString('id-ID'); 
@@ -992,7 +991,7 @@
             let m = allItems.find(x => x.id == parsed.id); 
             if(m) { 
                 let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : t.paymentMethod;
-                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let displayName = m.name.split(' | ')[0]; 
                 let p_price = getItemPrice(m, platformToUse);
                 h += `<tr><td>${displayName}</td><td>x${t.items[key]}</td><td style="text-align:right">${(p_price*t.items[key]).toLocaleString('id-ID')}</td></tr>`; 
             } 
@@ -1215,7 +1214,7 @@
             let p_price = getItemPrice(m, selectedPaymentMethod);
             s += p_price * cart[key]; 
             
-            let displayName = m.name.split(' | ')[0] + (selectedPaymentMethod !== 'Tunai' && selectedPaymentMethod !== 'QRIS' ? ` (${selectedPaymentMethod})` : ''); 
+            let displayName = m.name.split(' | ')[0]; 
             h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
         } 
         if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
