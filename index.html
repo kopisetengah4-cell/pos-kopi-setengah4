@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v69</title>
+    <title>POS KS4 - Sunter Branch v70</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -297,15 +297,6 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<!-- MODAL PILIH HARGA PLATFORM (HANYA MUNCUL DI MODE ONLINE) -->
-<div id="modal-price" class="modal">
-    <div class="modal-content" style="text-align:center">
-        <h3 id="price-modal-title" style="color:var(--primary); margin-bottom:15px; text-transform:uppercase;">Pilih Platform Harga</h3>
-        <div id="price-modal-btns" style="text-align:left;"></div>
-        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="closeModal()">SELESAI</button>
-    </div>
-</div>
-
 <div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
@@ -408,10 +399,6 @@
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
     let currentPuasId = null;
-    
-    // VARIABEL SISTEM HARGA PLATFORM
-    let currentPriceItemId = null;
-    let currentPriceItemIsPuas = false;
 
     const getSafeArray = (obj) => {
         if (!obj) return [];
@@ -419,7 +406,7 @@
         return Object.values(obj).filter(Boolean);
     };
 
-    // Membaca ID keranjang yang bergabung dengan platform (Misal: "123_Grab")
+    // Fungsi untuk mendukung data lama di firebase
     function parseCartKey(key) {
         if(key.includes('_')) {
             let p = key.split('_');
@@ -428,12 +415,12 @@
         return { id: key, platform: 'Normal' };
     }
 
-    // Mendapatkan harga yang sesuai dengan platform
-    function getItemPrice(item, platform) {
+    // Mendapatkan harga yang sesuai dengan metode pembayaran yang dipilih saat checkout
+    function getItemPrice(item, method) {
         if (!item) return 0;
-        if (platform === 'Grab') return item.priceGrab || item.price;
-        if (platform === 'Gojek') return item.priceGojek || item.price;
-        if (platform === 'Shopee') return item.priceShopee || item.price;
+        if (method === 'Grab') return item.priceGrab || item.price;
+        if (method === 'Gojek') return item.priceGojek || item.price;
+        if (method === 'Shopee') return item.priceShopee || item.price;
         return item.price;
     }
 
@@ -612,24 +599,13 @@
                 if(parsed.id == item.id) q += cart[k];
             }
             
-            let act = "";
-            let innerContent = "";
-
-            if (masterMode === 'ONLINE') {
-                // Tampilan ONLINE: Klik memunculkan Modal Harga Platform
-                act = `openPriceModal(${item.id}, ${isPuas})`;
-                innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
-                ${q > 0 ? `<div style="background:var(--primary); color:white; border-radius:10px; padding:2px 5px; font-weight:bold; font-size:0.75rem; margin-top:5px;">Terpilih: ${q}</div>` : ''}`;
-            } else {
-                // Tampilan DINE IN: Langsung tambahkan ke keranjang (Bypass Modal)
-                act = isPuas ? `openBreadModalDineIn(${item.id})` : `updateCartNormal(${item.id}, 1, false)`;
-                innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
-                <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
-                    <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
-                    <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
-                    <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
-                </div>`;
-            }
+            let act = isPuas ? `openBreadModal(${item.id})` : `updateCartNormal(${item.id}, 1, ${isPuas})`;
+            let innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
+            <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
+                <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
+                <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
+                <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
+            </div>`;
 
             grid.innerHTML += `<div class="card" onclick="${act}">${innerContent}</div>`;
         });
@@ -637,7 +613,7 @@
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
-    // UPDATE KERANJANG KHUSUS DINE IN
+    // UPDATE KERANJANG KESELURUHAN SEKARANG MENGGUNAKAN FUNGSI INI
     function updateCartNormal(id, d, isPuas) { 
         if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
         cart[id] = (cart[id] || 0) + d; 
@@ -645,77 +621,21 @@
         renderMenu(); updateUI(); 
     }
 
-    // MODAL ROTI KHUSUS DINE IN
-    function openBreadModalDineIn(id) {
+    // MODAL ROTI 
+    function openBreadModal(id) {
         currentPuasId = String(id);
         document.getElementById('modal-bread').classList.add('show');
     }
 
-    // MODAL PILIH HARGA PLATFORM (HANYA ONLINE)
-    function openPriceModal(id, isPuas) {
-        if (masterMode !== 'ONLINE') return;
-        currentPriceItemId = id;
-        currentPriceItemIsPuas = isPuas;
-        let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id);
-        if(!m) return;
-        
-        document.getElementById('price-modal-title').innerText = m.name.split(' | ')[0];
-        
-        const platforms = ['Normal', 'Grab', 'Gojek', 'Shopee'];
-        let html = '';
-        platforms.forEach(plat => {
-            let p = getItemPrice(m, plat);
-            let key = plat === 'Normal' ? String(id) : `${id}_${plat}`;
-            let qty = cart[key] || 0;
-            
-            // Label khusus agar tidak ada tulisan "Dine In" pada Online Mode
-            let platLabel = plat === 'Normal' ? 'Harga Normal' : plat;
-            
-            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eee; background:${qty>0?'#e8f5e9':'white'}; border-radius:8px; margin-bottom:5px;">
-                <div style="text-align:left; font-weight:bold; font-size:1rem; color:var(--text);">
-                    ${platLabel}<br>
-                    <span style="color:var(--primary); font-size:0.85rem;">Rp ${p.toLocaleString('id-ID')}</span>
-                </div>
-                <div class="qty-controls">
-                    <button class="btn-q" style="background:${qty>0?'#e74c3c':'#ccc'};" onclick="updateCartPlatform('${key}', -1)">-</button>
-                    <b id="qty-disp-${key}" style="font-size:1.2rem; min-width:25px; display:inline-block; text-align:center;">${qty}</b>
-                    <button class="btn-q" style="background:var(--primary);" onclick="updateCartPlatform('${key}', 1)">+</button>
-                </div>
-            </div>`;
-        });
-        document.getElementById('price-modal-btns').innerHTML = html;
-        document.getElementById('modal-price').classList.add('show');
-    }
-
-    // UPDATE KERANJANG PLATFORM ONLINE
-    function updateCartPlatform(key, d) {
-        if(currentPriceItemIsPuas && d > 0) {
-            closeModal(); 
-            currentPuasId = key; 
-            document.getElementById('modal-bread').classList.add('show');
-            return;
-        }
-        if(currentPriceItemIsPuas && d < 0 && cart.extraBread) {
-            cart.extraBread.pop();
-        }
-        
-        cart[key] = (cart[key] || 0) + d;
-        if(cart[key] <= 0) delete cart[key];
-        
-        renderMenu();
-        updateUI();
-        
-        openPriceModal(currentPriceItemId, currentPriceItemIsPuas);
-    }
-    
     function updateUI() { 
         let t = 0; 
         const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
         for(let key in cart) { 
             if(key==='extraBread') continue; 
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id); 
-            if(m) t += getItemPrice(m, platform) * cart[key]; 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
+            // Disini selalu menampilkan harga Normal/Dasar sebelum checkout di klik
+            if(m) t += m.price * cart[key]; 
         } 
         document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
     }
@@ -751,9 +671,9 @@
         let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
         for(let key in cart) {
             if(key==='extraBread') continue;
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id);
-            if(m) s += getItemPrice(m, platform) * cart[key];
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
         }
         let finalTotal = Math.max(0, s - d);
         
@@ -770,9 +690,9 @@
         let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
         for(let key in cart) {
             if(key==='extraBread') continue;
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id);
-            if(m) s += getItemPrice(m, platform) * cart[key];
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
         }
         let finalTotal = Math.max(0, s - d);
 
@@ -808,8 +728,8 @@
 
             for(let key in t.items) { 
                 if(key==='extraBread') continue; 
-                let {id, platform} = parseCartKey(key);
-                let m = allItems.find(x => x.id == id); 
+                let parsed = parseCartKey(key);
+                let m = allItems.find(x => x.id == parsed.id); 
                 if(!m) continue; 
                 
                 let q = t.items[key]; 
@@ -1007,11 +927,13 @@
         const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
         for(let key in items) { 
             if(key === 'extraBread') continue; 
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id); 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
             if(m) { 
-                let displayName = m.name.split(' | ')[0] + (platform !== 'Normal' ? ` (${platform})` : ''); 
-                let p_price = getItemPrice(m, platform);
+                // Untuk mencetak struk lama secara akurat, tentukan platform yg digunakan (legacy support) atau method saat ini
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
+                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let p_price = getItemPrice(m, platformToUse);
                 p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[key]}x Rp ${p_price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(p_price*items[key]).toLocaleString('id-ID')}</td></tr>`; 
             } 
         } 
@@ -1032,11 +954,12 @@
         let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
         for(let key in items) { 
             if(key === 'extraBread') continue; 
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id); 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
             if(m) { 
-                let displayName = m.name.split(' | ')[0] + (platform !== 'Normal' ? ` (${platform})` : ''); 
-                let p_price = getItemPrice(m, platform);
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
+                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let p_price = getItemPrice(m, platformToUse);
                 txt += displayName + "\n"; 
                 let qtyLine = items[key] + "x Rp" + p_price.toLocaleString('id-ID'); 
                 let subtotal = "Rp" + (p_price * items[key]).toLocaleString('id-ID'); 
@@ -1068,8 +991,9 @@
             let parsed = parseCartKey(key);
             let m = allItems.find(x => x.id == parsed.id); 
             if(m) { 
-                let displayName = m.name.split(' | ')[0] + (parsed.platform !== 'Normal' ? ` (${parsed.platform})` : ''); 
-                let p_price = getItemPrice(m, parsed.platform);
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : t.paymentMethod;
+                let displayName = m.name.split(' | ')[0] + (platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? ` (${platformToUse})` : ''); 
+                let p_price = getItemPrice(m, platformToUse);
                 h += `<tr><td>${displayName}</td><td>x${t.items[key]}</td><td style="text-align:right">${(p_price*t.items[key]).toLocaleString('id-ID')}</td></tr>`; 
             } 
         } 
@@ -1284,12 +1208,14 @@
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
         for(let key in cart) { 
             if(key==='extraBread') continue; 
-            let {id, platform} = parseCartKey(key);
-            let m = list.find(x => x.id == id); 
-            let p_price = getItemPrice(m, platform);
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
+            
+            // DISINI HARGA DITARIK BERDASARKAN METODE PEMBAYARAN YANG BARU DIPILIH
+            let p_price = getItemPrice(m, selectedPaymentMethod);
             s += p_price * cart[key]; 
             
-            let displayName = m.name.split(' | ')[0] + (platform !== 'Normal' ? ` (${platform})` : ''); 
+            let displayName = m.name.split(' | ')[0] + (selectedPaymentMethod !== 'Tunai' && selectedPaymentMethod !== 'QRIS' ? ` (${selectedPaymentMethod})` : ''); 
             h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
         } 
         if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
@@ -1322,9 +1248,9 @@
         
         for(let key in cart) { 
             if(key==='extraBread') continue; 
-            let {id, platform} = parseCartKey(key);
-            let m = getSafeArray(localMenu[masterMode]).find(x => x.id == id); 
-            if(m) t.total += getItemPrice(m, platform) * cart[key]; 
+            let parsed = parseCartKey(key);
+            let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
+            if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
         } 
         t.total -= d; t.total = Math.max(0, t.total); 
         
@@ -1341,7 +1267,6 @@
     function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     
-    // BREAD MODAL LOGIC MENGGUNAKAN COMPOSITE KEY
     function selectBread(id, name) { 
         if(!cart.extraBread) cart.extraBread = []; 
         cart.extraBread.push(id); 
@@ -1358,11 +1283,13 @@
         let allItems = getAllUniqueMenus();
         currentFilteredTransactions.forEach(t => { 
             let waktu = new Date(t.date).toLocaleString('id-ID'); let itemsStr = []; 
+            let methodForStruk = t.paymentMethod || "Tunai";
             for(let key in t.items) { 
                 if(key === 'extraBread') continue; 
                 let parsed = parseCartKey(key);
                 let m = allItems.find(x => x.id == parsed.id); 
-                if(m) itemsStr.push(`${m.name.split(' | ')[0]} ${parsed.platform !== 'Normal' ? '('+parsed.platform+')' : ''} (x${t.items[key]})`); 
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : methodForStruk;
+                if(m) itemsStr.push(`${m.name.split(' | ')[0]} ${platformToUse !== 'Normal' && platformToUse !== 'Tunai' && platformToUse !== 'QRIS' ? '('+platformToUse+')' : ''} (x${t.items[key]})`); 
             } 
             if(t.extraBread) { t.extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); itemsStr.push(`${rn} (x1)`); }); } 
             data.push([ waktu, t.branchName, t.mode, (t.paymentMethod || "Tunai"), t.disc || 0, t.total, itemsStr.join(", ") ]); 
