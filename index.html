@@ -373,7 +373,6 @@
 
     const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-CK": { name: "Cikini", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
-    // InitialData hanya digunakan sebagai fallback kosong (tidak akan menimpa Firebase Anda lagi)
     const initialData = { ONLINE: [], DINEIN: [] };
 
     let allMenusData = {}; 
@@ -417,7 +416,6 @@
         let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         if (!data) data = {};
         branchKeys.forEach(b => {
-            // Membaca langsung dari Firebase data, jika tidak ada baru membaca struktur kosong (tidak memaksa initialData lama)
             let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : [];
             let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : [];
             
@@ -589,7 +587,6 @@
             
             let act = isPuas ? `openBreadModal(${item.id})` : `updateCartNormal(${item.id}, 1, ${isPuas})`;
             
-            // Rincian Harga Ojol Simetris Tanpa Logo/Emoji/Icon
             let ojolPricesHtml = "";
             if (masterMode === "ONLINE") {
                 let grb = item.priceGrab || item.price;
@@ -1033,7 +1030,7 @@
     function toggleMgmtPriceInputs() {
         const mode = document.getElementById('new-mode').value;
         const container = document.getElementById('ojol-price-inputs-container');
-        if (m === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
+        if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
     }
 
     function addNewMenu() { 
