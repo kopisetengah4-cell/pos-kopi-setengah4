@@ -480,7 +480,11 @@
         try {
             allMenusData = parseFirebaseMenus(snap.val());
             if (currentBranchId && currentBranchId !== "KS4-ADM") {
-                localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
+                // Proteksi Fallback otomatis jika data cabang kosong / terhapus agar tidak layar putih
+                localMenu = allMenusData[currentBranchId];
+                if (!localMenu || (!localMenu.ONLINE.length && !localMenu.DINEIN.length)) {
+                    localMenu = allMenusData["ALL"];
+                }
             } else {
                 localMenu = allMenusData["ALL"];
             }
@@ -507,9 +511,8 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('branch-display').innerText = users[currentBranchId].name;
             
-            if (currentBranchId !== "KS4-ADM") {
-                localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
-            } else {
+            localMenu = allMenusData[currentBranchId];
+            if (!localMenu || (!localMenu.ONLINE.length && !localMenu.DINEIN.length)) {
                 localMenu = allMenusData["ALL"];
             }
 
@@ -587,20 +590,28 @@
             
             let act = isPuas ? `openBreadModal(${item.id})` : `updateCartNormal(${item.id}, 1, ${isPuas})`;
             
+            let mainPriceHtml = "";
             let ojolPricesHtml = "";
+            
             if (masterMode === "ONLINE") {
+                // Sesuai Permintaan: Di mode online, harga normal disembunyikan (tidak dipasang)
+                mainPriceHtml = ""; 
+                
                 let grb = item.priceGrab || item.price;
                 let gjk = item.priceGojek || item.price;
                 let shp = item.priceShopee || item.price;
-                ojolPricesHtml = `<div class="ojol-prices-box">
+                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 10px;">
                     <div class="ojol-row"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
                     <div class="ojol-row"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
                     <div class="ojol-row"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
                 </div>`;
+            } else {
+                // Mode Dine In tetap memunculkan harga dasar normal bawaan
+                mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
             let innerContent = `<h4>${displayName}</h4>
-            <p>Rp ${item.price.toLocaleString()}</p>
+            ${mainPriceHtml}
             ${ojolPricesHtml}
             <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
                 <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
