@@ -65,9 +65,10 @@
         .tab.active { background: var(--primary); color: white; }
 
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 145px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
+        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 165px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
         .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
-        .card p { color: var(--primary); font-weight: bold; margin: 5px 0; font-size: 0.85rem; }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.85rem; }
+        .card .ojol-prices { font-size: 0.65rem; color: #666; background: #f1f2f6; padding: 4px; border-radius: 6px; text-align: left; margin-bottom: 5px; line-height: 1.2; }
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
@@ -173,7 +174,7 @@
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON Jeruk</option>
-                <option value="KS4-PI">PONDOK INDAH</option>
+                <option value="KS4-CK">CIKINI</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
                 <option value="KS4-OT">OTISTA</option>
@@ -220,7 +221,7 @@
                 <option value="ALL">✅ SEMUA CABANG SEKALIGUS</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON JERUK</option>
-                <option value="KS4-PI">PONDOK INDAH</option>
+                <option value="KS4-CK">CIKINI</option>
                 <option value="KS4-MT">MENTENG</option>
                 <option value="KS4-CP">CEMPUT</option>
                 <option value="KS4-OT">OTISTA</option>
@@ -229,23 +230,25 @@
         </div>
 
         <div style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
+            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
+                <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
+            </select>
+
             <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
             <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
-            <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <input type="number" id="new-price-grab" placeholder="Harga Grab" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
-                <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
-                <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+            <div id="ojol-price-inputs-container">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <input type="number" id="new-price-grab" placeholder="Harga Grab" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                </div>
             </div>
             
             <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
-            </select>
-            
-            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-                <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
             <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#f0f5f1; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
@@ -302,11 +305,7 @@
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
         <h3 style="color:var(--primary); margin-bottom:15px;">Pilih Metode Pembayaran</h3>
-        <button class="btn-pay-method" onclick="selectPayment('Grab')">Grab</button>
-        <button class="btn-pay-method" onclick="selectPayment('Gojek')">Gojek</button>
-        <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
-        <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
-        <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
+        <div id="payment-methods-list"></div>
         <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
     </div>
 </div>
@@ -367,7 +366,8 @@
     const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v40'); 
 
-    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-PI": { name: "Pondok Indah", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+    // Pondok Indah "KS4-PI" resmi diganti menjadi Cikini "KS4-CK" dengan password tetap "3265"
+    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-CK": { name: "Cikini", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
     const initialData = {
         ONLINE: [
@@ -406,7 +406,6 @@
         return Object.values(obj).filter(Boolean);
     };
 
-    // Fungsi untuk mendukung data lama di firebase
     function parseCartKey(key) {
         if(key.includes('_')) {
             let p = key.split('_');
@@ -415,7 +414,7 @@
         return { id: key, platform: 'Normal' };
     }
 
-    // Mendapatkan harga yang sesuai dengan metode pembayaran yang dipilih saat checkout
+    // Penarikan harga berdasarkan platform ojol
     function getItemPrice(item, method) {
         if (!item) return 0;
         if (method === 'Grab') return item.priceGrab || item.price;
@@ -426,7 +425,7 @@
 
     function parseFirebaseMenus(data) {
         let result = {};
-        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         if (!data) data = {};
         branchKeys.forEach(b => {
             let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : JSON.parse(JSON.stringify(initialData.ONLINE));
@@ -477,7 +476,7 @@
             if (now - data.timestamp < 3600000 * 12) { 
                 currentBranchId = data.branchId;
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('branch-display').innerText = users[currentBranchId].name;
+                document.getElementById('branch-display').innerText = users[currentBranchId] ? users[currentBranchId].name : currentBranchId;
                 
                 if(currentBranchId === "KS4-ADM") {
                     document.body.classList.add('admin-mode');
@@ -496,12 +495,13 @@
         try {
             allMenusData = parseFirebaseMenus(snap.val());
             if (currentBranchId && currentBranchId !== "KS4-ADM") {
-                localMenu = allMenusData[currentBranchId];
+                localMenu = allMenusData[currentBranchId] || allMenusData["ALL"];
             } else {
                 localMenu = allMenusData["ALL"];
             }
             renderMenu(); 
             renderMgmt();
+            toggleMgmtPriceInputs();
         } catch (e) {
             console.error("Gagal memuat menu:", e);
         }
@@ -530,6 +530,7 @@
 
             renderMenu();
             renderMgmt();
+            toggleMgmtPriceInputs();
 
             if(u === "KS4-ADM") {
                 document.body.classList.add('admin-mode');
@@ -549,6 +550,7 @@
         document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
         document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
         if(document.getElementById('search-menu')) { document.getElementById('search-menu').value = ''; }
+        document.getElementById('label-mode').innerText = "MODE: " + (m === 'ONLINE' ? 'ONLINE' : 'DINE IN');
         changeCategory('ICE'); updateUI(); 
     }
     
@@ -591,7 +593,6 @@
             let displayName = item.name.split(' | ')[0]; 
             let isPuas = displayName.includes("Puas");
             
-            // Hitung total kuantitas menu ini di keranjang
             let q = 0;
             for(let k in cart) {
                 if(k === 'extraBread') continue;
@@ -600,7 +601,22 @@
             }
             
             let act = isPuas ? `openBreadModal(${item.id})` : `updateCartNormal(${item.id}, 1, ${isPuas})`;
-            let innerContent = `<h4>${displayName}</h4><p>Rp ${item.price.toLocaleString()}</p>
+            
+            let ojolPricesHtml = "";
+            if (masterMode === "ONLINE") {
+                let grb = item.priceGrab || item.price;
+                let gjk = item.priceGojek || item.price;
+                let shp = item.priceShopee || item.price;
+                ojolPricesHtml = `<div class="ojol-prices">
+                    🛵 Grb: Rp ${grb.toLocaleString()}<br>
+                    🏍️ Gjk: Rp ${gjk.toLocaleString()}<br>
+                    🛍️ Shp: Rp ${shp.toLocaleString()}
+                </div>`;
+            }
+
+            let innerContent = `<h4>${displayName}</h4>
+            <p>Rp ${item.price.toLocaleString()}</p>
+            ${ojolPricesHtml}
             <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
                 <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
                 <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
@@ -613,7 +629,6 @@
         if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
     }
 
-    // UPDATE KERANJANG KESELURUHAN SEKARANG MENGGUNAKAN FUNGSI INI
     function updateCartNormal(id, d, isPuas) { 
         if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
         cart[id] = (cart[id] || 0) + d; 
@@ -621,7 +636,6 @@
         renderMenu(); updateUI(); 
     }
 
-    // MODAL ROTI 
     function openBreadModal(id) {
         currentPuasId = String(id);
         document.getElementById('modal-bread').classList.add('show');
@@ -631,10 +645,9 @@
         let t = 0; 
         const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
         for(let key in cart) { 
-            if(key==='extraBread') continue; 
+            if(key=='extraBread') continue; 
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id); 
-            // Disini selalu menampilkan harga Normal/Dasar sebelum checkout di klik
             if(m) t += m.price * cart[key]; 
         } 
         document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
@@ -643,10 +656,27 @@
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
         closeModal(); 
-        document.querySelectorAll('.btn-pay-method').forEach(btn => btn.classList.remove('selected'));
-        selectedPaymentMethod = "Tunai";
+
+        let methodsContainer = document.getElementById('payment-methods-list');
+        methodsContainer.innerHTML = '';
+
+        if (masterMode === "ONLINE") {
+            methodsContainer.innerHTML = `
+                <button class="btn-pay-method" onclick="selectPayment('Grab')">Grab</button>
+                <button class="btn-pay-method" onclick="selectPayment('Gojek')">Gojek</button>
+                <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
+            `;
+            selectedPaymentMethod = "Grab"; 
+        } else {
+            methodsContainer.innerHTML = `
+                <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
+                <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
+            `;
+            selectedPaymentMethod = "Tunai"; 
+        }
+
         document.querySelectorAll('.btn-pay-method').forEach(btn => {
-            if(btn.innerText === "Tunai") btn.classList.add('selected');
+            if(btn.innerText === selectedPaymentMethod) btn.classList.add('selected');
         });
         document.getElementById('modal-payment').classList.add('show');
     }
@@ -738,7 +768,6 @@
                 let kategori = m.cat || "EXTRA"; 
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
 
-                // PEMBACAAN SISTEM KOMPONEN BARU
                 if (m.isNewCustom && m.name.includes("WADAH:")) {
                     let parts = m.name.split(' | ');
                     let metadata = parts[2] || ""; 
@@ -774,7 +803,6 @@
                     }
 
                 } else {
-                    // LOGIKA LAMA MENU BAWAAN
                     let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
                     if(nameLower.includes("1 liter")) l1 += q; 
                     if(nameLower.includes("500ml")) ml500 += q; 
@@ -1014,14 +1042,31 @@
     
     function changeMgmtBranch() { renderMgmt(); }
 
+    function toggleMgmtPriceInputs() {
+        const mode = document.getElementById('new-mode').value;
+        const container = document.getElementById('ojol-price-inputs-container');
+        if (mode === 'DINEIN') {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+        }
+    }
+
     function addNewMenu() { 
         const n = document.getElementById('new-name').value;
         const p = parseInt(document.getElementById('new-price').value);
-        const pGrab = parseInt(document.getElementById('new-price-grab').value) || p;
-        const pGojek = parseInt(document.getElementById('new-price-gojek').value) || p;
-        const pShopee = parseInt(document.getElementById('new-price-shopee').value) || p;
-        const c = document.getElementById('new-cat').value;
         const m = document.getElementById('new-mode').value;
+        const c = document.getElementById('new-cat').value;
+        
+        let pGrab = p;
+        let pGojek = p;
+        let pShopee = p;
+
+        if (m === 'ONLINE') {
+            pGrab = parseInt(document.getElementById('new-price-grab').value) || p;
+            pGojek = parseInt(document.getElementById('new-price-gojek').value) || p;
+            pShopee = parseInt(document.getElementById('new-price-shopee').value) || p;
+        }
         
         let finalName = "";
         
@@ -1047,7 +1092,7 @@
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
             let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
             else targetMenus = [sel];
         } else {
             targetMenus = [currentBranchId];
@@ -1070,9 +1115,11 @@
 
         document.getElementById('new-name').value = '';
         document.getElementById('new-price').value = '';
-        document.getElementById('new-price-grab').value = '';
-        document.getElementById('new-price-gojek').value = '';
-        document.getElementById('new-price-shopee').value = '';
+        if (m === 'ONLINE') {
+            document.getElementById('new-price-grab').value = '';
+            document.getElementById('new-price-gojek').value = '';
+            document.getElementById('new-price-shopee').value = '';
+        }
         
         if(panel.style.display === 'block') {
             document.getElementById('new-qty-wadah').value = '';
@@ -1110,7 +1157,7 @@
                 } else {
                     items.forEach(item => { 
                         let pText = `Rp ${item.price.toLocaleString('id-ID')}`;
-                        if(item.priceGrab || item.priceGojek || item.priceShopee) {
+                        if(m === 'ONLINE' && (item.priceGrab || item.priceGojek || item.priceShopee)) {
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
@@ -1133,7 +1180,7 @@
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
             let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
             else targetMenus = [sel];
         } else {
             targetMenus = [currentBranchId];
@@ -1155,9 +1202,15 @@
         const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price);
         if(newPrice === null || newPrice.trim() === "") return;
         
-        const newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
-        const newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
-        const newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
+        let newPriceGrab = newPrice;
+        let newPriceGojek = newPrice;
+        let newPriceShopee = newPrice;
+
+        if (m === 'ONLINE') {
+            newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
+            newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
+            newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
+        }
 
         targetMenus.forEach(b => {
             if(allMenusData[b] && allMenusData[b][m]) {
@@ -1182,7 +1235,7 @@
             let targetMenus = [];
             if (currentBranchId === "KS4-ADM") {
                 let sel = document.getElementById('mgmt-branch-select').value;
-                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-PI", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+                if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
                 else targetMenus = [sel];
             } else {
                 targetMenus = [currentBranchId];
@@ -1210,7 +1263,6 @@
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id); 
             
-            // DISINI HARGA DITARIK BERDASARKAN METODE PEMBAYARAN YANG BARU DIPILIH
             let p_price = getItemPrice(m, selectedPaymentMethod);
             s += p_price * cart[key]; 
             
@@ -1231,14 +1283,14 @@
         document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
         document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId].name, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
+        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
         document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
     }
     
     function confirmPayment() { 
         let d = parseInt(document.getElementById('discount-input').value) || 0;
         let t = { 
-            id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId].name, 
+            id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, 
             items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, 
             paymentMethod: selectedPaymentMethod,
             cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0,
