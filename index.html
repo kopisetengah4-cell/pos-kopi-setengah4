@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v73</title>
+    <title>POS KS4 - Sunter Branch v74</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -506,13 +506,11 @@
             let combined = [];
             let addedIds = new Set();
 
-            // 1. Masukkan menu spesifik cabang terlebih dahulu (jika ada editan harga cabang)
             getSafeArray(branchData[m]).forEach(item => {
                 combined.push(item);
                 addedIds.add(item.id);
             });
 
-            // 2. Masukkan menu dari Admin global ("ALL") jika belum ada di cabang tersebut
             getSafeArray(globalData[m]).forEach(item => {
                 if (!addedIds.has(item.id)) {
                     combined.push(item);
@@ -530,7 +528,6 @@
         try {
             allMenusData = parseFirebaseMenus(snap.val());
             if (currentBranchId && currentBranchId !== "KS4-ADM") {
-                // Sempurna: Menggabungkan data spesifik cabang dengan data global ALL milik Admin
                 localMenu = buildMergedBranchMenu(currentBranchId);
             } else {
                 localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
@@ -627,7 +624,8 @@
         
         displayList.forEach(item => {
             let displayName = item.name.split(' | ')[0]; 
-            let isPuas = displayName.includes("Puas");
+            // Sempurna: Memastikan paket Puas di Online maupun Dine In wajib pilih rasa roti
+            let isPuas = displayName.toLowerCase().includes("puas");
             
             let q = 0;
             for(let k in cart) {
@@ -1125,23 +1123,32 @@
         else targetMenus = [sel];
 
         let id = Date.now();
+        
+        // Sempurna: Memperbaiki skrip perulangan pengisian data agar tidak crash pada data kosong
         targetMenus.forEach(b => {
-            if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
+            if(!allMenusData[b]) {
+                allMenusData[b] = { ONLINE: [], DINEIN: [] };
+            }
+            if(!allMenusData[b].ONLINE) allMenusData[b].ONLINE = [];
+            if(!allMenusData[b].DINEIN) allMenusData[b].DINEIN = [];
+            
             let items = getSafeArray(allMenusData[b][m]);
             items.push({ id: id, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
             allMenusData[b][m] = items;
         });
         
-        menuRef.set(allMenusData); 
-        alert("Menu Baru Berhasil Ditambahkan!"); 
-
-        document.getElementById('new-name').value = '';
-        document.getElementById('new-price').value = '';
-        if (m === 'ONLINE') {
-            document.getElementById('new-price-grab').value = '';
-            document.getElementById('new-price-gojek').value = '';
-            document.getElementById('new-price-shopee').value = '';
-        }
+        menuRef.set(allMenusData).then(() => {
+            alert("Menu Baru Berhasil Ditambahkan ke Seluruh Target Cabang!"); 
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-price').value = '';
+            if (m === 'ONLINE') {
+                document.getElementById('new-price-grab').value = '';
+                document.getElementById('new-price-gojek').value = '';
+                document.getElementById('new-price-shopee').value = '';
+            }
+        }).catch(err => {
+            alert("Gagal menyimpan ke database: " + err.message);
+        });
     }
     
     function renderMgmt() { 
@@ -1196,7 +1203,6 @@
         } else { targetMenus = [currentBranchId]; }
 
         let currentItem = null;
-        // Cari menu global atau cabang untuk diambil nilai lamanya
         if (allMenusData[targetMenus[0]] && allMenusData[targetMenus[0]][m]) {
             currentItem = getSafeArray(allMenusData[targetMenus[0]][m]).find(x => x.id == id);
         }
@@ -1224,7 +1230,6 @@
                 items[idx].name = newName; items[idx].price = parseInt(newPrice);
                 items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
             } else {
-                // Jika karyawan mengedit menu yang asalnya dari data induk global ALL
                 items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
             }
             allMenusData[b][m] = items;
