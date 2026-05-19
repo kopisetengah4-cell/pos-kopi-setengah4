@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v74</title>
+    <title>POS KS4 - Sunter Branch v75</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -434,8 +434,9 @@
                 }
             }
 
-            onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
-            dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom) x.isHidden = true; });
+            // Perbaikan Mutlak: Hanya menyembunyikan ID besar kustom cabang lama, menu resmi baru Admin dilewati.
+            onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
+            dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
             onlineData = onlineData.filter(x => x.id !== 37);
             dineinData = dineinData.filter(x => x.id !== 37);
@@ -624,7 +625,7 @@
         
         displayList.forEach(item => {
             let displayName = item.name.split(' | ')[0]; 
-            // Sempurna: Memastikan paket Puas di Online maupun Dine In wajib pilih rasa roti
+            // Validasi Sempurna Paket Puas: Berlaku di Online maupun Dine In untuk memicu pilihan roti wajib.
             let isPuas = displayName.toLowerCase().includes("puas");
             
             let q = 0;
@@ -1122,23 +1123,32 @@
         if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         else targetMenus = [sel];
 
-        let id = Date.now();
-        
-        // Sempurna: Memperbaiki skrip perulangan pengisian data agar tidak crash pada data kosong
+        // Sempurna: Mencari ID tertinggi yang ada dan ditambah 1 agar tidak disembunyikan filter proteksi
+        let maxId = 0;
         targetMenus.forEach(b => {
-            if(!allMenusData[b]) {
-                allMenusData[b] = { ONLINE: [], DINEIN: [] };
+            if(allMenusData[b]) {
+                ['ONLINE','DINEIN'].forEach(mo => {
+                    getSafeArray(allMenusData[b][mo]).forEach(it => {
+                        if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
+                    });
+                });
             }
+        });
+        if(maxId === 0) maxId = 50; 
+        let nextId = maxId + 1;
+
+        targetMenus.forEach(b => {
+            if(!allMenusData[b]) { allMenusData[b] = { ONLINE: [], DINEIN: [] }; }
             if(!allMenusData[b].ONLINE) allMenusData[b].ONLINE = [];
             if(!allMenusData[b].DINEIN) allMenusData[b].DINEIN = [];
             
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: id, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
+            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
             allMenusData[b][m] = items;
         });
         
         menuRef.set(allMenusData).then(() => {
-            alert("Menu Baru Berhasil Ditambahkan ke Seluruh Target Cabang!"); 
+            alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
             document.getElementById('new-name').value = '';
             document.getElementById('new-price').value = '';
             if (m === 'ONLINE') {
