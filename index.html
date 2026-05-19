@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v72</title>
+    <title>POS KS4 - Sunter Branch v73</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -233,7 +233,6 @@
             </select>
         </div>
 
-        <!-- Bagian ini dikunci khusus Admin via CSS Selector -->
         <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
             <h4 style="margin:0 0 10px 0; color:var(--admin);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
@@ -423,7 +422,6 @@
             let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : [];
             let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : [];
             
-            // Logika Pembersihan: Hapus menu buatan masing-masing cabang jika aplikasi dimuat
             if (b !== "ALL") {
                 let initialOnlineLength = onlineData.length;
                 let initialDineinLength = dineinData.length;
@@ -498,16 +496,44 @@
     }
     window.onload = checkSession;
 
+    function buildMergedBranchMenu(branchId) {
+        let globalData = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+        let branchData = allMenusData[branchId] || { ONLINE: [], DINEIN: [] };
+
+        let result = { ONLINE: [], DINEIN: [] };
+
+        ['ONLINE', 'DINEIN'].forEach(m => {
+            let combined = [];
+            let addedIds = new Set();
+
+            // 1. Masukkan menu spesifik cabang terlebih dahulu (jika ada editan harga cabang)
+            getSafeArray(branchData[m]).forEach(item => {
+                combined.push(item);
+                addedIds.add(item.id);
+            });
+
+            // 2. Masukkan menu dari Admin global ("ALL") jika belum ada di cabang tersebut
+            getSafeArray(globalData[m]).forEach(item => {
+                if (!addedIds.has(item.id)) {
+                    combined.push(item);
+                    addedIds.add(item.id);
+                }
+            });
+
+            result[m] = combined;
+        });
+
+        return result;
+    }
+
     menuRef.on('value', snap => {
         try {
             allMenusData = parseFirebaseMenus(snap.val());
             if (currentBranchId && currentBranchId !== "KS4-ADM") {
-                localMenu = allMenusData[currentBranchId];
-                if (!localMenu || (!localMenu.ONLINE.length && !localMenu.DINEIN.length)) {
-                    localMenu = allMenusData["ALL"];
-                }
+                // Sempurna: Menggabungkan data spesifik cabang dengan data global ALL milik Admin
+                localMenu = buildMergedBranchMenu(currentBranchId);
             } else {
-                localMenu = allMenusData["ALL"];
+                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
             }
             renderMenu(); 
             renderMgmt();
@@ -532,9 +558,10 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('branch-display').innerText = users[currentBranchId].name;
             
-            localMenu = allMenusData[currentBranchId];
-            if (!localMenu || (!localMenu.ONLINE.length && !localMenu.DINEIN.length)) {
-                localMenu = allMenusData["ALL"];
+            if (currentBranchId !== "KS4-ADM") {
+                localMenu = buildMergedBranchMenu(currentBranchId);
+            } else {
+                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
             }
 
             renderMenu();
@@ -1101,7 +1128,6 @@
         targetMenus.forEach(b => {
             if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
             let items = getSafeArray(allMenusData[b][m]);
-            // Menu baru dari admin dipasang flag khusus jika diperlukan, tapi dipastikan berada di target cabang terkendali.
             items.push({ id: id, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
             allMenusData[b][m] = items;
         });
@@ -1130,7 +1156,7 @@
                 if (viewBranch === "ALL") { list.innerHTML += `<div style="background:#e74c3c; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini mengubah data SELURUH CABANG!</div>`; }
             }
             
-            let mgmtMenu = allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] };
+            let mgmtMenu = isAdmin ? (allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] }) : buildMergedBranchMenu(viewBranch);
             ['ONLINE', 'DINEIN'].forEach(m => { 
                 let html = `<h4 style="margin-top:20px; color:var(--admin); border-bottom:2px solid #ddd; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
                 let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
@@ -1143,7 +1169,6 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        // Proteksi Hak Akses Tombol Delete (X) hanya untuk Admin
                         let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>`;
                         if (isAdmin) {
                             actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>`;
@@ -1171,12 +1196,14 @@
         } else { targetMenus = [currentBranchId]; }
 
         let currentItem = null;
-        for (let b of targetMenus) {
-            if(allMenusData[b] && allMenusData[b][m]) {
-                currentItem = getSafeArray(allMenusData[b][m]).find(x => x.id == id); if(currentItem) break;
-            }
+        // Cari menu global atau cabang untuk diambil nilai lamanya
+        if (allMenusData[targetMenus[0]] && allMenusData[targetMenus[0]][m]) {
+            currentItem = getSafeArray(allMenusData[targetMenus[0]][m]).find(x => x.id == id);
         }
-        if(!currentItem) return;
+        if (!currentItem && allMenusData["ALL"] && allMenusData["ALL"][m]) {
+            currentItem = getSafeArray(allMenusData["ALL"][m]).find(x => x.id == id);
+        }
+        if(!currentItem) return alert("Menu tidak ditemukan!");
 
         const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
         const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
@@ -1189,14 +1216,18 @@
         }
 
         targetMenus.forEach(b => {
-            if(allMenusData[b] && allMenusData[b][m]) {
-                let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id);
-                if(idx !== -1) {
-                    items[idx].name = newName; items[idx].price = parseInt(newPrice);
-                    items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
-                    allMenusData[b][m] = items;
-                }
+            if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
+            let items = getSafeArray(allMenusData[b][m]); 
+            let idx = items.findIndex(x=>x.id==id);
+            
+            if(idx !== -1) {
+                items[idx].name = newName; items[idx].price = parseInt(newPrice);
+                items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
+            } else {
+                // Jika karyawan mengedit menu yang asalnya dari data induk global ALL
+                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
             }
+            allMenusData[b][m] = items;
         });
         menuRef.set(allMenusData); 
     }
