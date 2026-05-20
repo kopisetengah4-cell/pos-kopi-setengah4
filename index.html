@@ -789,6 +789,7 @@
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
+            // BERSIH TOTAL TANPA KEBOCORAN KODE HTML
             let imgHtml = "";
             if(item.img && item.img.trim() !== "") {
                 imgHtml = `<div class="card-img-container"><img src="${item.img.trim()}" class="card-img" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>';"></div>`;
@@ -1369,7 +1370,6 @@
             }); 
         } catch(e) { console.error("Gagal memuat list:", e); }
     }
-
     function editM(m, id) { 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
