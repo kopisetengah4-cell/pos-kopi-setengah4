@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v77</title>
+    <title>POS KS4 - Sunter Branch v76</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -36,17 +36,17 @@
         body.admin-mode #admin-mgmt-filter, body.admin-mode #admin-add-menu-box { display: block; }
 
         main { 
-            flex: 1; overflow-y: auto; padding: 10px; 
-            padding-bottom: 360px; 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            padding-bottom: 400px; 
             -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior-y: contain; 
         }
 
-        .header { background: white; padding: 12px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(8px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; }
         
-        .shop-name { font-size: 1.4rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 2px; }
-        #branch-display { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .shop-name { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 2px; }
+        #branch-display { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         
-        .logout-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #888; }
+        .logout-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; }
         
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
@@ -56,109 +56,26 @@
         .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
         .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 4px; gap: 4px; flex-shrink: 0; border-radius: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-        .m-tab, .r-tab { flex: 1; padding: 8px 4px; border: none; border-radius: 8px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #ddd; color: #777; transition: 0.2s; white-space: nowrap; }
+        .mode-tabs, .range-tabs { display: flex; background: #eee; padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #ddd; color: #777; transition: 0.2s; white-space: nowrap; }
         .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
 
-        .nav-tabs { display: flex; background: white; padding: 8px; gap: 6px; border-bottom: 1px solid #eee; overflow-x: auto; scrollbar-width: none; }
-        .tab { padding: 8px 14px; border: none; border-radius: 15px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.72rem; cursor: pointer; }
+        .nav-tabs { display: flex; background: white; padding: 10px; gap: 8px; border-bottom: 1px solid #eee; overflow-x: auto; scrollbar-width: none; }
+        .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
-        .product-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 5px; 
-            padding: 2px; 
-        }
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
+        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
+        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.85rem; }
         
-        .card { 
-            background: white; 
-            border-radius: 8px; 
-            border: 1px solid #eee; 
-            overflow: hidden; 
-            min-height: 160px; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
-            cursor: pointer; 
-            position: relative; 
-        }
-        
-        .card-img-container { 
-            width: 100%; 
-            aspect-ratio: 1.2 / 1; 
-            background: #e1e2e6; 
-            position: relative; 
-            overflow: hidden; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        
-        .card-img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-        
-        .card-no-img { 
-            font-size: 1.2rem; 
-            color: #b2bec3; 
-        }
-
-        .card-body { 
-            padding: 5px; 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        
-        .card h4 { 
-            margin: 0; 
-            font-size: 0.72rem; 
-            height: 28px; 
-            overflow: hidden; 
-            color: #2d3436; 
-            line-height: 1.2; 
-            text-align: center; 
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .card p { 
-            color: var(--primary); 
-            font-weight: bold; 
-            margin: 2px 0; 
-            font-size: 0.75rem; 
-            text-align: center; 
-        }
-        
-        .card .ojol-prices-box { 
-            font-size: 0.52rem; 
-            color: #555; 
-            background: #f5f6fa; 
-            padding: 2px 3px; 
-            border-radius: 4px; 
-            margin-bottom: 2px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 1px; 
-            font-family: monospace; 
-            width: 100%;
-        }
-        
+        .card .ojol-prices-box { font-size: 0.68rem; color: #555; background: #f5f6fa; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; }
         .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1e2e6; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 1px 2px; border-radius: 3px; }
+        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 2px 4px; border-radius: 4px; }
         
-        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: auto; padding-top: 2px; width: 100%; }
-        .btn-q { width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
-
-        .mgmt-img-preview { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #eee; margin-right: 10px; border: 1px solid #ddd; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
@@ -166,12 +83,13 @@
         td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
         .row-total { background: #fff3e0; font-weight: bold; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #eee; height: 65px; z-index: 3000; padding-bottom: env(safe-area-inset-bottom); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #eee; height: 70px; z-index: 3000; padding-bottom: env(safe-area-inset-bottom); }
         .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 0.65rem; font-weight: 600; cursor: pointer; }
         .nav-btn.active { color: var(--primary); }
 
-        .footer-cart { position: fixed; bottom: 65px; left: 0; right: 0; background: white; padding: 12px; border-radius: 18px 18px 0 0; box-shadow: 0 -6px 15px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
         
+        /* Gaya baru untuk selektor cepat platform ojol di area kasir karyawan */
         .platform-selector-box { display: flex; gap: 4px; background: #e1e2e6; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
         .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #555; transition: 0.2s; }
         .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
@@ -224,8 +142,8 @@
         <button id="m-dinein" class="m-tab" onclick="setMasterMode('DINEIN')">DINE IN</button>
     </div>
     
-    <div style="padding: 0 5px 6px 5px;">
-        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid #ddd; font-size:0.85rem; font-weight:bold;" oninput="renderMenu()">
+    <div style="padding: 0 5px 10px 5px;">
+        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05 planetary);" oninput="renderMenu()">
     </div>
 
     <div id="cat-nav" class="nav-tabs">
@@ -237,17 +155,19 @@
     </div>
     <main><div class="product-grid" id="product-grid"></div></main>
     <div class="footer-cart">
-        <div style="background:#f0f5f1; padding:8px; border-radius:10px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:6px;">
+        <!-- Penyusunan Baru: Kotak Kontrol Diskon dan Wajib Pilih Kasir Ojol Berdampingan -->
+        <div style="background:#f0f5f1; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
                 <div style="display:flex; align-items:center; gap:5px;">
                     <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--admin);">Pot. Diskon:</label>
-                    <input type="number" id="discount-input" value="0" style="width:80px; text-align:right; padding:5px; border-radius:6px; border:1px solid #ccc; font-weight:bold; font-size:0.85rem;" oninput="updateUI()">
+                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #ccc; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
                 </div>
             </div>
             
+            <!-- Elemen Interaktif Tambahan Bersebelahan untuk Memilih Saluran Kasir Ojol Utama -->
             <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
-                <div style="font-size: 0.65rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
                     <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
                     <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
@@ -256,11 +176,11 @@
             </div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding: 0 4px;">
-            <span style="font-size: 0.75rem; font-weight: 800; color: #666;">Total Transaksi:</span>
-            <div id="total-price-display" style="font-size:1.3rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 4px;">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #666;">Total Transaksi:</span>
+            <div id="total-price-display" style="font-size:1.4rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
         </div>
-        <button id="btn-pay-main" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; margin-top:5px; font-size:0.95rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
+        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:6px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
     </div>
 </div>
 
@@ -338,7 +258,7 @@
             </select>
         </div>
 
-        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px;">
+        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
             <h4 style="margin:0 0 10px 0; color:var(--admin);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
@@ -346,8 +266,6 @@
 
             <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
-            <input type="text" id="new-img" placeholder="Link/URL Foto Menu (Kosongkan jika tidak ada)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px; border-left: 4px solid #27ae60;">
-
             <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
             <div id="ojol-price-inputs-container">
@@ -488,26 +406,13 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
-    let selectedPaymentMethod = ""; 
+    let selectedPaymentMethod = ""; // Dikosongkan di awal agar wajib dipilih oleh kasir
     let currentCashReceived = 0; 
     let currentCashChange = 0;   
     
     window.rawbtPrintText = "";
     let currentViewedTransId = null;
     let currentPuasId = null;
-
-    // FUNGSI BARU UNTUK OTOMATIS MERUBAH LINK GOOGLE DRIVE MENJADI DIRECT LINK
-    function convertToDirectLink(url) {
-        if(!url) return "";
-        let cleanUrl = url.trim();
-        if (cleanUrl.includes("drive.google.com")) {
-            let matches = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) || cleanUrl.match(/id=([a-zA-Z0-9-_]+)/);
-            if (matches && matches[1]) {
-                return "https://lh3.googleusercontent.com/d/" + matches[1];
-            }
-        }
-        return cleanUrl;
-    }
 
     const getSafeArray = (obj) => {
         if (!obj) return [];
@@ -706,14 +611,14 @@
         
         const platformSelector = document.getElementById('online-platform-container');
         if (m === 'ONLINE') {
-            selectedPaymentMethod = ""; 
+            selectedPaymentMethod = ""; // Reset pemilihan platform saat pindah ke online
             document.getElementById('label-mode').innerText = "MODE: ONLINE";
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
             document.getElementById('platform-warning-text').style.color = "#d35400";
         } else {
-            selectedPaymentMethod = "Tunai"; 
+            selectedPaymentMethod = "Tunai"; // Default dine in menggunakan Tunai
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
             platformSelector.style.display = "none";
         }
@@ -721,6 +626,7 @@
         changeCategory('ICE'); updateUI(); 
     }
 
+    // Fungsi bantu saat karyawan menekan selektor tombol platform ojol di area diskon
     function selectActivePlatform(p) {
         selectedPaymentMethod = p;
         document.querySelectorAll('.platform-btn').forEach(btn => {
@@ -789,38 +695,28 @@
                 let gjk = item.priceGojek || item.price;
                 let shp = item.priceShopee || item.price;
                 
+                // Menghilangkan visual harga normal utama dan menyoroti platform yang sedang dipilih aktif
                 let grabClass = selectedPaymentMethod === 'Grab' ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let gojekClass = selectedPaymentMethod === 'Gojek' ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let shopeeClass = selectedPaymentMethod === 'Shopee' ? 'ojol-row highlighted-platform' : 'ojol-row';
 
-                ojolPricesHtml = `<div class="ojol-prices-box">
-                    <div class="${gojekClass}"><span>Gojek</span><span>Rp ${gjk.toLocaleString()}</span></div>
-                    <div class="${shopeeClass}"><span>Shopee</span><span>Rp ${shp.toLocaleString()}</span></div>
-                    <div class="${grabClass}"><span>Grab</span><span>Rp ${grb.toLocaleString()}</span></div>
+                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 5px;">
+                    <div class="${gojekClass}"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
+                    <div class="${shopeeClass}"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
+                    <div class="${grabClass}"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
                 </div>`;
             } else {
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
-            let imgHtml = "";
-            if(item.img && item.img.trim() !== "") {
-                imgHtml = `<div class="card-img-container"><img src="${item.img.trim()}" class="card-img" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>';"></div>`;
-            } else {
-                imgHtml = `<div class="card-img-container"><span class="card-no-img">☕</span></div>`;
-            }
-
-            let innerContent = `
-                ${imgHtml}
-                <div class="card-body">
-                    <h4>${displayName}</h4>
-                    ${mainPriceHtml}
-                    ${ojolPricesHtml}
-                    <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
-                        <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
-                        <b style="color:var(--primary); font-size:1rem;">${q}</b>
-                        <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
-                    </div>
-                </div>`;
+            let innerContent = `<h4>${displayName}</h4>
+            ${mainPriceHtml}
+            ${ojolPricesHtml}
+            <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
+                <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
+                <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
+                <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
+            </div>`;
 
             grid.innerHTML += `<div class="card" onclick="${act}">${innerContent}</div>`;
         });
@@ -866,6 +762,7 @@
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
         
+        // Proteksi Mutlak: Memastikan kasir sudah memilih platform ojol sebelum meninjau transaksi
         if(masterMode === "ONLINE" && !selectedPaymentMethod) {
             return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
         }
@@ -876,6 +773,7 @@
         methodsContainer.innerHTML = '';
 
         if (masterMode === "ONLINE") {
+            // Otomatis bypass pilihan ke platform ojol yang sudah dipilih di awal oleh kasir
             currentCashReceived = 0;
             currentCashChange = 0;
             openCheckout(); 
@@ -910,7 +808,7 @@
     function openCashModal() {
         let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
         for(let key in cart) {
-            if(key=='extraBread') continue;
+            if(key==='extraBread') continue;
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id);
             if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
@@ -929,7 +827,7 @@
         
         let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
         for(let key in cart) {
-            if(key=='extraBread') continue;
+            if(key==='extraBread') continue;
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id);
             if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
@@ -967,7 +865,7 @@
             if(payMethods[method] !== undefined) payMethods[method] += t.total;
 
             for(let key in t.items) { 
-                if(key=='extraBread') continue; 
+                if(key==='extraBread') continue; 
                 let parsed = parseCartKey(key);
                 let m = allItems.find(x => x.id == parsed.id); 
                 if(!m) continue; 
@@ -1238,8 +1136,8 @@
         if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
-            h += `<tr><td colspan="2; text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2; text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         
         document.getElementById('rec-table').innerHTML = h; 
@@ -1265,7 +1163,6 @@
         const p = parseInt(document.getElementById('new-price').value);
         const m = document.getElementById('new-mode').value;
         const c = document.getElementById('new-cat').value;
-        const imgUrl = convertToDirectLink(document.getElementById('new-img').value); // SENSOR OTOMATIS SAAT INPUT BARU
         
         let pGrab = p; let pGojek = p; let pShopee = p;
         if (m === 'ONLINE') {
@@ -1297,11 +1194,14 @@
         let maxId = 0;
         targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => {
+                ['ONLINE','DINEIN'].forEach(mo => {maxId
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
-                });maxId = 50; 
+                });
+            }
+        });
+        if(maxId === 0) maxId = 50; 
         let nextId = maxId + 1;
 
         targetMenus.forEach(b => {
@@ -1310,7 +1210,7 @@
             if(!allMenusData[b].DINEIN) allMenusData[b].DINEIN = [];
             
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c, img: imgUrl });
+            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
             allMenusData[b][m] = items;
         });
         
@@ -1318,7 +1218,6 @@
             alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
             document.getElementById('new-name').value = '';
             document.getElementById('new-price').value = '';
-            document.getElementById('new-img').value = ''; 
             if (m === 'ONLINE') {
                 document.getElementById('new-price-grab').value = '';
                 document.getElementById('new-price-gojek').value = '';
@@ -1354,21 +1253,13 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        let miniImg = `<span style="font-size:1.5rem; margin-right:10px;">☕</span>`;
-                        if(item.img && item.img.trim() !== "") {
-                            miniImg = `<img src="${item.img.trim()}" class="mgmt-img-preview" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span style=\"font-size:1.5rem; margin-right:10px;\">☕</span>';">`;
-                        }
-
-                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
+                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>`;
                         if (isAdmin) {
-                            actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="delM('${m}', ${item.id})">X</button>`;
+                            actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>`;
                         }
 
-                        html += `<div class="mg-card">
-                            <div style="display:flex; align-items:center; flex:1;">
-                                ${miniImg}
-                                <div><b style="font-size:0.8rem;">${item.name.split(' | ')[0]}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
-                            </div>
+                        html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
+                            <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
                             <div>
                                 ${actionButtons}
                             </div>
@@ -1397,24 +1288,14 @@
         }
         if(!currentItem) return alert("Menu tidak ditemukan!");
 
-        const newName = prompt("Edit Nama Menu & Rincian:", currentItem.name); 
-        if(newName === null || newName.trim() === "") return;
+        const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
+        const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
         
-        let newImgInput = prompt("Edit / Ganti Link URL Foto Produk (Bisa link Google Drive langsung):", currentItem.img || ""); 
-        if(newImgInput === null) return;
-        let newImg = convertToDirectLink(newImgInput); // SELEKSI OTOMATIS JIKA USER INPUT LINK GOOGLE DRIVE
-
-        const newPrice = prompt("Edit Harga Normal / Dine In (Hanya Angka!):", currentItem.price); 
-        if(newPrice === null || newPrice.trim() === "") return;
-        
-        let newPriceGrab = newPrice; 
-        let newPriceGojek = newPrice; 
-        let newPriceShopee = newPrice;
-        
+        let newPriceGrab = newPrice; let newPriceGojek = newPrice; let newPriceShopee = newPrice;
         if (m === 'ONLINE') {
-            newPriceGrab = prompt("Edit Harga Grab (Hanya Angka!):", currentItem.priceGrab || newPrice);
-            newPriceGojek = prompt("Edit Harga Gojek (Hanya Angka!):", currentItem.priceGojek || newPrice);
-            newPriceShopee = prompt("Edit Harga Shopee (Hanya Angka!):", currentItem.priceShopee || newPrice);
+            newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
+            newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
+            newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
         }
 
         targetMenus.forEach(b => {
@@ -1423,21 +1304,14 @@
             let idx = items.findIndex(x=>x.id==id);
             
             if(idx !== -1) {
-                items[idx].name = newName; 
-                items[idx].price = parseInt(newPrice) || 0;
-                items[idx].img = newImg; 
-                items[idx].priceGrab = parseInt(newPriceGrab) || parseInt(newPrice); 
-                items[idx].priceGojek = parseInt(newPriceGojek) || parseInt(newPrice); 
-                items[idx].priceShopee = parseInt(newPriceShopee) || parseInt(newPrice);
+                items[idx].name = newName; items[idx].price = parseInt(newPrice);
+                items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
+            } else {
+                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
             }
             allMenusData[b][m] = items;
         });
-        
-        menuRef.set(allMenusData).then(() => {
-            alert("Menu Berhasil Diperbarui!");
-        }).catch(err => {
-            alert("Gagal menyimpan ke database: " + err.message);
-        }); 
+        menuRef.set(allMenusData); 
     }
 
     function delM(m, id) { 
@@ -1462,7 +1336,7 @@
     function openCheckout() { 
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
         for(let key in cart) { 
-            if(key=='extraBread') continue; 
+            if(key==='extraBread') continue; 
             let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
             let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
             let displayName = m.name.split(' | ')[0]; 
@@ -1473,8 +1347,8 @@
         let finalTotal = Math.max(0, s-d); 
         
         if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2; text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2; text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
@@ -1485,13 +1359,14 @@
         let d = parseInt(document.getElementById('discount-input').value) || 0;
         let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0 }; 
         for(let key in cart) { 
-            if(key=='extraBread') continue; 
+            if(key==='extraBread') continue; 
             let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
             if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
         } 
         t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
         transRef.push(t).then(() => { 
             cart = {}; document.getElementById('discount-input').value = 0; 
+            // Reset platform setelah transaksi sukses agar pesanan ojol berikutnya wajib memilih kembali
             if(masterMode === "ONLINE") {
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
