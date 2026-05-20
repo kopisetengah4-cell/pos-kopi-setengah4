@@ -496,6 +496,19 @@
     let currentViewedTransId = null;
     let currentPuasId = null;
 
+    // FUNGSI BARU UNTUK OTOMATIS MERUBAH LINK GOOGLE DRIVE MENJADI DIRECT LINK
+    function convertToDirectLink(url) {
+        if(!url) return "";
+        let cleanUrl = url.trim();
+        if (cleanUrl.includes("drive.google.com")) {
+            let matches = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) || cleanUrl.match(/id=([a-zA-Z0-9-_]+)/);
+            if (matches && matches[1]) {
+                return "https://lh3.googleusercontent.com/d/" + matches[1];
+            }
+        }
+        return cleanUrl;
+    }
+
     const getSafeArray = (obj) => {
         if (!obj) return [];
         if (Array.isArray(obj)) return obj.filter(Boolean);
@@ -789,7 +802,6 @@
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
-            // BERSIH TOTAL TANPA KEBOCORAN KODE HTML
             let imgHtml = "";
             if(item.img && item.img.trim() !== "") {
                 imgHtml = `<div class="card-img-container"><img src="${item.img.trim()}" class="card-img" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>';"></div>`;
@@ -1226,8 +1238,8 @@
         if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         
         document.getElementById('rec-table').innerHTML = h; 
@@ -1253,7 +1265,7 @@
         const p = parseInt(document.getElementById('new-price').value);
         const m = document.getElementById('new-mode').value;
         const c = document.getElementById('new-cat').value;
-        const imgUrl = document.getElementById('new-img').value; 
+        const imgUrl = convertToDirectLink(document.getElementById('new-img').value); // SENSOR OTOMATIS SAAT INPUT BARU
         
         let pGrab = p; let pGojek = p; let pShopee = p;
         if (m === 'ONLINE') {
@@ -1289,10 +1301,7 @@
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
-                });
-            }
-        });
-        if(maxId === 0) maxId = 50; 
+                });maxId = 50; 
         let nextId = maxId + 1;
 
         targetMenus.forEach(b => {
@@ -1370,6 +1379,7 @@
             }); 
         } catch(e) { console.error("Gagal memuat list:", e); }
     }
+
     function editM(m, id) { 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -1390,9 +1400,9 @@
         const newName = prompt("Edit Nama Menu & Rincian:", currentItem.name); 
         if(newName === null || newName.trim() === "") return;
         
-        let newImg = prompt("Edit / Ganti Link URL Foto Produk:", currentItem.img || ""); 
-        if(newImg === null) return;
-        newImg = newImg.trim().replace(/['"<>]/g, ""); 
+        let newImgInput = prompt("Edit / Ganti Link URL Foto Produk (Bisa link Google Drive langsung):", currentItem.img || ""); 
+        if(newImgInput === null) return;
+        let newImg = convertToDirectLink(newImgInput); // SELEKSI OTOMATIS JIKA USER INPUT LINK GOOGLE DRIVE
 
         const newPrice = prompt("Edit Harga Normal / Dine In (Hanya Angka!):", currentItem.price); 
         if(newPrice === null || newPrice.trim() === "") return;
@@ -1424,7 +1434,7 @@
         });
         
         menuRef.set(allMenusData).then(() => {
-            alert("Menu Berhasil Diperbarui dan Foto Ditambahkan!");
+            alert("Menu Berhasil Diperbarui!");
         }).catch(err => {
             alert("Gagal menyimpan ke database: " + err.message);
         }); 
@@ -1463,8 +1473,8 @@
         let finalTotal = Math.max(0, s-d); 
         
         if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
