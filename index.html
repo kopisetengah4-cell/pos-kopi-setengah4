@@ -791,7 +791,7 @@
 
             let imgHtml = "";
             if(item.img && item.img.trim() !== "") {
-                imgHtml = `<div class="card-img-container"><img src="${item.img}" class="card-img" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>'"></div>`;
+                imgHtml = `<div class="card-img-container"><img src="${item.img.trim()}" class="card-img" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>';"></div>`;
             } else {
                 imgHtml = `<div class="card-img-container"><span class="card-no-img">☕</span></div>`;
             }
@@ -1344,10 +1344,9 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        // PERBAIKAN SINTAKS GAMBAR DI SINI
                         let miniImg = `<span style="font-size:1.5rem; margin-right:10px;">☕</span>`;
                         if(item.img && item.img.trim() !== "") {
-                            miniImg = `<img src="${item.img}" class="mgmt-img-preview" onerror="this.onerror=null; this.parentNode.innerHTML='<span style=\"font-size:1.5rem; margin-right:10px;\">☕</span>';">`;
+                            miniImg = `<img src="${item.img.trim()}" class="mgmt-img-preview" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.parentNode.innerHTML='<span style=\"font-size:1.5rem; margin-right:10px;\">☕</span>';">`;
                         }
 
                         let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
@@ -1388,16 +1387,13 @@
         }
         if(!currentItem) return alert("Menu tidak ditemukan!");
 
-        // 1. Edit Nama
         const newName = prompt("Edit Nama Menu & Rincian:", currentItem.name); 
         if(newName === null || newName.trim() === "") return;
         
-        // 2. Edit URL Foto (Dibersihkan otomatis dari karakter aneh)
         let newImg = prompt("Edit / Ganti Link URL Foto Produk:", currentItem.img || ""); 
         if(newImg === null) return;
-        newImg = newImg.trim().replace(/['"<>]/g, ""); // Amankan link dari karakter perusak HTML
+        newImg = newImg.trim().replace(/['"<>]/g, ""); 
 
-        // 3. Edit Harga Normal
         const newPrice = prompt("Edit Harga Normal / Dine In (Hanya Angka!):", currentItem.price); 
         if(newPrice === null || newPrice.trim() === "") return;
         
