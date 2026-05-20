@@ -9,14 +9,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v75</title>
+    <title>POS KS4 - Sunter Branch v76</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #1a4d2e; --secondary: #f8f9fa; --text: #333; --admin: #d35400; }
+        :root { --primary: #1a4d2e; --secondary: #f8f9fa; --text: #333; --admin: #d35400; --warning-bg: #fff3e0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         html, body { 
@@ -72,6 +72,7 @@
         .card .ojol-prices-box { font-size: 0.68rem; color: #555; background: #f5f6fa; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; }
         .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1e2e6; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 2px 4px; border-radius: 4px; }
         
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
@@ -87,6 +88,13 @@
         .nav-btn.active { color: var(--primary); }
 
         .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Gaya baru untuk selektor cepat platform ojol di area kasir karyawan */
+        .platform-selector-box { display: flex; gap: 4px; background: #e1e2e6; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
+        .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #555; transition: 0.2s; }
+        .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
+        .platform-btn.active[data-p="Gojek"] { background: #e74c3c; color: white; }
+        .platform-btn.active[data-p="Shopee"] { background: #e67e22; color: white; }
 
         .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         
@@ -135,7 +143,7 @@
     </div>
     
     <div style="padding: 0 5px 10px 5px;">
-        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);" oninput="renderMenu()">
+        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05 planetary);" oninput="renderMenu()">
     </div>
 
     <div id="cat-nav" class="nav-tabs">
@@ -147,15 +155,32 @@
     </div>
     <main><div class="product-grid" id="product-grid"></div></main>
     <div class="footer-cart">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:#f0f5f1; padding:8px 10px; border-radius:10px; border: 1px dashed var(--primary);">
-            <span id="label-mode" style="font-size:0.7rem; font-weight:bold; color:var(--primary)">MODE: ONLINE</span>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <label for="discount-input" style="font-size:0.75rem; font-weight:bold; color:var(--admin);">Masukkan Diskon:</label>
-                <input type="number" id="discount-input" value="0" style="width:90px; text-align:right; padding:8px; border-radius:8px; border:1px solid #ccc; font-weight:bold; font-size:1rem;" oninput="updateUI()">
+        <!-- Penyusunan Baru: Kotak Kontrol Diskon dan Wajib Pilih Kasir Ojol Berdampingan -->
+        <div style="background:#f0f5f1; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--admin);">Pot. Diskon:</label>
+                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #ccc; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
+                </div>
+            </div>
+            
+            <!-- Elemen Interaktif Tambahan Bersebelahan untuk Memilih Saluran Kasir Ojol Utama -->
+            <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
+                <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div class="platform-selector-box">
+                    <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
+                    <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
+                    <button class="platform-btn" data-p="Shopee" onclick="selectActivePlatform('Shopee')">SHOPEE</button>
+                </div>
             </div>
         </div>
-        <div id="total-price-display" style="font-size:1.3rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
-        <button id="btn-pay-main" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:10px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 4px;">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #666;">Total Transaksi:</span>
+            <div id="total-price-display" style="font-size:1.4rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
+        </div>
+        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:6px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
     </div>
 </div>
 
@@ -381,7 +406,7 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
-    let selectedPaymentMethod = "Tunai";
+    let selectedPaymentMethod = ""; // Dikosongkan di awal agar wajib dipilih oleh kasir
     let currentCashReceived = 0; 
     let currentCashChange = 0;   
     
@@ -434,7 +459,6 @@
                 }
             }
 
-            // Perbaikan Mutlak: Hanya menyembunyikan ID besar kustom cabang lama, menu resmi baru Admin dilewati.
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
@@ -584,8 +608,34 @@
         document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
         document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
         if(document.getElementById('search-menu')) { document.getElementById('search-menu').value = ''; }
-        document.getElementById('label-mode').innerText = "MODE: " + (m === 'ONLINE' ? 'ONLINE' : 'DINE IN');
+        
+        const platformSelector = document.getElementById('online-platform-container');
+        if (m === 'ONLINE') {
+            selectedPaymentMethod = ""; // Reset pemilihan platform saat pindah ke online
+            document.getElementById('label-mode').innerText = "MODE: ONLINE";
+            platformSelector.style.display = "flex";
+            document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+            document.getElementById('platform-warning-text').style.color = "#d35400";
+        } else {
+            selectedPaymentMethod = "Tunai"; // Default dine in menggunakan Tunai
+            document.getElementById('label-mode').innerText = "MODE: DINE IN";
+            platformSelector.style.display = "none";
+        }
+        
         changeCategory('ICE'); updateUI(); 
+    }
+
+    // Fungsi bantu saat karyawan menekan selektor tombol platform ojol di area diskon
+    function selectActivePlatform(p) {
+        selectedPaymentMethod = p;
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-p') === p);
+        });
+        document.getElementById('platform-warning-text').innerText = "✅ PLATFORM TERPILIH: " + p.toUpperCase();
+        document.getElementById('platform-warning-text').style.color = "var(--primary)";
+        renderMenu();
+        updateUI();
     }
     
     function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
@@ -625,7 +675,6 @@
         
         displayList.forEach(item => {
             let displayName = item.name.split(' | ')[0]; 
-            // Validasi Sempurna Paket Puas: Berlaku di Online maupun Dine In untuk memicu pilihan roti wajib.
             let isPuas = displayName.toLowerCase().includes("puas");
             
             let q = 0;
@@ -645,10 +694,16 @@
                 let grb = item.priceGrab || item.price;
                 let gjk = item.priceGojek || item.price;
                 let shp = item.priceShopee || item.price;
-                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 10px;">
-                    <div class="ojol-row"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
-                    <div class="ojol-row"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
-                    <div class="ojol-row"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
+                
+                // Menghilangkan visual harga normal utama dan menyoroti platform yang sedang dipilih aktif
+                let grabClass = selectedPaymentMethod === 'Grab' ? 'ojol-row highlighted-platform' : 'ojol-row';
+                let gojekClass = selectedPaymentMethod === 'Gojek' ? 'ojol-row highlighted-platform' : 'ojol-row';
+                let shopeeClass = selectedPaymentMethod === 'Shopee' ? 'ojol-row highlighted-platform' : 'ojol-row';
+
+                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 5px;">
+                    <div class="${gojekClass}"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
+                    <div class="${shopeeClass}"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
+                    <div class="${grabClass}"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
                 </div>`;
             } else {
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
@@ -670,6 +725,10 @@
     }
 
     function updateCartNormal(id, d, isPuas) { 
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            alert("Silakan pilih saluran platform ojol (GRAB / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            return;
+        }
         if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
         cart[id] = (cart[id] || 0) + d; 
         if(cart[id] <= 0) delete cart[id]; 
@@ -677,6 +736,10 @@
     }
 
     function openBreadModal(id) {
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            alert("Silakan pilih saluran platform ojol (GRAB / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            return;
+        }
         currentPuasId = String(id);
         document.getElementById('modal-bread').classList.add('show');
     }
@@ -688,37 +751,42 @@
             if(key=='extraBread') continue; 
             let parsed = parseCartKey(key);
             let m = list.find(x => x.id == parsed.id); 
-            if(m) t += m.price * cart[key]; 
+            if(m) {
+                let platformPrice = getItemPrice(m, selectedPaymentMethod || 'Normal');
+                t += platformPrice * cart[key]; 
+            }
         } 
         document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
     }
 
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
+        
+        // Proteksi Mutlak: Memastikan kasir sudah memilih platform ojol sebelum meninjau transaksi
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
+        }
+        
         closeModal(); 
 
         let methodsContainer = document.getElementById('payment-methods-list');
         methodsContainer.innerHTML = '';
 
         if (masterMode === "ONLINE") {
-            methodsContainer.innerHTML = `
-                <button class="btn-pay-method" onclick="selectPayment('Grab')">Grab</button>
-                <button class="btn-pay-method" onclick="selectPayment('Gojek')">Gojek</button>
-                <button class="btn-pay-method" onclick="selectPayment('Shopee')">Shopee</button>
-            `;
-            selectedPaymentMethod = "Grab"; 
+            // Otomatis bypass pilihan ke platform ojol yang sudah dipilih di awal oleh kasir
+            currentCashReceived = 0;
+            currentCashChange = 0;
+            openCheckout(); 
         } else {
             methodsContainer.innerHTML = `
                 <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
                 <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
             `;
-            selectedPaymentMethod = "Tunai"; 
+            document.querySelectorAll('.btn-pay-method').forEach(btn => {
+                if(btn.innerText === selectedPaymentMethod) btn.classList.add('selected');
+            });
+            document.getElementById('modal-payment').classList.add('show');
         }
-
-        document.querySelectorAll('.btn-pay-method').forEach(btn => {
-            if(btn.innerText === selectedPaymentMethod) btn.classList.add('selected');
-        });
-        document.getElementById('modal-payment').classList.add('show');
     }
 
     function selectPayment(method) {
@@ -1123,11 +1191,10 @@
         if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         else targetMenus = [sel];
 
-        // Sempurna: Mencari ID tertinggi yang ada dan ditambah 1 agar tidak disembunyikan filter proteksi
         let maxId = 0;
         targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => {
+                ['ONLINE','DINEIN'].forEach(mo => {maxId
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
@@ -1298,7 +1365,15 @@
         } 
         t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
         transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; updateUI(); renderMenu(); 
+            cart = {}; document.getElementById('discount-input').value = 0; 
+            // Reset platform setelah transaksi sukses agar pesanan ojol berikutnya wajib memilih kembali
+            if(masterMode === "ONLINE") {
+                selectedPaymentMethod = "";
+                document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+                document.getElementById('platform-warning-text').style.color = "#d35400";
+            }
+            updateUI(); renderMenu(); 
             document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
             alert("Transaksi Berhasil!"); 
         }); 
