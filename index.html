@@ -396,7 +396,7 @@
         <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
         <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #443730; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
-            <button style="flex:1; padding:15px; background:#444; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:#444; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); handleBackToPayment();">Kembali</button>
             <button style="flex:1; padding:15px; background:var(--primary); color:#110E0C; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
         </div>
     </div>
@@ -411,7 +411,7 @@
     
     <div id="modal-btns-confirm">
         <button style="width:100%;padding:15px;background:#1a4d2e;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#ba1c1c;border:none;background:none;font-weight:bold;font-size:0.95rem;cursor:pointer;" onclick="closeModal(); openPaymentMethod();">KEMBALI</button>
+        <button style="width:100%;padding:12px;color:#ba1c1c;border:none;background:none;font-weight:bold;font-size:0.95rem;cursor:pointer;" onclick="handleBackToPayment()">KEMBALI</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
@@ -848,6 +848,25 @@
             currentCashReceived = 0;
             currentCashChange = 0;
             openCheckout(); 
+        }
+    }
+
+    function handleBackToPayment() {
+        closeModal();
+        if (masterMode === "ONLINE") {
+            // Pada mode Online platform sudah di-lock di bawah, cukup tutup modal struk
+            return;
+        } else {
+            // Pada mode Dine In, kembalikan kasir ke panel pilihan metode QRIS / Tunai
+            let methodsContainer = document.getElementById('payment-methods-list');
+            methodsContainer.innerHTML = `
+                <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
+                <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai Cash</button>
+            `;
+            document.querySelectorAll('.btn-pay-method').forEach(btn => {
+                if(btn.innerText === selectedPaymentMethod || (btn.innerText === "Tunai Cash" && selectedPaymentMethod === "Tunai")) btn.classList.add('selected');
+            });
+            document.getElementById('modal-payment').classList.add('show');
         }
     }
 
