@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#121212">
     
-    <title>POS KS4 - Sunter Branch v76 (Dark Edition)</title>
+    <title>POS KS4 - Sunter Branch v76 (Dark Edition Fixed)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -141,7 +141,6 @@
         .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #444; background: var(--bg-input); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
         .btn-pay-method.selected { border-color: var(--primary-light); background: #1b3a22; color: white; }
 
-        /* Penyesuaian tema gelap komponen input global */
         input[type="text"], input[type="number"], select {
             background-color: var(--bg-input) !important;
             color: var(--text-main) !important;
@@ -206,7 +205,7 @@
             </div>
             
             <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
-                <div style="font-size: 0.68rem; font-weight: 800; color: var(--admin); text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: #e67e22; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
                     <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
                     <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
@@ -655,7 +654,7 @@
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-            document.getElementById('platform-warning-text').style.color = var(--admin);
+            document.getElementById('platform-warning-text').style.color = "#e67e22";
         } else {
             selectedPaymentMethod = "Tunai"; 
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
@@ -678,7 +677,6 @@
     
     function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
 
-    /* Fungsi Filter Tanggal */
     function openDateModal(type) {
         filterTypeTemp = type; const container = document.getElementById('date-input-container'); const title = document.getElementById('date-modal-title');
         if(type === 'day') { title.innerText = "Laporan Harian"; container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; } 
@@ -1230,7 +1228,7 @@
         let maxId = 0;
         targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => {
+                ['ONLINE','DINEIN'].forEach(mo => { MaxId
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
@@ -1406,7 +1404,7 @@
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
                 document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                document.getElementById('platform-warning-text').style.color = var(--admin);
+                document.getElementById('platform-warning-text').style.color = "#e67e22";
             }
             updateUI(); renderMenu(); 
             document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
