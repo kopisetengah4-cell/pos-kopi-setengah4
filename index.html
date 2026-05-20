@@ -1344,9 +1344,10 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
+                        // PERBAIKAN SINTAKS GAMBAR DI SINI
                         let miniImg = `<span style="font-size:1.5rem; margin-right:10px;">☕</span>`;
                         if(item.img && item.img.trim() !== "") {
-                            miniImg = `<img src="${item.img}" class="mgmt-img-preview" onerror="this.src='' text-align:center;">`;
+                            miniImg = `<img src="${item.img}" class="mgmt-img-preview" onerror="this.onerror=null; this.parentNode.innerHTML='<span style=\"font-size:1.5rem; margin-right:10px;\">☕</span>';">`;
                         }
 
                         let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
