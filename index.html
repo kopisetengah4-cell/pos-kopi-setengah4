@@ -170,7 +170,6 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <div style="font-size: 3rem; margin-bottom: 10px;">☕</div>
         <h2 style="text-align:center; color:var(--primary); margin-top: 0;">POS KASIR KS4</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
@@ -184,7 +183,7 @@
 </div>
 
 <div class="header">
-    <div class="shop-name">☕ KOPI SETENGAH EMPAT</div>
+    <div class="shop-name">KOPI SETENGAH EMPAT</div>
     <div id="branch-display">UNIT</div>
     <button class="logout-btn" onclick="logout()">🚪</button>
 </div>
@@ -237,7 +236,7 @@
 
 <div id="page-history" class="page">
     <main>
-        <h3 style="color:var(--primary)">📋 Riwayat Pesanan Hari Ini</h3>
+        <h3 style="color:var(--primary)">🔍 Riwayat Pesanan Hari Ini</h3>
         <div class="table-container">
             <table>
                 <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
@@ -270,8 +269,8 @@
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; margin-bottom: 10px;">
-            <h3 style="color:var(--primary); margin:0;">📊 Laporan: <span id="rep-title">HARI INI</span></h3>
-            <button onclick="exportToExcel()" class="btn-excel"><span>📊</span> EXCEL</button>
+            <h3 style="color:var(--primary); margin:0;">Laporan: <span id="rep-title">HARI INI</span></h3>
+            <button onclick="exportToExcel()" class="btn-excel">📊 EXCEL</button>
         </div>
 
         <div id="report-summary-box"></div>
@@ -293,7 +292,7 @@
 
 <div id="page-mgmt" class="page">
     <main>
-        <h3 style="color:var(--text-main)">🛠️ Manajemen Menu</h3>
+        <h3 style="color:var(--text-main)">Manajemen Menu</h3>
         
         <div id="admin-mgmt-filter" style="background: var(--bg-card); padding: 15px; border-radius:15px; border: 2px solid var(--primary); margin-bottom:15px;">
             <label style="font-weight:bold; color:var(--primary); font-size:0.8rem;">Pilih Target Cabang untuk Diedit:</label>
@@ -310,7 +309,7 @@
         </div>
 
         <div id="admin-add-menu-box" style="background:var(--bg-card); padding:15px; border-radius:15px; border: 2px dashed var(--primary); margin-bottom:15px">
-            <h4 style="margin:0 0 100px 0; color:var(--primary);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
+            <h4 style="margin:0 0 10px 0; color:var(--primary);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px" onchange="toggleMgmtPriceInputs()">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
@@ -375,13 +374,13 @@
 </div>
 
 <nav class="bottom-nav" id="main-nav">
-    <button class="nav-btn active" id="btn-nav-pos" onclick="showPage('pos')"> Kasir</button>
-    <button class="nav-btn" id="btn-nav-history" onclick="showPage('history')"> Riwayat</button>
-    <button class="nav-btn" id="btn-nav-report" onclick="showPage('report')"> Laporan</button>
-    <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')"> Menu</button>
+    <button class="nav-btn active" id="btn-nav-pos" onclick="showPage('pos')">Kasir</button>
+    <button class="nav-btn" id="btn-nav-history" onclick="showPage('history')">Riwayat</button>
+    <button class="nav-btn" id="btn-nav-report" onclick="showPage('report')">Laporan</button>
+    <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti Varian</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(41, 'Roti Coklat')">🍞 Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(42, 'Roti Vanila')">🍞 Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(43, 'Roti Blueberry')">🍞 Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
@@ -393,7 +392,7 @@
 
 <div id="modal-cash" class="modal">
     <div class="modal-content" style="text-align:center">
-        <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai Cash</h3>
+        <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai</h3>
         <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
         <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #443730; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
@@ -404,7 +403,7 @@
 </div>
 
 <div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center; background:#fff; color:#000; border: 2px solid var(--primary);">
-    <h3 id="rec-header" style="color:#000; letter-spacing: 1px;">☕ STRUK BELANJA</h3>
+    <h3 id="rec-header" style="color:#000; letter-spacing: 1px;">STRUK</h3>
     <div id="rec-branch" style="font-size:0.7rem; color:#333;"></div>
     <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
     <table id="rec-table" style="margin-top:10px; color:#000;"></table>
@@ -412,12 +411,12 @@
     
     <div id="modal-btns-confirm">
         <button style="width:100%;padding:15px;background:#1a4d2e;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#ba1c1c;border:none;background:none;font-weight:bold;font-size:0.95rem;cursor:pointer;" onclick="openPaymentMethod()">⬅️ KEMBALI</button>
+        <button style="width:100%;padding:12px;color:#ba1c1c;border:none;background:none;font-weight:bold;font-size:0.95rem;cursor:pointer;" onclick="closeModal(); openPaymentMethod();">KEMBALI</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK STRUK</button>
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
             <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
         </div>
         <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
@@ -1241,7 +1240,7 @@
         let maxId = 0;
         targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => { maxId
+                ['ONLINE','DINEIN'].forEach(mo => { 
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
@@ -1259,7 +1258,7 @@
             let items = getSafeArray(allMenusData[b][m]);
             items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
             allMenusData[b][m] = items;
-        });MaxId
+        });
         
         menuRef.set(allMenusData).then(() => {
             alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
