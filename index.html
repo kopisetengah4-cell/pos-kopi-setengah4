@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a4d2e">
     
-    <title>POS KS4 - Sunter Branch v76</title>
+    <title>POS KS4 - Sunter Branch v77</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -64,18 +64,28 @@
         .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
+        /* PERUBAHAN GRID & CARD MENU UNTUK FOTO */
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: white; padding: 12px; border-radius: 12px; border: 1px solid #eee; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; }
-        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; }
-        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.85rem; }
+        .card { background: white; border-radius: 12px; border: 1px solid #eee; overflow: hidden; min-height: 250px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; position: relative; }
         
-        .card .ojol-prices-box { font-size: 0.68rem; color: #555; background: #f5f6fa; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; }
+        .card-img-container { width: 100%; height: 110px; background: #e1e2e6; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-no-img { font-size: 2rem; color: #b2bec3; }
+
+        .card-body { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card h4 { margin: 0; font-size: 0.8rem; height: 32px; overflow: hidden; color: #2d3436; line-height: 1.2; text-align: left; }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.9rem; text-align: left; }
+        
+        .card .ojol-prices-box { font-size: 0.65rem; color: #555; background: #f5f6fa; padding: 4px 6px; border-radius: 6px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 1px; font-family: monospace; }
         .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1e2e6; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 2px 4px; border-radius: 4px; }
+        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 1px 2px; border-radius: 3px; }
         
-        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: auto; padding-top: 5px; }
+        .btn-q { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+
+        /* LIST MANAGEMENT ADMIN DENGAN MINI FOTO */
+        .mgmt-img-preview { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #eee; margin-right: 10px; border: 1px solid #ddd; }
 
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
@@ -89,7 +99,6 @@
 
         .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(0,0,0,0.1); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Gaya baru untuk selektor cepat platform ojol di area kasir karyawan */
         .platform-selector-box { display: flex; gap: 4px; background: #e1e2e6; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
         .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #555; transition: 0.2s; }
         .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
@@ -143,7 +152,7 @@
     </div>
     
     <div style="padding: 0 5px 10px 5px;">
-        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05 planetary);" oninput="renderMenu()">
+        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ddd; font-size:0.9rem; font-weight:bold;" oninput="renderMenu()">
     </div>
 
     <div id="cat-nav" class="nav-tabs">
@@ -155,7 +164,6 @@
     </div>
     <main><div class="product-grid" id="product-grid"></div></main>
     <div class="footer-cart">
-        <!-- Penyusunan Baru: Kotak Kontrol Diskon dan Wajib Pilih Kasir Ojol Berdampingan -->
         <div style="background:#f0f5f1; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
@@ -165,7 +173,6 @@
                 </div>
             </div>
             
-            <!-- Elemen Interaktif Tambahan Bersebelahan untuk Memilih Saluran Kasir Ojol Utama -->
             <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
                 <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
@@ -266,6 +273,9 @@
 
             <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
+            <!-- TAMBAHAN FIELD LINK FOTO PRODUK BARU -->
+            <input type="text" id="new-img" placeholder="Link/URL Foto Menu (Kosongkan jika tidak ada)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px; border-left: 4px solid #27ae60;">
+
             <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
             <div id="ojol-price-inputs-container">
@@ -406,7 +416,7 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
-    let selectedPaymentMethod = ""; // Dikosongkan di awal agar wajib dipilih oleh kasir
+    let selectedPaymentMethod = ""; 
     let currentCashReceived = 0; 
     let currentCashChange = 0;   
     
@@ -611,14 +621,14 @@
         
         const platformSelector = document.getElementById('online-platform-container');
         if (m === 'ONLINE') {
-            selectedPaymentMethod = ""; // Reset pemilihan platform saat pindah ke online
+            selectedPaymentMethod = ""; 
             document.getElementById('label-mode').innerText = "MODE: ONLINE";
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
             document.getElementById('platform-warning-text').style.color = "#d35400";
         } else {
-            selectedPaymentMethod = "Tunai"; // Default dine in menggunakan Tunai
+            selectedPaymentMethod = "Tunai"; 
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
             platformSelector.style.display = "none";
         }
@@ -626,7 +636,6 @@
         changeCategory('ICE'); updateUI(); 
     }
 
-    // Fungsi bantu saat karyawan menekan selektor tombol platform ojol di area diskon
     function selectActivePlatform(p) {
         selectedPaymentMethod = p;
         document.querySelectorAll('.platform-btn').forEach(btn => {
@@ -660,6 +669,7 @@
 
     function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
     
+    // MODIFIKASI RENDER MENU: MENAMPILKAN FOTO PRODUK BARU
     function renderMenu() {
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
         if(!localMenu || !localMenu[masterMode]) return;
@@ -695,28 +705,37 @@
                 let gjk = item.priceGojek || item.price;
                 let shp = item.priceShopee || item.price;
                 
-                // Menghilangkan visual harga normal utama dan menyoroti platform yang sedang dipilih aktif
                 let grabClass = selectedPaymentMethod === 'Grab' ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let gojekClass = selectedPaymentMethod === 'Gojek' ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let shopeeClass = selectedPaymentMethod === 'Shopee' ? 'ojol-row highlighted-platform' : 'ojol-row';
 
-                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 5px;">
-                    <div class="${gojekClass}"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
-                    <div class="${shopeeClass}"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
-                    <div class="${grabClass}"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
+                ojolPricesHtml = `<div class="ojol-prices-box">
+                    <div class="${gojekClass}"><span>Gojek</span><span>Rp ${gjk.toLocaleString()}</span></div>
+                    <div class="${shopeeClass}"><span>Shopee</span><span>Rp ${shp.toLocaleString()}</span></div>
+                    <div class="${grabClass}"><span>Grab</span><span>Rp ${grb.toLocaleString()}</span></div>
                 </div>`;
             } else {
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
-            let innerContent = `<h4>${displayName}</h4>
-            ${mainPriceHtml}
-            ${ojolPricesHtml}
-            <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
-                <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
-                <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
-                <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
-            </div>`;
+            // Bagian visual foto produk
+            let imgHtml = `<div class="card-img-container"><span class="card-no-img">☕</span></div>`;
+            if(item.img && item.img.trim() !== "") {
+                imgHtml = `<div class="card-img-container"><img src="${item.img}" class="card-img" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>'"></div>`;
+            }
+
+            let innerContent = `
+                ${imgHtml}
+                <div class="card-body">
+                    <h4>${displayName}</h4>
+                    ${mainPriceHtml}
+                    ${ojolPricesHtml}
+                    <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
+                        <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
+                        <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
+                        <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
+                    </div>
+                </div>`;
 
             grid.innerHTML += `<div class="card" onclick="${act}">${innerContent}</div>`;
         });
@@ -762,7 +781,6 @@
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
         
-        // Proteksi Mutlak: Memastikan kasir sudah memilih platform ojol sebelum meninjau transaksi
         if(masterMode === "ONLINE" && !selectedPaymentMethod) {
             return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
         }
@@ -773,7 +791,6 @@
         methodsContainer.innerHTML = '';
 
         if (masterMode === "ONLINE") {
-            // Otomatis bypass pilihan ke platform ojol yang sudah dipilih di awal oleh kasir
             currentCashReceived = 0;
             currentCashChange = 0;
             openCheckout(); 
@@ -1156,6 +1173,7 @@
         if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
     }
 
+    // MODIFIKASI FORM SIMPAN TAMBAH MENU BARU: TERMASUK MENYIMPAN PROPERTY FOTO (img)
     function addNewMenu() { 
         if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Hanya Admin yang diizinkan menambah menu baru."); }
         
@@ -1163,6 +1181,7 @@
         const p = parseInt(document.getElementById('new-price').value);
         const m = document.getElementById('new-mode').value;
         const c = document.getElementById('new-cat').value;
+        const imgUrl = document.getElementById('new-img').value; // Ambil nilai input link foto
         
         let pGrab = p; let pGojek = p; let pShopee = p;
         if (m === 'ONLINE') {
@@ -1194,7 +1213,7 @@
         let maxId = 0;
         targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => {maxId
+                ['ONLINE','DINEIN'].forEach(mo => {
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
@@ -1210,7 +1229,7 @@
             if(!allMenusData[b].DINEIN) allMenusData[b].DINEIN = [];
             
             let items = getSafeArray(allMenusData[b][m]);
-            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
+            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c, img: imgUrl });
             allMenusData[b][m] = items;
         });
         
@@ -1218,6 +1237,7 @@
             alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
             document.getElementById('new-name').value = '';
             document.getElementById('new-price').value = '';
+            document.getElementById('new-img').value = ''; // Reset input gambar
             if (m === 'ONLINE') {
                 document.getElementById('new-price-grab').value = '';
                 document.getElementById('new-price-gojek').value = '';
@@ -1228,6 +1248,7 @@
         });
     }
     
+    // MODIFIKASI LIST ADMIN: MENAMPILKAN PRATINJAU MINI FOTO MENU
     function renderMgmt() { 
         try {
             const list = document.getElementById('mgmt-list'); if(!list) return; list.innerHTML = ''; 
@@ -1253,13 +1274,22 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>`;
-                        if (isAdmin) {
-                            actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>`;
+                        // Mini preview gambar di dashboard manajemen menu admin
+                        let miniImg = `<span style="font-size:1.5rem; margin-right:10px;">☕</span>`;
+                        if(item.img && item.img.trim() !== "") {
+                            miniImg = `<img src="${item.img}" class="mgmt-img-preview" onerror="this.src='' text-align:center;">`;
                         }
 
-                        html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ddd;">
-                            <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
+                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
+                        if (isAdmin) {
+                            actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="delM('${m}', ${item.id})">X</button>`;
+                        }
+
+                        html += `<div class="mg-card">
+                            <div style="display:flex; align-items:center; flex:1;">
+                                ${miniImg}
+                                <div><b style="font-size:0.8rem;">${item.name.split(' | ')[0]}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
+                            </div>
                             <div>
                                 ${actionButtons}
                             </div>
@@ -1271,6 +1301,7 @@
         } catch(e) { console.error("Gagal memuat list:", e); }
     }
 
+    // MODIFIKASI EDIT MENU: SEKARANG BISA MENGUBAH / MENGGANTI FOTO MENU LEWAT PROMPT
     function editM(m, id) { 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -1289,6 +1320,10 @@
         if(!currentItem) return alert("Menu tidak ditemukan!");
 
         const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
+        
+        // Tambahan Prompt baru untuk Mengedit / Mengganti link foto produk
+        const newImg = prompt("Edit / Ganti Link URL Foto Produk:", currentItem.img || ""); if(newImg === null) return;
+
         const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
         
         let newPriceGrab = newPrice; let newPriceGojek = newPrice; let newPriceShopee = newPrice;
@@ -1304,14 +1339,18 @@
             let idx = items.findIndex(x=>x.id==id);
             
             if(idx !== -1) {
-                items[idx].name = newName; items[idx].price = parseInt(newPrice);
+                items[idx].name = newName; 
+                items[idx].price = parseInt(newPrice);
+                items[idx].img = newImg; // Update link gambar baru
                 items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
             } else {
-                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
+                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat, img: newImg });
             }
             allMenusData[b][m] = items;
         });
-        menuRef.set(allMenusData); 
+        menuRef.set(allMenusData).then(() => {
+            alert("Menu Berhasil Diperbarui!");
+        }); 
     }
 
     function delM(m, id) { 
@@ -1366,7 +1405,6 @@
         t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
         transRef.push(t).then(() => { 
             cart = {}; document.getElementById('discount-input').value = 0; 
-            // Reset platform setelah transaksi sukses agar pesanan ojol berikutnya wajib memilih kembali
             if(masterMode === "ONLINE") {
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
