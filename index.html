@@ -64,25 +64,61 @@
         .tab { padding: 10px 18px; border: none; border-radius: 20px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.75rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
-        /* PERUBAHAN GRID & CARD MENU UNTUK FOTO */
-        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: white; border-radius: 12px; border: 1px solid #eee; overflow: hidden; min-height: 250px; display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; position: relative; }
+        /* PERUBAHAN GRID MENJADI 3 KOLOM KESAMPING */
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 8px; 
+            padding: 5px; 
+        }
         
-        .card-img-container { width: 100%; height: 110px; background: #e1e2e6; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .card-img { width: 100%; height: 100%; object-fit: cover; }
-        .card-no-img { font-size: 2rem; color: #b2bec3; }
+        .card { 
+            background: white; 
+            border-radius: 10px; 
+            border: 1px solid #eee; 
+            overflow: hidden; 
+            min-height: 210px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            cursor: pointer; 
+            position: relative; 
+        }
+        
+        /* MEMBUAT FOTO SIMETRIS & SAMA RATA */
+        .card-img-container { 
+            width: 100%; 
+            aspect-ratio: 1 / 1; 
+            background: #e1e2e6; 
+            position: relative; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        .card-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        .card-no-img { 
+            font-size: 1.5rem; 
+            color: #b2bec3; 
+        }
 
-        .card-body { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .card h4 { margin: 0; font-size: 0.8rem; height: 32px; overflow: hidden; color: #2d3436; line-height: 1.2; text-align: left; }
-        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.9rem; text-align: left; }
+        .card-body { padding: 8px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; color: #2d3436; line-height: 1.2; text-align: left; }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.8rem; text-align: left; }
         
-        .card .ojol-prices-box { font-size: 0.65rem; color: #555; background: #f5f6fa; padding: 4px 6px; border-radius: 6px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 1px; font-family: monospace; }
+        .card .ojol-prices-box { font-size: 0.55rem; color: #555; background: #f5f6fa; padding: 3px 4px; border-radius: 4px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 1px; font-family: monospace; }
         .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1e2e6; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
         .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 1px 2px; border-radius: 3px; }
         
-        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: auto; padding-top: 5px; }
-        .btn-q { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: auto; padding-top: 3px; }
+        .btn-q { width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
 
         /* LIST MANAGEMENT ADMIN DENGAN MINI FOTO */
         .mgmt-img-preview { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #eee; margin-right: 10px; border: 1px solid #ddd; }
@@ -273,7 +309,6 @@
 
             <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
             
-            <!-- TAMBAHAN FIELD LINK FOTO PRODUK BARU -->
             <input type="text" id="new-img" placeholder="Link/URL Foto Menu (Kosongkan jika tidak ada)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px; border-left: 4px solid #27ae60;">
 
             <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
@@ -669,7 +704,6 @@
 
     function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
     
-    // MODIFIKASI RENDER MENU: MENAMPILKAN FOTO PRODUK BARU
     function renderMenu() {
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
         if(!localMenu || !localMenu[masterMode]) return;
@@ -718,7 +752,7 @@
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
-            // Bagian visual foto produk
+            // PERBAIKAN: Menghilangkan logo kopi jika ada gambar agar full screen
             let imgHtml = `<div class="card-img-container"><span class="card-no-img">☕</span></div>`;
             if(item.img && item.img.trim() !== "") {
                 imgHtml = `<div class="card-img-container"><img src="${item.img}" class="card-img" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>'"></div>`;
@@ -1173,7 +1207,6 @@
         if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
     }
 
-    // MODIFIKASI FORM SIMPAN TAMBAH MENU BARU: TERMASUK MENYIMPAN PROPERTY FOTO (img)
     function addNewMenu() { 
         if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Hanya Admin yang diizinkan menambah menu baru."); }
         
@@ -1181,7 +1214,7 @@
         const p = parseInt(document.getElementById('new-price').value);
         const m = document.getElementById('new-mode').value;
         const c = document.getElementById('new-cat').value;
-        const imgUrl = document.getElementById('new-img').value; // Ambil nilai input link foto
+        const imgUrl = document.getElementById('new-img').value; 
         
         let pGrab = p; let pGojek = p; let pShopee = p;
         if (m === 'ONLINE') {
@@ -1237,7 +1270,7 @@
             alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
             document.getElementById('new-name').value = '';
             document.getElementById('new-price').value = '';
-            document.getElementById('new-img').value = ''; // Reset input gambar
+            document.getElementById('new-img').value = ''; 
             if (m === 'ONLINE') {
                 document.getElementById('new-price-grab').value = '';
                 document.getElementById('new-price-gojek').value = '';
@@ -1248,7 +1281,6 @@
         });
     }
     
-    // MODIFIKASI LIST ADMIN: MENAMPILKAN PRATINJAU MINI FOTO MENU
     function renderMgmt() { 
         try {
             const list = document.getElementById('mgmt-list'); if(!list) return; list.innerHTML = ''; 
@@ -1274,7 +1306,6 @@
                             pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        // Mini preview gambar di dashboard manajemen menu admin
                         let miniImg = `<span style="font-size:1.5rem; margin-right:10px;">☕</span>`;
                         if(item.img && item.img.trim() !== "") {
                             miniImg = `<img src="${item.img}" class="mgmt-img-preview" onerror="this.src='' text-align:center;">`;
@@ -1301,7 +1332,6 @@
         } catch(e) { console.error("Gagal memuat list:", e); }
     }
 
-    // MODIFIKASI EDIT MENU: SEKARANG BISA MENGUBAH / MENGGANTI FOTO MENU LEWAT PROMPT
     function editM(m, id) { 
         let targetMenus = [];
         if (currentBranchId === "KS4-ADM") {
@@ -1321,7 +1351,6 @@
 
         const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
         
-        // Tambahan Prompt baru untuk Mengedit / Mengganti link foto produk
         const newImg = prompt("Edit / Ganti Link URL Foto Produk:", currentItem.img || ""); if(newImg === null) return;
 
         const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
@@ -1341,7 +1370,7 @@
             if(idx !== -1) {
                 items[idx].name = newName; 
                 items[idx].price = parseInt(newPrice);
-                items[idx].img = newImg; // Update link gambar baru
+                items[idx].img = newImg; 
                 items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
             } else {
                 items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat, img: newImg });
