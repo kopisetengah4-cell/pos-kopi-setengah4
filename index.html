@@ -64,7 +64,6 @@
         .tab { padding: 8px 14px; border: none; border-radius: 15px; background: #eee; font-weight: 600; white-space: nowrap; font-size: 0.72rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
-        /* PERUBAHAN GRID & CARD MENJADI SANGAT RINGKAS (COMPACT MAKSIMAL) */
         .product-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
@@ -85,7 +84,6 @@
             position: relative; 
         }
         
-        /* UKURAN FOTO SIMETRIS COMPACT */
         .card-img-container { 
             width: 100%; 
             aspect-ratio: 1.2 / 1; 
@@ -117,7 +115,6 @@
             align-items: center;
         }
         
-        /* REVISI: TULISAN MENU DI TENGAH DAN TINGGI COCOK */
         .card h4 { 
             margin: 0; 
             font-size: 0.72rem; 
@@ -161,7 +158,6 @@
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: auto; padding-top: 2px; width: 100%; }
         .btn-q { width: 20px; height: 20px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
 
-        /* LIST MANAGEMENT ADMIN DENGAN MINI FOTO */
         .mgmt-img-preview { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #eee; margin-right: 10px; border: 1px solid #ddd; }
 
         .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; margin-top: 10px; }
@@ -342,7 +338,7 @@
             </select>
         </div>
 
-        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px registry;">
+        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px;">
             <h4 style="margin:0 0 10px 0; color:var(--admin);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
@@ -793,7 +789,6 @@
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
             }
 
-            // REVISI: Kontainer foto bersih tanpa menyisakan teks / emoji logo kopi jika dipasang gambar
             let imgHtml = "";
             if(item.img && item.img.trim() !== "") {
                 imgHtml = `<div class="card-img-container"><img src="${item.img}" class="card-img" onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\"card-no-img\">☕</span>'"></div>`;
@@ -959,7 +954,7 @@
             if(payMethods[method] !== undefined) payMethods[method] += t.total;
 
             for(let key in t.items) { 
-                if(key==='extraBread') continue; 
+                if(key=='extraBread') continue; 
                 let parsed = parseCartKey(key);
                 let m = allItems.find(x => x.id == parsed.id); 
                 if(!m) continue; 
@@ -1309,7 +1304,17 @@
             allMenusData[b][m] = items;
         });
         
-        } catch (err) {
+        menuRef.set(allMenusData).then(() => {
+            alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-price').value = '';
+            document.getElementById('new-img').value = ''; 
+            if (m === 'ONLINE') {
+                document.getElementById('new-price-grab').value = '';
+                document.getElementById('new-price-gojek').value = '';
+                document.getElementById('new-price-shopee').value = '';
+            }
+        }).catch(err => {
             alert("Gagal menyimpan ke database: " + err.message);
         });
     }
@@ -1460,7 +1465,7 @@
         let d = parseInt(document.getElementById('discount-input').value) || 0;
         let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0 }; 
         for(let key in cart) { 
-            if(key==='extraBread') continue; 
+            if(key=='extraBread') continue; 
             let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
             if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
         } 
