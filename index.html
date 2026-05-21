@@ -6,8 +6,8 @@
     
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#110E0C">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#F9F6F0">
     
     <title>POS KS4 - Premium Coffee Edition</title>
     
@@ -17,15 +17,15 @@
     
     <style>
         :root { 
-            --bg-main: #110E0C;      /* Espresso Dark */
-            --bg-card: #1C1714;      /* Coffee Roasted */
-            --bg-input: #2A231F;     /* Muted Coffee */
-            --primary: #C5A880;      /* Warm Coffee Gold */
-            --primary-light: #E2CEB1;/* Light Cream Gold */
-            --text-main: #FFFFFF;    /* Pure White */
-            --text-muted: #BAAFA6;   /* Latte Gray */
-            --admin: #E67E22; 
-            --warning-bg: #2C1A04; 
+            --bg-main: #F9F6F0;       /* Putih Cream Lembut */
+            --bg-card: #FFFFFF;       /* Putih Bersih untuk Kartu */
+            --bg-input: #F1ECE4;      /* Cream Agak Muted untuk Input */
+            --primary: #8E6F43;       /* Kopi Gold Lebih Gelap agar Kontras */
+            --primary-light: #C5A880; /* Warm Coffee Gold */
+            --text-main: #2A231F;     /* Espresso Tua untuk Teks Utama */
+            --text-muted: #6B5A50;    /* Latte Gray Tua untuk Sub-teks */
+            --admin: #D35400; 
+            --warning-bg: #FDF2E9; 
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -41,7 +41,7 @@
         body.admin-mode #btn-nav-pos, body.admin-mode #btn-nav-history { display: none !important; }
 
         body.admin-mode #branch-display { color: var(--admin); }
-        body:not(.admin-mode) #branch-display { color: var(--primary-light); }
+        body:not(.admin-mode) #branch-display { color: var(--primary); }
 
         #admin-mgmt-filter, #admin-add-menu-box { display: none; }
         body.admin-mode #admin-mgmt-filter, body.admin-mode #admin-add-menu-box { display: block; }
@@ -56,7 +56,7 @@
             background: var(--bg-card); 
             padding: 15px; 
             text-align: center; 
-            border-bottom: 2px solid var(--primary); 
+            border-bottom: 2px solid var(--primary-light); 
             flex-shrink: 0; 
             position: relative; 
             padding-top: calc(10px + env(safe-area-inset-top)); 
@@ -64,6 +64,7 @@
             flex-direction: column; 
             justify-content: center; 
             align-items: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .shop-name { font-size: 1.5rem; font-weight: 900; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 2px; }
@@ -74,21 +75,21 @@
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
         
-        #login-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; touch-action: auto; }
-        .login-box { background: var(--bg-card); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text-main); box-shadow: 0 15px 35px rgba(0,0,0,0.7); border: 1px solid var(--primary); text-align: center; }
-        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #443730; background: var(--bg-input); color: white; border-radius: 10px; font-size: 1rem; }
-        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: #110E0C; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 1rem; letter-spacing: 0.5px; }
+        #login-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: var(--text-main); touch-action: auto; }
+        .login-box { background: var(--bg-card); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text-main); box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid var(--primary-light); text-align: center; }
+        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #D1C7BD; background: var(--bg-input); color: var(--text-main); border-radius: 10px; font-size: 1rem; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: #FFFFFF; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; font-size: 1rem; letter-spacing: 0.5px; }
 
-        .mode-tabs, .range-tabs { display: flex; background: var(--bg-card); padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; border: 1px solid #3d322b; }
+        .mode-tabs, .range-tabs { display: flex; background: var(--bg-card); padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; border: 1px solid #E1D7CD; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.75rem; cursor: pointer; background: var(--bg-input); color: var(--text-muted); transition: 0.2s; white-space: nowrap; }
-        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: #110E0C !important; }
+        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: #FFFFFF !important; }
 
         .nav-tabs { 
             display: flex; 
             background: var(--bg-card); 
             padding: 8px; 
             gap: 6px; 
-            border-bottom: 1px solid #3d322b; 
+            border-bottom: 1px solid #E1D7CD; 
             justify-content: center; 
             align-items: center;
             width: 100%;
@@ -107,58 +108,59 @@
             cursor: pointer; 
             transition: all 0.2s ease;
         }
-        .tab.active { background: var(--primary); color: #110E0C; font-weight: 800; }
+        .tab.active { background: var(--primary); color: #FFFFFF; font-weight: 800; }
 
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid #3d322b; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
+        .card { background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid #E1D7CD; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+        .card :active { transform: scale(0.98); }
         .card h4 { margin: 0; font-size: 0.85rem; height: 32px; overflow: hidden; color: var(--text-main); font-weight: 600; }
         .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.95rem; }
         
-        .card .ojol-prices-box { font-size: 0.68rem; color: #ccc; background: var(--bg-input); padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; border: 1px solid #3d322b; }
-        .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #443730; padding-bottom: 1px; }
+        .card .ojol-prices-box { font-size: 0.68rem; color: var(--text-muted); background: var(--bg-input); padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; border: 1px solid #E1D7CD; }
+        .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #D1C7BD; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .card .ojol-row.highlighted-platform { background: #5c4424; font-weight: bold; color: #ffb85c; padding: 2px 4px; border-radius: 4px; }
+        .card .ojol-row.highlighted-platform { background: #F3E5D8; font-weight: bold; color: #A0522D; padding: 2px 4px; border-radius: 4px; }
         
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: #110E0C; font-weight: bold; cursor: pointer; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: #FFFFFF; font-weight: bold; cursor: pointer; }
 
-        .table-container { background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid #3d322b; margin-top: 10px; }
+        .table-container { background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid #E1D7CD; margin-top: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; color: var(--text-main); }
-        th { background: #171311; padding: 10px; text-align: center; border-bottom: 2px solid #3d322b; color: var(--primary); font-weight: 800; }
-        td { padding: 10px; border-bottom: 1px solid #3d322b; text-align: center; }
-        .row-total { background: #3d2b18; font-weight: bold; color: #ff9f43; }
+        th { background: #F1ECE4; padding: 10px; text-align: center; border-bottom: 2px solid #E1D7CD; color: var(--primary); font-weight: 800; }
+        td { padding: 10px; border-bottom: 1px solid #E1D7CD; text-align: center; background: var(--bg-card); }
+        .row-total { background: #FDF2E9; font-weight: bold; color: #D35400; }
+        .row-total td { background: #FDF2E9; color: #D35400; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: var(--bg-card); border-top: 1px solid #3d322b; height: 70px; z-index: 3000; padding-bottom: env(safe-area-inset-bottom); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: var(--bg-card); border-top: 1px solid #E1D7CD; height: 70px; z-index: 3000; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 10px rgba(0,0,0,0.03); }
         .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; cursor: pointer; }
         .nav-btn.active { color: var(--primary); font-weight: 800; }
 
-        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: var(--bg-card); padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 25px rgba(0,0,0,0.6); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #3d322b; }
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: var(--bg-card); padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 25px rgba(0,0,0,0.08); z-index: 2000; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #E1D7CD; }
         
-        .platform-selector-box { display: flex; gap: 4px; background: var(--bg-input); padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; border: 1px solid #443730; }
+        .platform-selector-box { display: flex; gap: 4px; background: var(--bg-input); padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; border: 1px solid #D1C7BD; }
         .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: var(--text-muted); transition: 0.2s; }
         .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
         .platform-btn.active[data-p="Gojek"] { background: #e74c3c; color: white; }
         .platform-btn.active[data-p="Shopee"] { background: #e67e22; color: white; }
 
-        .mg-card { background: var(--bg-card); padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #3d322b; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .mg-card { background: var(--bg-card); padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #E1D7CD; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; touch-action: auto; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; touch-action: auto; backdrop-filter: blur(2px); }
         .modal.show { display: flex; }
-        .modal-content { background: var(--bg-card); color: var(--text-main); width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; border: 1px solid var(--primary); }
+        .modal-content { background: var(--bg-card); color: var(--text-main); width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; border: 1px solid var(--primary-light); box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
         
-        .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
-        .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #443730; background: var(--bg-input); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
-        .btn-pay-method.selected { border-color: var(--primary); background: #3d2b18; color: white; }
+        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #D1C7BD; background: var(--bg-input); color: var(--text-main); font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        .btn-pay-method.selected { border-color: var(--primary); background: #F3E5D8; color: var(--primary); }
 
         input[type="text"], input[type="number"], select {
             background-color: var(--bg-input) !important;
             color: var(--text-main) !important;
-            border: 1px solid #443730 !important;
+            border: 1px solid #D1C7BD !important;
         }
-        input::placeholder { color: #6b5a50 !important; }
+        input::placeholder { color: #A19285 !important; }
 
         #print-area { display: none; }
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { display: block; position: absolute; left: 0; top: 0; width: 58mm; margin: 0; padding: 0; color: #000; font-family: 'Courier New', monospace; } @page { margin: 0; } }
@@ -195,7 +197,7 @@
     </div>
     
     <div style="padding: 0 5px 10px 5px;">
-        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu kopi / roti..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #443730; font-size:0.9rem; font-weight:bold;" oninput="renderMenu()">
+        <input type="text" id="search-menu" placeholder="🔍 Cari nama menu kopi / roti..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #D1C7BD; font-size:0.9rem; font-weight:bold;" oninput="renderMenu()">
     </div>
 
     <div id="cat-nav" class="nav-tabs">
@@ -207,17 +209,17 @@
     </div>
     <main><div class="product-grid" id="product-grid"></div></main>
     <div class="footer-cart">
-        <div style="background:#221b18; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
+        <div style="background:#FAF8F5; padding:10px; border-radius:12px; border: 1px dashed var(--primary-light); display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
                 <div style="display:flex; align-items:center; gap:5px;">
-                    <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--primary-light);">Pot. Diskon:</label>
-                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #443730; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
+                    <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--text-muted);">Pot. Diskon:</label>
+                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #D1C7BD; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
                 </div>
             </div>
             
             <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
-                <div style="font-size: 0.68rem; font-weight: 800; color: #ffb85c; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: #D35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
                     <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
                     <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
@@ -230,7 +232,7 @@
             <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted);">Total Transaksi:</span>
             <div id="total-price-display" style="font-size:1.4rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
         </div>
-        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:#110E0C; border:none; border-radius:12px; font-weight:900; margin-top:6px; font-size:1.1rem; letter-spacing: 0.5px;" onclick="openPaymentMethod()">BAYAR</button>
+        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:#FFFFFF; border:none; border-radius:12px; font-weight:900; margin-top:6px; font-size:1.1rem; letter-spacing: 0.5px;" onclick="openPaymentMethod()">BAYAR</button>
     </div>
 </div>
 
@@ -248,7 +250,7 @@
 
 <div id="page-report" class="page">
     <main>
-        <div id="admin-panel" style="display:none; background: var(--bg-card); padding: 15px; border-bottom: 2px solid var(--primary); margin: -15px -15px 15px -15px;">
+        <div id="admin-panel" style="display:none; background: var(--bg-card); padding: 15px; border-bottom: 2px solid var(--primary-light); margin: -15px -15px 15px -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
             <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
@@ -277,7 +279,7 @@
         <div id="report-details-box"></div>
         
         <div id="admin-history-box" style="display:none; margin-top:25px;">
-            <h3 style="color:var(--primary); border-bottom: 2px solid var(--primary); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
+            <h3 style="color:var(--primary); border-bottom: 2px solid var(--primary-light); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
             <div class="table-container">
                 <table>
                     <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
@@ -294,7 +296,7 @@
     <main>
         <h3 style="color:var(--text-main)">Manajemen Menu</h3>
         
-        <div id="admin-mgmt-filter" style="background: var(--bg-card); padding: 15px; border-radius:15px; border: 2px solid var(--primary); margin-bottom:15px;">
+        <div id="admin-mgmt-filter" style="background: var(--bg-card); padding: 15px; border-radius:15px; border: 2px solid var(--primary-light); margin-bottom:15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
             <label style="font-weight:bold; color:var(--primary); font-size:0.8rem;">Pilih Target Cabang untuk Diedit:</label>
             <select id="mgmt-branch-select" onchange="changeMgmtBranch()" style="width:100%; padding:12px; margin-top:5px; border-radius:10px; font-weight:bold;">
                 <option value="ALL">✅ SEMUA CABANG SEKALIGUS</option>
@@ -308,7 +310,7 @@
             </select>
         </div>
 
-        <div id="admin-add-menu-box" style="background:var(--bg-card); padding:15px; border-radius:15px; border: 2px dashed var(--primary); margin-bottom:15px">
+        <div id="admin-add-menu-box" style="background:var(--bg-card); padding:15px; border-radius:15px; border: 2px dashed var(--primary-light); margin-bottom:15px">
             <h4 style="margin:0 0 10px 0; color:var(--primary);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
             <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px" onchange="toggleMgmtPriceInputs()">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
@@ -319,7 +321,7 @@
             <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border-radius:10px">
             
             <div id="ojol-price-inputs-container">
-                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary-light); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
                     <input type="number" id="new-price-grab" placeholder="Harga Grab" style="flex:1; width:100%; padding:12px; border-radius:10px; font-size:0.8rem;">
                     <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border-radius:10px; font-size:0.8rem;">
@@ -331,9 +333,9 @@
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
 
-            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#1C1714; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
+            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:var(--bg-input); color:var(--primary); border:2px dashed var(--primary-light); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
             
-            <div id="komponen-panel" style="display:none; background:var(--bg-input); padding:15px; border-radius:10px; border:1px solid #443730; margin-bottom:15px;">
+            <div id="komponen-panel" style="display:none; background:var(--bg-input); padding:15px; border-radius:10px; border:1px solid #D1C7BD; margin-bottom:15px;">
                 <label style="font-size:0.8rem; font-weight:bold; color:var(--primary); margin-bottom:10px; display:block;">Pengaturan Fisik Cup & Susu (Otomatis Dihitung)</label>
                 
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -366,7 +368,7 @@
                 </div>
             </div>
 
-            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--primary); color:#110E0C; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--primary); color:#FFFFFF; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
         </div>
         
         <div id="mgmt-list"></div>
@@ -380,13 +382,13 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:white; border:1px solid #443730;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:var(--text-main); border:1px solid #D1C7BD;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:var(--text-main); border:1px solid #D1C7BD;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold; background:var(--bg-input); color:var(--text-main); border:1px solid #D1C7BD;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:var(--text-muted);border:none;background:none;margin-top:10px;font-weight:bold;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
         <h3 style="color:var(--primary); margin-bottom:15px;">Pilih Metode Pembayaran</h3>
         <div id="payment-methods-list"></div>
-        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+        <button style="width:100%;padding:10px;color:var(--text-muted);border:none;background:none;margin-top:10px;font-weight:bold;" onclick="closeModal()">Batal</button>
     </div>
 </div>
 
@@ -394,19 +396,19 @@
     <div class="modal-content" style="text-align:center">
         <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai</h3>
         <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
-        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #443730; text-align:center; margin-bottom:20px;">
+        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #D1C7BD; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
-            <button style="flex:1; padding:15px; background:#444; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="handleBackToPayment()">Kembali</button>
-            <button style="flex:1; padding:15px; background:var(--primary); color:#110E0C; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+            <button style="flex:1; padding:15px; background:#888; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="handleBackToPayment()">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:#FFFFFF; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
         </div>
     </div>
 </div>
 
-<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center; background:#fff; color:#000; border: 2px solid var(--primary);">
+<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center; background:#fff; color:#000; border: 2px solid var(--primary-light);">
     <h3 id="rec-header" style="color:#000; letter-spacing: 1px;">STRUK</h3>
     <div id="rec-branch" style="font-size:0.7rem; color:#333;"></div>
     <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
-    <table id="rec-table" style="margin-top:10px; color:#000;"></table>
+    <table id="rec-table" style="margin-top:10px; color:#000; width:100%;"></table>
     <h4 id="rec-total" style="text-align:right; color:#1a4d2e; font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
@@ -428,8 +430,8 @@
         <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
         <div id="date-input-container" style="margin-top:15px;"></div>
         <div style="display:flex; gap:10px; margin-top:25px;">
-            <button style="flex:1; padding:12px; background:#444; color:white; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
-            <button style="flex:1; padding:12px; background:var(--primary); color:#110E0C; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+            <button style="flex:1; padding:12px; background:#888; color:white; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:#FFFFFF; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
         </div>
     </div>
 </div>
@@ -666,7 +668,7 @@
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-            document.getElementById('platform-warning-text').style.color = "#ffb85c";
+            document.getElementById('platform-warning-text').style.color = "#D35400";
         } else {
             selectedPaymentMethod = "Tunai"; 
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
@@ -707,7 +709,7 @@
         document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
     }
 
-    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); renderMenu(); }
+    function changeCategory(c) { document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); activeCat = c; renderMenu(); }
     
     function renderMenu() {
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
@@ -762,7 +764,7 @@
             ${ojolPricesHtml}
             <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
                 <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
-                <b style="color:white; font-size:1.1rem; margin: 0 4px;">${q}</b>
+                <b style="color:var(--text-main); font-size:1.1rem; margin: 0 4px;">${q}</b>
                 <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
             </div>`;
 
@@ -854,10 +856,8 @@
     function handleBackToPayment() {
         closeModal();
         if (masterMode === "ONLINE") {
-            // Langsung tutup modal untuk kembali ke kasir utama, agar platform ojol tidak rusak
             return;
         } else {
-            // Pada mode Dine In, kembalikan kasir ke panel pilihan metode QRIS / Tunai
             let methodsContainer = document.getElementById('payment-methods-list');
             methodsContainer.innerHTML = `
                 <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
@@ -930,7 +930,7 @@
             if(payMethods[method] !== undefined) payMethods[method] += t.total;
 
             for(let key in t.items) { 
-                if(key==='extraBread') continue; 
+                if(key=='extraBread') continue; 
                 let parsed = parseCartKey(key);
                 let m = allItems.find(x => x.id == parsed.id); 
                 if(!m) continue; 
@@ -1020,7 +1020,7 @@
                         } 
                     } 
                 } 
-            } 
+            });
             if(t.extraBread) t.extraBread.forEach(bid => { 
                 if(bid==41) { rc++; catItems["SNACKS"]["Roti Coklat"] = (catItems["SNACKS"]["Roti Coklat"] || 0) + 1; } 
                 if(bid==42) { rv++; catItems["SNACKS"]["Roti Vanila"] = (catItems["SNACKS"]["Roti Vanila"] || 0) + 1; } 
@@ -1028,7 +1028,7 @@
             }); 
         });
 
-        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #5c4424; padding-top:10px;">`;
+        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #D1C7BD; padding-top:10px;">`;
         if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Shopee"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Shopee: <b>Rp ${payMethods["Shopee"].toLocaleString('id-ID')}</b></div>`;
@@ -1036,37 +1036,37 @@
         if(payMethods["Tunai"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Tunai: <b>Rp ${payMethods["Tunai"].toLocaleString('id-ID')}</b></div>`;
         paymentHtml += `</div>`;
 
-        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #3d322b; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
         
-        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #3d322b;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #3d322b;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
+        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #E1D7CD; background:var(--bg-card);">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #E1D7CD; background:var(--bg-card);"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         
-        if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #3d322b; padding-top:15px;"><h4 style="color:var(--primary); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#171311; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
+        if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #E1D7CD; padding-top:15px;"><h4 style="color:var(--primary); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#F1ECE4; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         
-        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #3d322b; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
         if(currentBranchId === "KS4-ADM") { 
             document.getElementById('admin-history-box').style.display = 'block'; 
             let histHtml = ''; 
             filtered.forEach(t => { 
                 histHtml += `<tr>
-                    <td style="text-align:left;">
+                    <td style="text-align:left; background:var(--bg-card);">
                         ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> 
                         ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
                         <span style="font-size:0.65rem; font-weight:bold; color:var(--admin);">${t.paymentMethod || 'Tunai'}</span>
                     </td>
-                    <td style="text-align:left;">
+                    <td style="text-align:left; background:var(--bg-card);">
                         <b>${t.branchName}</b><br>
                         <span style="font-size:0.65rem; color:#888;">${t.mode}</span>
                     </td>
-                    <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
-                    <td style="text-align:left;">
+                    <td style="text-align:left; background:var(--bg-card);">Rp ${t.total.toLocaleString()}</td>
+                    <td style="text-align:left; background:var(--bg-card);">
                         <button style="background:var(--bg-input); color:var(--primary); border:1px solid var(--primary); padding:6px; border-radius:5px; margin-bottom:5px; width:100%; cursor:pointer; font-weight:bold;" onclick="viewStruk('${t.id}')">STRUK</button>
                         <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%; cursor:pointer;">HAPUS</button>
                     </td>
                 </tr>`; 
             }); 
-            if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
+            if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center; background:var(--bg-card);">Kosong</td></tr>`; 
             document.getElementById('admin-history-tbody').innerHTML = histHtml; 
         } else { 
             document.getElementById('admin-history-box').style.display = 'none'; 
@@ -1086,15 +1086,15 @@
         }); 
         document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
             return `<tr>
-                <td style="text-align:left;">
+                <td style="text-align:left; background:var(--bg-card);">
                     ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
                     <span style="font-size:0.65rem; font-weight:bold; color:var(--primary);">${t.paymentMethod || 'Tunai'}</span>
                 </td>
-                <td style="text-align:left;">
-                    <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#ffb85c':'#27ae60'}">${t.mode}</span>
+                <td style="text-align:left; background:var(--bg-card);">
+                    <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#D35400':'#27ae60'}">${t.mode}</span>
                 </td>
-                <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
-                <td style="text-align:left;">
+                <td style="text-align:left; background:var(--bg-card);">Rp ${t.total.toLocaleString()}</td>
+                <td style="text-align:left; background:var(--bg-card);">
                     <button style="background:var(--bg-input); color:var(--primary); border:1px solid var(--primary); padding:6px; border-radius:5px; cursor:pointer; font-weight:bold;" onclick="viewStruk('${t.id}')">STRUK</button>
                 </td>
             </tr>`; 
@@ -1307,7 +1307,7 @@
             
             let mgmtMenu = isAdmin ? (allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] }) : buildMergedBranchMenu(viewBranch);
             ['ONLINE', 'DINEIN'].forEach(m => { 
-                let html = `<h4 style="margin-top:20px; color:var(--primary); border-bottom:2px solid #3d322b; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
+                let html = `<h4 style="margin-top:20px; color:var(--primary); border-bottom:2px solid #E1D7CD; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
                 let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
                 if (items.length === 0) {
                     html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
@@ -1315,10 +1315,10 @@
                     items.forEach(item => { 
                         let pText = `Rp ${item.price.toLocaleString('id-ID')}`;
                         if(m === 'ONLINE' && (item.priceGrab || item.priceGojek || item.priceShopee)) {
-                            pText += `<br><span style="font-size:0.7rem; color:#aaa;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
+                            pText += `<br><span style="font-size:0.7rem; color:var(--text-muted);">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
                         }
                         
-                        let actionButtons = `<button style="background:var(--primary); color:#110E0C; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
+                        let actionButtons = `<button style="background:var(--primary); color:#FFFFFF; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px; cursor:pointer;" onclick="editM('${m}', ${item.id})">Edit</button>`;
                         if (isAdmin) {
                             actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="delM('${m}', ${item.id})">X</button>`;
                         }
@@ -1435,7 +1435,7 @@
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
                 document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                document.getElementById('platform-warning-text').style.color = "#ffb85c";
+                document.getElementById('platform-warning-text').style.color = "#D35400";
             }
             updateUI(); renderMenu(); 
             document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
