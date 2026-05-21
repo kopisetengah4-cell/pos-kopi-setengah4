@@ -112,7 +112,7 @@
 
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
         .card { background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid #E1D7CD; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
-        .card :active { transform: scale(0.98); }
+        .card:active { transform: scale(0.98); }
         .card h4 { margin: 0; font-size: 0.85rem; height: 32px; overflow: hidden; color: var(--text-main); font-weight: 600; }
         .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.95rem; }
         
@@ -450,8 +450,6 @@
 
     const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-CK": { name: "Cikini", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
 
-    const initialData = { ONLINE: [], DINEIN: [] };
-
     let allMenusData = {}; 
     let localMenu = { ONLINE: [], DINEIN: [] }; 
     let masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [];
@@ -530,6 +528,7 @@
     function getAllUniqueMenus() {
         let unique = []; let ids = new Set();
         for (let b in allMenusData) {
+            if (!allMenusData[b]) continue;
             ['ONLINE', 'DINEIN'].forEach(m => {
                 getSafeArray(allMenusData[b][m]).forEach(item => {
                     if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
@@ -623,56 +622,72 @@
     });
 
     function handleLogin() {
-        const u = document.getElementById('login-user').value.toUpperCase(), p = document.getElementById('login-pass').value;
+        const u = document.getElementById('login-user').value.toUpperCase().trim();
+        const p = document.getElementById('login-pass').value.trim();
+        
         if (users[u] && users[u].pass === p) {
             currentBranchId = u;
             localStorage.setItem('ks4_session', JSON.stringify({ branchId: u, timestamp: new Date().getTime() }));
-            if(document.getElementById('remember-me').checked) { localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); } 
-            else { localStorage.removeItem('ks4_saved_login'); }
+            
+            if(document.getElementById('remember-me').checked) { 
+                localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); 
+            } else { 
+                localStorage.removeItem('ks4_saved_login'); 
+            }
+            
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('branch-display').innerText = users[currentBranchId].name;
             
-            if (currentBranchId !== "KS4-ADM") {
-                localMenu = buildMergedBranchMenu(currentBranchId);
+            if (allMenusData && allMenusData[u]) {
+                localMenu = (u !== "KS4-ADM") ? buildMergedBranchMenu(u) : (allMenusData["ALL"] || { ONLINE: [], DINEIN: [] });
             } else {
-                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+                localMenu = { ONLINE: [], DINEIN: [] };
             }
 
-            renderMenu();
-            renderMgmt();
-            toggleMgmtPriceInputs();
+            try {
+                renderMenu();
+                renderMgmt();
+                toggleMgmtPriceInputs();
+            } catch(err) {
+                console.log("Menunggu render komponen siap...");
+            }
 
             if(u === "KS4-ADM") {
                 document.body.classList.add('admin-mode');
-                document.getElementById('admin-panel').style.display = 'block';
+                if(document.getElementById('admin-panel')) document.getElementById('admin-panel').style.display = 'block';
                 showPage('report');
             } else { 
                 document.body.classList.remove('admin-mode');
-                showPage('pos'); setMasterMode('ONLINE'); 
+                showPage('pos'); 
+                setMasterMode('ONLINE'); 
             }
-        } else { alert("Login Gagal! ID atau Password Salah."); }
+        } else { 
+            alert("Login Gagal! ID atau Password Salah."); 
+        }
     }
 
     function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
     
     function setMasterMode(m) { 
         masterMode = m; cart = {}; 
-        document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
-        document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
+        if(document.getElementById('m-online')) document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
+        if(document.getElementById('m-dinein')) document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
         if(document.getElementById('search-menu')) { document.getElementById('search-menu').value = ''; }
         
         const platformSelector = document.getElementById('online-platform-container');
         if (m === 'ONLINE') {
             selectedPaymentMethod = ""; 
-            document.getElementById('label-mode').innerText = "MODE: ONLINE";
-            platformSelector.style.display = "flex";
+            if(document.getElementById('label-mode')) document.getElementById('label-mode').innerText = "MODE: ONLINE";
+            if(platformSelector) platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-            document.getElementById('platform-warning-text').style.color = "#D35400";
+            if(document.getElementById('platform-warning-text')) {
+                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+                document.getElementById('platform-warning-text').style.color = "#D35400";
+            }
         } else {
             selectedPaymentMethod = "Tunai"; 
-            document.getElementById('label-mode').innerText = "MODE: DINE IN";
-            platformSelector.style.display = "none";
+            if(document.getElementById('label-mode')) document.getElementById('label-mode').innerText = "MODE: DINE IN";
+            if(platformSelector) platformSelector.style.display = "none";
         }
         
         changeCategory('ICE'); updateUI(); 
@@ -683,20 +698,22 @@
         document.querySelectorAll('.platform-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-p') === p);
         });
-        document.getElementById('platform-warning-text').innerText = "✅ PLATFORM TERPILIH: " + p.toUpperCase();
-        document.getElementById('platform-warning-text').style.color = "var(--primary)";
+        if(document.getElementById('platform-warning-text')) {
+            document.getElementById('platform-warning-text').innerText = "✅ PLATFORM TERPILIH: " + p.toUpperCase();
+            document.getElementById('platform-warning-text').style.color = "var(--primary)";
+        }
         renderMenu();
         updateUI();
     }
     
-    function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
+    function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); if(document.getElementById('rep-title')) document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
 
     function openDateModal(type) {
         filterTypeTemp = type; const container = document.getElementById('date-input-container'); const title = document.getElementById('date-modal-title');
-        if(type === 'day') { title.innerText = "Laporan Harian"; container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; } 
-        else if(type === 'range') { title.innerText = "Laporan Mingguan / Kustom"; container.innerHTML = `<div style="text-align:left; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Mulai Tanggal:</div><input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; font-size:1rem;"><div style="text-align:left; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Hingga Tanggal:</div><input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; } 
-        else if(type === 'month') { title.innerText = "Laporan Bulanan"; container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; }
-        document.getElementById('modal-date').classList.add('show');
+        if(type === 'day') { if(title) title.innerText = "Laporan Harian"; if(container) container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; } 
+        else if(type === 'range') { if(title) title.innerText = "Laporan Mingguan / Kustom"; if(container) container.innerHTML = `<div style="text-align:left; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Mulai Tanggal:</div><input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; font-size:1rem;"><div style="text-align:left; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Hingga Tanggal:</div><input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; } 
+        else if(type === 'month') { if(title) title.innerText = "Laporan Bulanan"; if(container) container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; font-size:1rem;">`; }
+        if(document.getElementById('modal-date')) document.getElementById('modal-date').classList.add('show');
     }
 
     function applyDateFilter() {
@@ -704,15 +721,15 @@
         if(!filterDate1) return alert("Pilih tanggal terlebih dahulu!");
         if(filterTypeTemp === 'range' && !filterDate2) return alert("Pilih tanggal akhir!");
         activeRange = filterTypeTemp; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
-        let tabId = "r-day"; if(activeRange === 'range') tabId = "r-week"; if(activeRange === 'month') tabId = "r-month"; document.getElementById(tabId).classList.add('active');
+        let tabId = "r-day"; if(activeRange === 'range') tabId = "r-week"; if(activeRange === 'month') tabId = "r-month"; if(document.getElementById(tabId)) document.getElementById(tabId).classList.add('active');
         let titleStr = ""; if(activeRange === 'day') titleStr = filterDate1; if(activeRange === 'range') titleStr = filterDate1 + " s/d " + filterDate2; if(activeRange === 'month') titleStr = "Bulan " + filterDate1;
-        document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
+        if(document.getElementById('rep-title')) document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
     }
 
     function changeCategory(c) { document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.innerText === c || (c==='SNACKS' && t.innerText==='ROTI'))); activeCat = c; renderMenu(); }
     
     function renderMenu() {
-        const grid = document.getElementById('product-grid'); grid.innerHTML = '';
+        const grid = document.getElementById('product-grid'); if(!grid) return; grid.innerHTML = '';
         if(!localMenu || !localMenu[masterMode]) return;
         const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
         
@@ -791,7 +808,7 @@
             return;
         }
         currentPuasId = String(id);
-        document.getElementById('modal-bread').classList.add('show');
+        if(document.getElementById('modal-bread')) document.getElementById('modal-bread').classList.add('show');
     }
 
     function updateUI() { 
@@ -806,7 +823,9 @@
                 t += platformPrice * cart[key]; 
             }
         } 
-        document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
+        if(document.getElementById('total-price-display')) {
+            document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
+        }
     }
 
     function openPaymentMethod() {
@@ -819,6 +838,7 @@
         closeModal(); 
 
         let methodsContainer = document.getElementById('payment-methods-list');
+        if(!methodsContainer) return;
         methodsContainer.innerHTML = '';
 
         if (masterMode === "ONLINE") {
@@ -833,7 +853,7 @@
             document.querySelectorAll('.btn-pay-method').forEach(btn => {
                 if(btn.innerText === selectedPaymentMethod || (btn.innerText === "Tunai Cash" && selectedPaymentMethod === "Tunai")) btn.classList.add('selected');
             });
-            document.getElementById('modal-payment').classList.add('show');
+            if(document.getElementById('modal-payment')) document.getElementById('modal-payment').classList.add('show');
         }
     }
 
@@ -859,6 +879,7 @@
             return;
         } else {
             let methodsContainer = document.getElementById('payment-methods-list');
+            if(!methodsContainer) return;
             methodsContainer.innerHTML = `
                 <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
                 <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai Cash</button>
@@ -866,7 +887,7 @@
             document.querySelectorAll('.btn-pay-method').forEach(btn => {
                 if(btn.innerText === selectedPaymentMethod || (btn.innerText === "Tunai Cash" && selectedPaymentMethod === "Tunai")) btn.classList.add('selected');
             });
-            document.getElementById('modal-payment').classList.add('show');
+            if(document.getElementById('modal-payment')) document.getElementById('modal-payment').classList.add('show');
         }
     }
 
@@ -880,11 +901,11 @@
         }
         let finalTotal = Math.max(0, s - d);
         
-        document.getElementById('cash-total-display').innerText = "Total Belanja: Rp " + finalTotal.toLocaleString('id-ID');
-        document.getElementById('cash-input-val').value = '';
-        document.getElementById('modal-cash').classList.add('show');
+        if(document.getElementById('cash-total-display')) document.getElementById('cash-total-display').innerText = "Total Belanja: Rp " + finalTotal.toLocaleString('id-ID');
+        if(document.getElementById('cash-input-val')) document.getElementById('cash-input-val').value = '';
+        if(document.getElementById('modal-cash')) document.getElementById('modal-cash').classList.add('show');
         
-        setTimeout(() => { document.getElementById('cash-input-val').focus(); }, 100);
+        setTimeout(() => { if(document.getElementById('cash-input-val')) document.getElementById('cash-input-val').focus(); }, 100);
     }
 
     function processCash() {
@@ -1036,17 +1057,21 @@
         if(payMethods["Tunai"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Tunai: <b>Rp ${payMethods["Tunai"].toLocaleString('id-ID')}</b></div>`;
         paymentHtml += `</div>`;
 
-        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        if(document.getElementById('report-summary-box')) {
+            document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        }
         
         let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #E1D7CD; background:var(--bg-card);">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #E1D7CD; background:var(--bg-card);"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
         if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         
         if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #E1D7CD; padding-top:15px;"><h4 style="color:var(--primary); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#F1ECE4; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem; background:var(--bg-card);"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         
-        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        if(document.getElementById('report-details-box')) {
+            document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:var(--bg-card); padding:15px; border-radius:15px; border:1px solid #E1D7CD; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        }
         
         if(currentBranchId === "KS4-ADM") { 
-            document.getElementById('admin-history-box').style.display = 'block'; 
+            if(document.getElementById('admin-history-box')) document.getElementById('admin-history-box').style.display = 'block'; 
             let histHtml = ''; 
             filtered.forEach(t => { 
                 histHtml += `<tr>
@@ -1067,12 +1092,19 @@
                 </tr>`; 
             }); 
             if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center; background:var(--bg-card);">Kosong</td></tr>`; 
-            document.getElementById('admin-history-tbody').innerHTML = histHtml; 
+            if(document.getElementById('admin-history-tbody')) document.getElementById('admin-history-tbody').innerHTML = histHtml; 
         } else { 
-            document.getElementById('admin-history-box').style.display = 'none'; 
+            if(document.getElementById('admin-history-box')) document.getElementById('admin-history-box').style.display = 'none'; 
         }
         
-        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; cursor:pointer;">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
+        const delBox = document.getElementById('admin-delete-report-box'); 
+        if (delBox) {
+            if (currentBranchId === "KS4-ADM" && filtered.length > 0) { 
+                delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; cursor:pointer;">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; 
+            } else { 
+                delBox.innerHTML = ''; 
+            }
+        }
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
@@ -1084,21 +1116,23 @@
             const txDate = new Date(t.date); 
             return t.branchId === currentBranchId && txDate.toDateString() === now.toDateString(); 
         }); 
-        document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
-            return `<tr>
-                <td style="text-align:left; background:var(--bg-card);">
-                    ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
-                    <span style="font-size:0.65rem; font-weight:bold; color:var(--primary);">${t.paymentMethod || 'Tunai'}</span>
-                </td>
-                <td style="text-align:left; background:var(--bg-card);">
-                    <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#D35400':'#27ae60'}">${t.mode}</span>
-                </td>
-                <td style="text-align:left; background:var(--bg-card);">Rp ${t.total.toLocaleString()}</td>
-                <td style="text-align:left; background:var(--bg-card);">
-                    <button style="background:var(--bg-input); color:var(--primary); border:1px solid var(--primary); padding:6px; border-radius:5px; cursor:pointer; font-weight:bold;" onclick="viewStruk('${t.id}')">STRUK</button>
-                </td>
-            </tr>`; 
-        }).join(''); 
+        if(document.getElementById('history-tbody')) {
+            document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
+                return `<tr>
+                    <td style="text-align:left; background:var(--bg-card);">
+                        ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
+                        <span style="font-size:0.65rem; font-weight:bold; color:var(--primary);">${t.paymentMethod || 'Tunai'}</span>
+                    </td>
+                    <td style="text-align:left; background:var(--bg-card);">
+                        <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#D35400':'#27ae60'}">${t.mode}</span>
+                    </td>
+                    <td style="text-align:left; background:var(--bg-card);">Rp ${t.total.toLocaleString()}</td>
+                    <td style="text-align:left; background:var(--bg-card);">
+                        <button style="background:var(--bg-input); color:var(--primary); border:1px solid var(--primary); padding:6px; border-radius:5px; cursor:pointer; font-weight:bold;" onclick="viewStruk('${t.id}')">STRUK</button>
+                    </td>
+                </tr>`; 
+            }).join(''); 
+        }
     }
     
     function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
@@ -1148,7 +1182,7 @@
         }
         
         p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
-        document.getElementById('print-area').innerHTML = p;
+        if(document.getElementById('print-area')) document.getElementById('print-area').innerHTML = p;
         
         function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
         let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
@@ -1205,12 +1239,14 @@
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         
-        document.getElementById('rec-table').innerHTML = h; 
-        document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); 
-        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
-        document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
+        if(document.getElementById('rec-table')) document.getElementById('rec-table').innerHTML = h; 
+        if(document.getElementById('rec-total')) document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); 
+        if(document.getElementById('rec-branch')) document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
+        if(document.getElementById('rec-method')) document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
         buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai"), t.cashReceived || 0, t.cashChange || 0); 
-        document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+        if(document.getElementById('modal-receipt')) document.getElementById('modal-receipt').classList.add('show'); 
+        if(document.getElementById('modal-btns-confirm')) document.getElementById('modal-btns-confirm').style.display = 'none'; 
+        if(document.getElementById('modal-btns-close')) document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
     function changeMgmtBranch() { renderMgmt(); }
@@ -1218,7 +1254,9 @@
     function toggleMgmtPriceInputs() {
         const mode = document.getElementById('new-mode').value;
         const container = document.getElementById('ojol-price-inputs-container');
-        if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
+        if(container) {
+            if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
+        }
     }
 
     function addNewMenu() { 
@@ -1238,7 +1276,7 @@
         
         let finalName = "";
         const panel = document.getElementById('komponen-panel');
-        if (panel.style.display === 'block') {
+        if (panel && panel.style.display === 'block') {
             const wadah = document.getElementById('new-wadah').value;
             const qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0;
             const qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0;
@@ -1401,8 +1439,9 @@
     function openCheckout() { 
         let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
         for(let key in cart) { 
-            if(key==='extraBread') continue; 
+            if(key=='extraBread') continue; 
             let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
+            if(!m) continue;
             let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
             let displayName = m.name.split(' | ')[0]; 
             h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
@@ -1415,35 +1454,42 @@
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
         }
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
+        if(document.getElementById('rec-table')) document.getElementById('rec-table').innerHTML = h; 
+        if(document.getElementById('rec-total')) document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
+        if(document.getElementById('rec-method')) document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
+        if(document.getElementById('modal-btns-confirm')) document.getElementById('modal-btns-confirm').style.display = 'block'; 
+        if(document.getElementById('modal-btns-close')) document.getElementById('modal-btns-close').style.display = 'none'; 
+        if(document.getElementById('modal-receipt')) document.getElementById('modal-receipt').classList.add('show'); 
     }
     
     function confirmPayment() { 
         let d = parseInt(document.getElementById('discount-input').value) || 0;
         let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0 }; 
         for(let key in cart) { 
-            if(key==='extraBread') continue; 
+            if(key=='extraBread') continue; 
             let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
             if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
         } 
         t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
         transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; 
+            cart = {}; if(document.getElementById('discount-input')) document.getElementById('discount-input').value = 0; 
             if(masterMode === "ONLINE") {
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                document.getElementById('platform-warning-text').style.color = "#D35400";
+                if(document.getElementById('platform-warning-text')) {
+                    document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+                    document.getElementById('platform-warning-text').style.color = "#D35400";
+                }
             }
             updateUI(); renderMenu(); 
-            document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+            if(document.getElementById('modal-btns-confirm')) document.getElementById('modal-btns-confirm').style.display = 'none'; 
+            if(document.getElementById('modal-btns-close')) document.getElementById('modal-btns-close').style.display = 'block'; 
             alert("Transaksi Berhasil!"); 
         }); 
     }
     
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
+    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); if(document.getElementById('page-'+p)) document.getElementById('page-'+p).classList.add('active'); if(document.getElementById('btn-nav-'+p)) document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { cart[currentPuasId] = (cart[currentPuasId] || 0) + 1; currentPuasId = null; } renderMenu(); updateUI(); closeModal(); }
 </script>
