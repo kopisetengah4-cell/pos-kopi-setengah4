@@ -11,8 +11,9 @@
     
     <title>POS KS4 - Premium Coffee Edition</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <!-- Menggunakan Library Firebase CDN yang Stabil & Sesuai dengan Struktur Kode Base Anda -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
@@ -441,14 +442,31 @@
         if (Object.keys(cart).length > 0) { e.preventDefault(); e.returnValue = ''; }
     });
 
-    const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
+    // Inisialisasi Firebase konfigurasi
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", 
+        authDomain: "kasir-setengah4.firebaseapp.com", 
+        databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", 
+        projectId: "kasir-setengah4", 
+        storageBucket: "kasir-setengah4.appspot.com" 
+    };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
     const transRef = db.ref('transactions_master_v39'); 
     const menuRef = db.ref('master_menu_v40'); 
 
-    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-CK": { name: "Cikini", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+    const users = { 
+        "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, 
+        "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, 
+        "KS4-CK": { name: "Cikini", pass: "3265" }, 
+        "KS4-MT": { name: "Menteng", pass: "9865" }, 
+        "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, 
+        "KS4-OT": { name: "Otista", pass: "1478" }, 
+        "KS4-ST": { name: "Sunter", pass: "1312" }, 
+        "KS4-ADM": { name: "ADMIN", pass: "9812" } 
+    };
 
     let allMenusData = {}; 
     let localMenu = { ONLINE: [], DINEIN: [] }; 
@@ -542,6 +560,117 @@
         return unique;
     }
 
+    function buildMergedBranchMenu(branchId) {
+        let globalData = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+        let branchData = allMenusData[branchId] || { ONLINE: [], DINEIN: [] };
+
+        let result = { ONLINE: [], DINEIN: [] };
+
+        ['ONLINE', 'DINEIN'].forEach(m => {
+            let combined = [];
+            let addedIds = new Set();
+
+            getSafeArray(branchData[m]).forEach(item => {
+                combined.push(item);
+                addedIds.add(item.id);
+            });
+
+            getSafeArray(globalData[m]).forEach(item => {
+                if (!addedIds.has(item.id)) {
+                    combined.push(item);
+                    addedIds.add(item.id);
+                }
+            });
+
+            result[m] = combined;
+        });
+
+        return result;
+    }
+
+    // Sambungkan Listener Database Firebase di Sini
+    menuRef.on('value', snap => {
+        try {
+            allMenusData = parseFirebaseMenus(snap.val());
+            if (currentBranchId && currentBranchId !== "KS4-ADM") {
+                localMenu = buildMergedBranchMenu(currentBranchId);
+            } else {
+                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+            }
+            renderMenu(); 
+            renderMgmt();
+            toggleMgmtPriceInputs();
+        } catch (e) {
+            console.error("Gagal memuat menu:", e);
+        }
+    });
+
+    transRef.on('value', snap => {
+        allTransactions = snap.val() ? Object.values(snap.val()).reverse() : [];
+        if(currentBranchId) { updateReport(); updateHistory(); }
+    });
+
+    // SISTEM LOGIN AMAN: Verifikasi lokal instan untuk mencegah layar freeze/stuck
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.toUpperCase().trim();
+        const p = document.getElementById('login-pass').value.trim();
+        
+        if (!u || !p) {
+            alert("Harap isi ID Cabang dan Password!");
+            return;
+        }
+
+        if (users[u] && users[u].pass === p) {
+            currentBranchId = u;
+            localStorage.setItem('ks4_session', JSON.stringify({ branchId: u, timestamp: new Date().getTime() }));
+            
+            if(document.getElementById('remember-me').checked) { 
+                localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); 
+            } else { 
+                localStorage.removeItem('ks4_saved_login'); 
+            }
+            
+            // Tutup layar login secara instan tanpa menunggu data cloud
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('branch-display').innerText = users[currentBranchId].name;
+            
+            if (allMenusData && allMenusData[u]) {
+                localMenu = (u !== "KS4-ADM") ? buildMergedBranchMenu(u) : (allMenusData["ALL"] || { ONLINE: [], DINEIN: [] });
+            } else {
+                localMenu = { ONLINE: [], DINEIN: [] };
+            }
+
+            try {
+                renderMenu();
+                renderMgmt();
+                toggleMgmtPriceInputs();
+            } catch(err) {
+                console.log("Menunggu render siap...");
+            }
+
+            if(u === "KS4-ADM") {
+                document.body.classList.add('admin-mode');
+                if(document.getElementById('admin-panel')) document.getElementById('admin-panel').style.display = 'block';
+                showPage('report');
+            } else { 
+                document.body.classList.remove('admin-mode');
+                showPage('pos'); 
+                setMasterMode('ONLINE'); 
+            }
+            
+            // Re-fetch data untuk memastikan data terbaru masuk
+            if(db) {
+                menuRef.once('value', (snap) => {
+                    allMenusData = parseFirebaseMenus(snap.val());
+                    localMenu = (u !== "KS4-ADM") ? buildMergedBranchMenu(u) : (allMenusData["ALL"] || { ONLINE: [], DINEIN: [] });
+                    renderMenu();
+                });
+            }
+        } else { 
+            alert("Login Gagal! ID atau Password Salah."); 
+        }
+    }
+
     function checkSession() {
         const savedLogin = localStorage.getItem('ks4_saved_login');
         if(savedLogin) {
@@ -571,100 +700,6 @@
         }
     }
     window.onload = checkSession;
-
-    function buildMergedBranchMenu(branchId) {
-        let globalData = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
-        let branchData = allMenusData[branchId] || { ONLINE: [], DINEIN: [] };
-
-        let result = { ONLINE: [], DINEIN: [] };
-
-        ['ONLINE', 'DINEIN'].forEach(m => {
-            let combined = [];
-            let addedIds = new Set();
-
-            getSafeArray(branchData[m]).forEach(item => {
-                combined.push(item);
-                addedIds.add(item.id);
-            });
-
-            getSafeArray(globalData[m]).forEach(item => {
-                if (!addedIds.has(item.id)) {
-                    combined.push(item);
-                    addedIds.add(item.id);
-                }
-            });
-
-            result[m] = combined;
-        });
-
-        return result;
-    }
-
-    menuRef.on('value', snap => {
-        try {
-            allMenusData = parseFirebaseMenus(snap.val());
-            if (currentBranchId && currentBranchId !== "KS4-ADM") {
-                localMenu = buildMergedBranchMenu(currentBranchId);
-            } else {
-                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
-            }
-            renderMenu(); 
-            renderMgmt();
-            toggleMgmtPriceInputs();
-        } catch (e) {
-            console.error("Gagal memuat menu:", e);
-        }
-    });
-
-    transRef.on('value', snap => {
-        allTransactions = snap.val() ? Object.values(snap.val()).reverse() : [];
-        if(currentBranchId) { updateReport(); updateHistory(); }
-    });
-
-    function handleLogin() {
-        const u = document.getElementById('login-user').value.toUpperCase().trim();
-        const p = document.getElementById('login-pass').value.trim();
-        
-        if (users[u] && users[u].pass === p) {
-            currentBranchId = u;
-            localStorage.setItem('ks4_session', JSON.stringify({ branchId: u, timestamp: new Date().getTime() }));
-            
-            if(document.getElementById('remember-me').checked) { 
-                localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); 
-            } else { 
-                localStorage.removeItem('ks4_saved_login'); 
-            }
-            
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('branch-display').innerText = users[currentBranchId].name;
-            
-            if (allMenusData && allMenusData[u]) {
-                localMenu = (u !== "KS4-ADM") ? buildMergedBranchMenu(u) : (allMenusData["ALL"] || { ONLINE: [], DINEIN: [] });
-            } else {
-                localMenu = { ONLINE: [], DINEIN: [] };
-            }
-
-            try {
-                renderMenu();
-                renderMgmt();
-                toggleMgmtPriceInputs();
-            } catch(err) {
-                console.log("Menunggu render komponen siap...");
-            }
-
-            if(u === "KS4-ADM") {
-                document.body.classList.add('admin-mode');
-                if(document.getElementById('admin-panel')) document.getElementById('admin-panel').style.display = 'block';
-                showPage('report');
-            } else { 
-                document.body.classList.remove('admin-mode');
-                showPage('pos'); 
-                setMasterMode('ONLINE'); 
-            }
-        } else { 
-            alert("Login Gagal! ID atau Password Salah."); 
-        }
-    }
 
     function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
     
@@ -1235,8 +1270,8 @@
         if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2; text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         
         if(document.getElementById('rec-table')) document.getElementById('rec-table').innerHTML = h; 
@@ -1436,62 +1471,9 @@
         } 
     }
     
-    function openCheckout() { 
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
-        for(let key in cart) { 
-            if(key=='extraBread') continue; 
-            let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
-            if(!m) continue;
-            let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
-            let displayName = m.name.split(' | ')[0]; 
-            h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
-        } 
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
-        let finalTotal = Math.max(0, s-d); 
-        
-        if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
-        }
-        if(document.getElementById('rec-table')) document.getElementById('rec-table').innerHTML = h; 
-        if(document.getElementById('rec-total')) document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); 
-        if(document.getElementById('rec-method')) document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        if(document.getElementById('modal-btns-confirm')) document.getElementById('modal-btns-confirm').style.display = 'block'; 
-        if(document.getElementById('modal-btns-close')) document.getElementById('modal-btns-close').style.display = 'none'; 
-        if(document.getElementById('modal-receipt')) document.getElementById('modal-receipt').classList.add('show'); 
-    }
-    
-    function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0 }; 
-        for(let key in cart) { 
-            if(key=='extraBread') continue; 
-            let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
-            if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
-        } 
-        t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
-        transRef.push(t).then(() => { 
-            cart = {}; if(document.getElementById('discount-input')) document.getElementById('discount-input').value = 0; 
-            if(masterMode === "ONLINE") {
-                selectedPaymentMethod = "";
-                document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
-                if(document.getElementById('platform-warning-text')) {
-                    document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                    document.getElementById('platform-warning-text').style.color = "#D35400";
-                }
-            }
-            updateUI(); renderMenu(); 
-            if(document.getElementById('modal-btns-confirm')) document.getElementById('modal-btns-confirm').style.display = 'none'; 
-            if(document.getElementById('modal-btns-close')) document.getElementById('modal-btns-close').style.display = 'block'; 
-            alert("Transaksi Berhasil!"); 
-        }); 
-    }
-    
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); if(document.getElementById('page-'+p)) document.getElementById('page-'+p).classList.add('active'); if(document.getElementById('btn-nav-'+p)) document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
     function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
     function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { cart[currentPuasId] = (cart[currentPuasId] || 0) + 1; currentPuasId = null; } renderMenu(); updateUI(); closeModal(); }
+    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); if(document.getElementById('page-'+p)) document.getElementById('page-'+p).classList.add('active'); if(document.getElementById('btn-nav-'+p)) document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
 </script>
 </body>
 </html>
