@@ -69,7 +69,7 @@
         .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #e3dad0; color: #7a6e67; transition: 0.2s; white-space: nowrap; }
         .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
 
-        .nav-tabs { display: flex; background: var(--secondary); padding: 10px; gap: 8px; border-bottom: 1px solid #e8e2d5; overflow-x: auto; scrollbar-width: none; }
+        .nav-tabs { display: flex; background: var(--secondary); padding: 10px; gap: 8px; border-bottom: 1px solid #ede6da; overflow-x: auto; scrollbar-width: none; }
         .tab { padding: 10px 18px; border: none; border-radius: 20px; background: var(--tab-inactive); color: var(--text); font-weight: 600; white-space: nowrap; font-size: 0.75rem; cursor: pointer; }
         .tab.active { background: var(--primary); color: white; }
 
@@ -323,7 +323,7 @@
             </div>
 
             <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
-        </div>maxId
+        </div>
         
         <div id="mgmt-list"></div>
     </main>
@@ -412,7 +412,7 @@
     let currentFilteredTransactions = [];
     let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
     
-    let selectedPaymentMethod = ""; // Dikosongkan di awal agar wajib dipilih oleh kasir
+    let selectedPaymentMethod = ""; 
     let currentCashReceived = 0; 
     let currentCashChange = 0;   
     
@@ -617,14 +617,14 @@
         
         const platformSelector = document.getElementById('online-platform-container');
         if (m === 'ONLINE') {
-            selectedPaymentMethod = ""; // Reset pemilihan platform saat pindah ke online
+            selectedPaymentMethod = ""; 
             document.getElementById('label-mode').innerText = "MODE: ONLINE";
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
             document.getElementById('platform-warning-text').style.color = "#d35400";
         } else {
-            selectedPaymentMethod = "Tunai"; // Default dine in menggunakan Tunai
+            selectedPaymentMethod = "Tunai"; 
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
             platformSelector.style.display = "none";
         }
