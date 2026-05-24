@@ -373,7 +373,7 @@
     
     <div id="modal-btns-confirm">
         <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
+        <button id="btn-change-pay-modal" style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
@@ -771,24 +771,19 @@
 
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
+        }
         
         closeModal(); 
-        let methodsContainer = document.getElementById('payment-methods-list');
-        methodsContainer.innerHTML = '';
-
+        
+        // Pembaruan Logika: Jika ONLINE, hilangkan modal pilihan dan langsung lempar ke struk checkout
         if (masterMode === "ONLINE") {
             currentCashReceived = 0;
             currentCashChange = 0;
-            
-            // Perbaikan Bug: Izinkan opsi ubah / pilih platform ulang agar harga sinkron kembali
-            methodsContainer.innerHTML = `
-                <h4 style="margin:0 0 10px 0; color:#d35400; font-size:0.8rem;">UBAH / KONFIRMASI PLATFORM:</h4>
-                <button class="btn-pay-method" onclick="selectActivePlatform('Grab'); openCheckout();">GRAB</button>
-                <button class="btn-pay-method" onclick="selectActivePlatform('Gojek'); openCheckout();">GOJEK</button>
-                <button class="btn-pay-method" onclick="selectActivePlatform('Shopee'); openCheckout();">SHOPEE</button>
-            `;
-            document.getElementById('modal-payment').classList.add('show');
+            openCheckout(); 
         } else {
+            let methodsContainer = document.getElementById('payment-methods-list');
             methodsContainer.innerHTML = `
                 <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
                 <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
@@ -861,7 +856,6 @@
         const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
         const now = new Date(); const nowStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
         
-        // Anti-Fraud Filter: Hanya hitung data transaksi yang aktif (tidak ditandai dihapus/isDeleted)
         const filtered = allTransactions.filter(t => { 
             if(t.isDeleted === true) return false; 
             const d = new Date(t.date); 
@@ -876,7 +870,6 @@
             return dOk && bOk; 
         });
 
-        // Pengumpulan data sampah khusus admin melacak riwayat struk yang sengaja dihapus cabang
         const deletedTransactions = allTransactions.filter(t => {
             if(t.isDeleted !== true) return false;
             const d = new Date(t.date);
@@ -1042,7 +1035,6 @@
             if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
             document.getElementById('admin-history-tbody').innerHTML = histHtml; 
 
-            // Render Log Audit Pembatalan Struk untuk Admin
             let auditBox = document.getElementById('admin-audit-box');
             if(!auditBox){
                 const newDiv = document.createElement('div');
@@ -1242,6 +1234,14 @@
         document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
         document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
         buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai"), t.cashReceived || 0, t.cashChange || 0); 
+        
+        // Sembunyikan tombol ubah metode pembayaran di tampilan preview struk lama jika bermode online
+        if(t.mode === "ONLINE") {
+            document.getElementById('btn-change-pay-modal').style.display = 'none';
+        } else {
+            document.getElementById('btn-change-pay-modal').style.display = 'block';
+        }
+
         document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
     }
     
@@ -1288,10 +1288,10 @@
         if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         else targetMenus = [sel];
 
-        let maxId = 0;maxId = 0;
-        targetMenus.forEach(b => { maxId = 0;
+        let maxId = 0;
+        targetMenus.forEach(b => {
             if(allMenusData[b]) {
-                ['ONLINE','DINEIN'].forEach(mo => {
+                ['ONLINE','DINEIN'].forEach(mo => { maxId = 0;
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
                         if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
                     });
@@ -1320,7 +1320,7 @@
                 document.getElementById('new-price-gojek').value = '';
                 document.getElementById('new-price-shopee').value = '';
             }
-        }).catch(err => { maxId = 0;
+        }).catch(err => {
             alert("Gagal menyimpan ke database: " + err.message);
         });
     }
@@ -1449,6 +1449,14 @@
         }
         document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
+        
+        // Atur visibilitas tombol ubah pembayaran berdasarkan mode aktif saat checkout baru dibuka
+        if(masterMode === "ONLINE") {
+            document.getElementById('btn-change-pay-modal').style.display = 'none';
+        } else {
+            document.getElementById('btn-change-pay-modal').style.display = 'block';
+        }
+
         document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
     }
     
