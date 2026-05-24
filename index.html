@@ -101,6 +101,7 @@
         .platform-selector-box { display: flex; gap: 4px; background: #ede6da; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
         .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #7a6e67; transition: 0.2s; }
         .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
+        .platform-btn.active[data-p="Grab%"] { background: #16a085; color: white; }
         .platform-btn.active[data-p="Gojek"] { background: #e74c3c; color: white; }
         .platform-btn.active[data-p="Shopee"] { background: #e67e22; color: white; }
 
@@ -182,6 +183,7 @@
                 <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
                     <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
+                    <button class="platform-btn" data-p="Grab%" onclick="selectActivePlatform('Grab%')">GRAB%</button>
                     <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
                     <button class="platform-btn" data-p="Shopee" onclick="selectActivePlatform('Shopee')">SHOPEE</button>
                 </div>
@@ -283,7 +285,7 @@
             <div id="ojol-price-inputs-container">
                 <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="number" id="new-price-grab" placeholder="Harga Grab" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-grab" placeholder="Harga Grab/Grab%" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
                     <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
                     <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
                 </div>
@@ -444,7 +446,7 @@
 
     function getItemPrice(item, method) {
         if (!item) return 0;
-        if (method === 'Grab') return item.priceGrab || item.price;
+        if (method === 'Grab' || method === 'Grab%') return item.priceGrab || item.price;
         if (method === 'Gojek') return item.priceGojek || item.price;
         if (method === 'Shopee') return item.priceShopee || item.price;
         return item.price;
@@ -708,14 +710,14 @@
                 let gjk = item.priceGojek || item.price;
                 let shp = item.priceShopee || item.price;
                 
-                let grabClass = selectedPaymentMethod === 'Grab' ? 'ojol-row highlighted-platform' : 'ojol-row';
+                let grabClass = (selectedPaymentMethod === 'Grab' || selectedPaymentMethod === 'Grab%') ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let gojekClass = selectedPaymentMethod === 'Gojek' ? 'ojol-row highlighted-platform' : 'ojol-row';
                 let shopeeClass = selectedPaymentMethod === 'Shopee' ? 'ojol-row highlighted-platform' : 'ojol-row';
 
                 ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 5px;">
                     <div class="${gojekClass}"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
                     <div class="${shopeeClass}"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
-                    <div class="${grabClass}"><span>Grab:</span><span>Rp ${grb.toLocaleString()}</span></div>
+                    <div class="${grabClass}"><span>Grab/Grab%:</span><span>Rp ${grb.toLocaleString()}</span></div>
                 </div>`;
             } else {
                 mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
@@ -738,7 +740,7 @@
 
     function updateCartNormal(id, d, isPuas) { 
         if(masterMode === "ONLINE" && !selectedPaymentMethod) {
-            alert("Silakan pilih saluran platform ojol (GRAB / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            alert("Silakan pilih saluran platform ojol (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
             return;
         }
         if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
@@ -749,7 +751,7 @@
 
     function openBreadModal(id) {
         if(masterMode === "ONLINE" && !selectedPaymentMethod) {
-            alert("Silakan pilih saluran platform ojol (GRAB / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            alert("Silakan pilih saluran platform ojol (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
             return;
         }
         currentPuasId = String(id);
@@ -774,7 +776,7 @@
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
         if(masterMode === "ONLINE" && !selectedPaymentMethod) {
-            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
+            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
         }
         
         closeModal(); 
@@ -887,7 +889,7 @@
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
         let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
         
-        let payMethods = { "Grab": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
+        let payMethods = { "Grab": 0, "Grab%": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
         
         let allItems = getAllUniqueMenus(); 
 
@@ -997,6 +999,7 @@
 
         let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">`;
         if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Grab%"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab%: <b>Rp ${payMethods["Grab%"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Shopee"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Shopee: <b>Rp ${payMethods["Shopee"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["QRIS"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">QRIS: <b>Rp ${payMethods["QRIS"].toLocaleString('id-ID')}</b></div>`;
