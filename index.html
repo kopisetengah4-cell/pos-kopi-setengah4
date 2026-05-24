@@ -771,19 +771,23 @@
 
     function openPaymentMethod() {
         if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
-        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
-            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
-        }
         
         closeModal(); 
-
         let methodsContainer = document.getElementById('payment-methods-list');
         methodsContainer.innerHTML = '';
 
         if (masterMode === "ONLINE") {
             currentCashReceived = 0;
             currentCashChange = 0;
-            openCheckout(); 
+            
+            // Perbaikan Bug: Izinkan opsi ubah / pilih platform ulang agar harga sinkron kembali
+            methodsContainer.innerHTML = `
+                <h4 style="margin:0 0 10px 0; color:#d35400; font-size:0.8rem;">UBAH / KONFIRMASI PLATFORM:</h4>
+                <button class="btn-pay-method" onclick="selectActivePlatform('Grab'); openCheckout();">GRAB</button>
+                <button class="btn-pay-method" onclick="selectActivePlatform('Gojek'); openCheckout();">GOJEK</button>
+                <button class="btn-pay-method" onclick="selectActivePlatform('Shopee'); openCheckout();">SHOPEE</button>
+            `;
+            document.getElementById('modal-payment').classList.add('show');
         } else {
             methodsContainer.innerHTML = `
                 <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
@@ -856,7 +860,34 @@
     function updateReport() {
         const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
         const now = new Date(); const nowStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
-        const filtered = allTransactions.filter(t => { const d = new Date(t.date); const tDateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); const tMonthStr = tDateStr.slice(0, 7); let dOk = false; if (activeRange === 'today') dOk = (tDateStr === nowStr || d.toDateString() === now.toDateString()); else if (activeRange === 'day') dOk = (tDateStr === filterDate1); else if (activeRange === 'range') dOk = (tDateStr >= filterDate1 && tDateStr <= filterDate2); else if (activeRange === 'month') dOk = (tMonthStr === filterDate1); let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId; return dOk && bOk; });
+        
+        // Anti-Fraud Filter: Hanya hitung data transaksi yang aktif (tidak ditandai dihapus/isDeleted)
+        const filtered = allTransactions.filter(t => { 
+            if(t.isDeleted === true) return false; 
+            const d = new Date(t.date); 
+            const tDateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
+            const tMonthStr = tDateStr.slice(0, 7); 
+            let dOk = false; 
+            if (activeRange === 'today') dOk = (tDateStr === nowStr || d.toDateString() === now.toDateString()); 
+            else if (activeRange === 'day') dOk = (tDateStr === filterDate1); 
+            else if (activeRange === 'range') dOk = (tDateStr >= filterDate1 && tDateStr <= filterDate2); 
+            else if (activeRange === 'month') dOk = (tMonthStr === filterDate1); 
+            let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId; 
+            return dOk && bOk; 
+        });
+
+        // Pengumpulan data sampah khusus admin melacak riwayat struk yang sengaja dihapus cabang
+        const deletedTransactions = allTransactions.filter(t => {
+            if(t.isDeleted !== true) return false;
+            const d = new Date(t.date);
+            const tDateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+            let dOk = false;
+            if (activeRange === 'today') dOk = (tDateStr === nowStr);
+            else dOk = true;
+            let bOk = (bF === "ALL" || t.branchId === bF);
+            return dOk && bOk;
+        });
+
         currentFilteredTransactions = filtered;
         let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, l1=0, ml500=0;
         let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
@@ -1010,8 +1041,47 @@
             }); 
             if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
             document.getElementById('admin-history-tbody').innerHTML = histHtml; 
+
+            // Render Log Audit Pembatalan Struk untuk Admin
+            let auditBox = document.getElementById('admin-audit-box');
+            if(!auditBox){
+                const newDiv = document.createElement('div');
+                newDiv.id = 'admin-audit-box';
+                newDiv.style.marginTop = '25px';
+                document.getElementById('admin-history-box').parentNode.insertBefore(newDiv, document.getElementById('admin-delete-report-box'));
+                auditBox = newDiv;
+            }
+            
+            let auditHtml = `<h3 style="color:#c0392b; border-bottom: 2px solid #c0392b; padding-bottom:5px;">⚠️ Log Pembatalan / Struk Dihapus (Audit Pusat)</h3>
+                             <div class="table-container">
+                                <table style="background: #f9f9f9;">
+                                    <thead>
+                                        <tr style="background:#f2dede; color:#a94442;">
+                                            <th style="text-align:left;">WAKTU DIAUDIT</th>
+                                            <th style="text-align:left;">CABANG / OLEH</th>
+                                            <th style="text-align:left;">NOMINAL</th>
+                                            <th style="text-align:left;">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+            
+            deletedTransactions.forEach(at => {
+                let delTime = at.deletedAt ? new Date(at.deletedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
+                auditHtml += `<tr style="color: #c0392b; font-style: italic;">
+                    <td style="text-align:left;">${new Date(at.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}<br>${delTime}</td>
+                    <td style="text-align:left;"><b>${at.branchName}</b><br><small>User: ${at.deletedBy || 'Unknown'}</small></td>
+                    <td style="text-align:left;">Rp ${at.total.toLocaleString()}</td>
+                    <td style="text-align:left;"><button style="background:#7f8c8d; color:white; border:none; padding:6px; border-radius:5px; width:100%;" onclick="viewStruk('${at.id}')">CEK DETAIL</button></td>
+                </tr>`;
+            });
+            
+            if(deletedTransactions.length === 0) auditHtml += `<tr><td colspan="4" style="text-align:center; color:#999;">Aman. Tidak ada struk yang dihapus cabang hari ini.</td></tr>`;
+            auditHtml += `</tbody></table></div>`;
+            auditBox.innerHTML = auditHtml;
+
         } else { 
             document.getElementById('admin-history-box').style.display = 'none'; 
+            if(document.getElementById('admin-audit-box')) document.getElementById('admin-audit-box').style.display = 'none';
         }
         
         const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
@@ -1024,7 +1094,7 @@
         const now = new Date(); 
         const list = allTransactions.filter(t => { 
             const txDate = new Date(t.date); 
-            return t.branchId === currentBranchId && txDate.toDateString() === now.toDateString(); 
+            return t.branchId === currentBranchId && t.isDeleted !== true && txDate.toDateString() === now.toDateString(); 
         }); 
         document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
             return `<tr>
@@ -1043,17 +1113,37 @@
         }).join(''); 
     }
     
-    function deleteTrans(id) { if(confirm("Hapus transaksi ini?")) { transRef.once('value', s => { const data = s.val(); for (let k in data) { if (data[k].id == id) { transRef.child(k).remove(); break; } } }); } }
+    function deleteTrans(id) { 
+        if(confirm("Apakah Anda yakin ingin membatalkan/menghapus transaksi ini? Tindakan ini akan dicatat di log sistem pusat.")) { 
+            transRef.once('value', s => { 
+                const data = s.val(); 
+                for (let k in data) { 
+                    if (data[k].id == id) { 
+                        transRef.child(k).update({
+                            isDeleted: true,
+                            deletedAt: new Date().toISOString(),
+                            deletedBy: currentBranchId
+                        }); 
+                        break; 
+                    } 
+                } 
+            }); 
+        } 
+    }
 
     function deleteTransFromModal() {
         if(!currentViewedTransId) return;
-        if(confirm("Hapus transaksi ini?\n\nPastikan Anda menghapus data yang benar. Data yang sudah dihapus tidak bisa dikembalikan!")) {
+        if(confirm("Hapus transaksi ini?\n\nTindakan pembatalan struk ini akan otomatis dipantau oleh Admin Pusat.")) {
             transRef.once('value', s => { 
                 const data = s.val(); 
                 for (let k in data) { 
                     if (data[k].id == currentViewedTransId) { 
-                        transRef.child(k).remove().then(() => {
-                            alert("Transaksi berhasil dibatalkan dan dihapus dari laporan.");
+                        transRef.child(k).update({
+                            isDeleted: true,
+                            deletedAt: new Date().toISOString(),
+                            deletedBy: currentBranchId
+                        }).then(() => {
+                            alert("Transaksi berhasil dibatalkan.");
                             closeModal();
                         });
                         break; 
@@ -1198,8 +1288,8 @@
         if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         else targetMenus = [sel];
 
-        let maxId = 0;
-        targetMenus.forEach(b => {
+        let maxId = 0;maxId = 0;
+        targetMenus.forEach(b => { maxId = 0;
             if(allMenusData[b]) {
                 ['ONLINE','DINEIN'].forEach(mo => {
                     getSafeArray(allMenusData[b][mo]).forEach(it => {
@@ -1230,7 +1320,7 @@
                 document.getElementById('new-price-gojek').value = '';
                 document.getElementById('new-price-shopee').value = '';
             }
-        }).catch(err => {
+        }).catch(err => { maxId = 0;
             alert("Gagal menyimpan ke database: " + err.message);
         });
     }
@@ -1364,7 +1454,23 @@
     
     function confirmPayment() { 
         let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0 }; 
+        let t = { 
+            id: Date.now(), 
+            date: new Date().toISOString(), 
+            branchId: currentBranchId, 
+            branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, 
+            items: {...cart}, 
+            extraBread: cart.extraBread ? [...cart.extraBread] : [], 
+            mode: masterMode, 
+            disc: d, 
+            total: 0, 
+            paymentMethod: selectedPaymentMethod, 
+            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, 
+            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0,
+            isDeleted: false,
+            deletedAt: "",
+            deletedBy: ""
+        }; 
         for(let key in cart) { 
             if(key==='extraBread') continue; 
             let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
