@@ -373,6 +373,8 @@
     
     <div id="modal-btns-confirm">
         <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
+        <!-- Tombol Batal Input Baru untuk Mode Online/Dine In -->
+        <button style="width:100%;padding:12px;background:#e74c3c;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:8px;font-size:1rem;cursor:pointer;" onclick="closeModal()">❌ BATAL / KEMBALI EDIT</button>
         <button id="btn-change-pay-modal" style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
@@ -777,7 +779,6 @@
         
         closeModal(); 
         
-        // Pembaruan Logika: Jika ONLINE, hilangkan modal pilihan dan langsung lempar ke struk checkout
         if (masterMode === "ONLINE") {
             currentCashReceived = 0;
             currentCashChange = 0;
@@ -1235,7 +1236,6 @@
         document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
         buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai"), t.cashReceived || 0, t.cashChange || 0); 
         
-        // Sembunyikan tombol ubah metode pembayaran di tampilan preview struk lama jika bermode online
         if(t.mode === "ONLINE") {
             document.getElementById('btn-change-pay-modal').style.display = 'none';
         } else {
@@ -1450,7 +1450,6 @@
         document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
         buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
         
-        // Atur visibilitas tombol ubah pembayaran berdasarkan mode aktif saat checkout baru dibuka
         if(masterMode === "ONLINE") {
             document.getElementById('btn-change-pay-modal').style.display = 'none';
         } else {
