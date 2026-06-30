@@ -1414,40 +1414,37 @@
         menuRef.set(allMenusData); 
     }
 
-    function delM(m, id) { 
-        if (currentBranchId !== "KS4-ADM") { 
-            return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); 
-        }
+    
+function delM(id){
+  let allMenusData = JSON.parse(localStorage.getItem("allMenusData")) || {};
 
+  Object.keys(allMenusData).forEach(branch => {
+    allMenusData[branch] = allMenusData[branch].filter(x => {
+      // hapus juga jika nama pandan aren latte (case insensitive)
+      if (x.name && x.name.toLowerCase().includes("pandan aren latte")) return false;
+      return String(x.id) !== String(id);
+    });
+  });
+
+  localStorage.setItem("allMenusData", JSON.stringify(allMenusData));
+  alert("Menu berhasil dihapus!");
+  if (typeof renderMenu === "function") renderMenu();
+}
+
+        
         if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
             let targetMenus = [];
             let sel = document.getElementById('mgmt-branch-select').value;
-
-            if (sel === "ALL") {
-                targetMenus = Object.keys(allMenusData);
-            } else {
-                targetMenus = [sel];
-            }
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+            else targetMenus = [sel];
 
             targetMenus.forEach(b => {
-                if(!allMenusData[b]) return;
-
-                if(allMenusData[b][m]) {
-                    let items = getSafeArray(allMenusData[b][m]);
-
-                    let idx = items.findIndex(x => String(x.id) === String(id));
-
-                    if(idx !== -1) {
-                        items[idx].isHidden = true;
-                        allMenusData[b][m] = items;
-                    }
+                if(allMenusData[b] && allMenusData[b][m]) {
+                    let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id);
+                    if(idx !== -1) { items[idx].isHidden = true; allMenusData[b][m] = items; }
                 }
             });
-
-            menuRef.set(allMenusData).then(()=>{
-                renderMenu();
-                alert("Menu berhasil disembunyikan.");
-            });
+            menuRef.set(allMenusData); 
         } 
     }
     
