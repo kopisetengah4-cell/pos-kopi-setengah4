@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4a3b32">
+    
+    <title>POS KS4 - Sunter Branch v76</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #4a3b32; /* Cokelat Kopi hangat */
+            --secondary: #fdfbf7; /* Putih Cream lembut */
+            --card-bg: #ffffff;
+            --text: #3e342f; 
+            --admin: #d35400; 
+            --warning-bg: #fff3e0; 
+            --tab-inactive: #f0eae1;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        html, body { 
+            position: fixed; width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; 
+            overscroll-behavior: none !important; background: var(--secondary);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body { display: flex; flex-direction: column; }
+        
+        body.admin-mode #btn-nav-pos, body.admin-mode #btn-nav-history { display: none !important; }
+
+        body.admin-mode #branch-display { color: var(--admin); }
+        body:not(.admin-mode) #branch-display { color: var(--primary); }
+
+        #admin-mgmt-filter, #admin-add-menu-box { display: none; }
+        body.admin-mode #admin-mgmt-filter, body.admin-mode #admin-add-menu-box { display: block; }
+
+        main { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            padding-bottom: 400px; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .shop-name { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 2px; }
+        #branch-display { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .logout-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; z-index: 10; }
+        
+        .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .page.active { display: flex; }
+        
+        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        .mode-tabs, .range-tabs { display: flex; background: var(--tab-inactive); padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+        .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #e3dad0; color: #7a6e67; transition: 0.2s; white-space: nowrap; }
+        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
+
+        .nav-tabs { display: flex; background: var(--secondary); padding: 10px; gap: 8px; border-bottom: 1px solid #ede6da; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; position: relative; z-index: 5000; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 12px 20px; border: none; border-radius: 20px; background: var(--tab-inactive); color: var(--text); font-weight: bold; white-space: nowrap; font-size: 0.8rem; cursor: pointer; display: inline-block; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
+        .card { background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid #ede6da; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px rgba(62,52,47,0.03); cursor: pointer; }
+        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; color: var(--text); }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.85rem; }
+        
+        .card .ojol-prices-box { font-size: 0.68rem; color: #555; background: #f7f3eb; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; }
+        .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1dcd3; padding-bottom: 1px; }
+        .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 2px 4px; border-radius: 4px; }
+        
+        .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+
+        .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #ede6da; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th { background: #fdfcf9; padding: 10px; text-align: center; border-bottom: 2px solid #ede6da; color: #7a6e67; font-weight: 800; }
+        td { padding: 10px; border-bottom: 1px solid #ede6da; text-align: center; color: var(--text); }
+        .row-total { background: #fff3e0; font-weight: bold; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #ede6da; height: 70px; z-index: 6000; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a3978e; font-size: 0.65rem; font-weight: 600; cursor: pointer; }
+        .nav-btn.active { color: var(--primary); }
+
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(62,52,47,0.08); z-index: 4000; padding-bottom: env(safe-area-inset-bottom); }
+        
+        .platform-selector-box { display: flex; gap: 4px; background: #ede6da; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
+        .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #7a6e67; transition: 0.2s; }
+        .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
+        .platform-btn.active[data-p="Grab%"] { background: #16a085; color: white; }
+        .platform-btn.active[data-p="Gojek"] { background: #e74c3c; color: white; }
+        .platform-btn.active[data-p="Shopee"] { background: #e67e22; color: white; }
+
+        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ede6da; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        
+        .modal { display: none; position: fixed; inset: 0; background: rgba(62,52,47,0.6); z-index: 99999; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; }
+        
+        .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #ede6da; background: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; color: var(--text); }
+        .btn-pay-method.selected { border-color: var(--primary); background: #fdfbf7; color: var(--primary); }
+
+        #print-area { display: none; }
+        @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { display: block; position: absolute; left: 0; top: 0; width: 58mm; margin: 0; padding: 0; color: #000; font-family: 'Courier New', monospace; } @page { margin: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="print-area"></div>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h2 style="text-align:center; color:var(--primary)">POS KS4</h2>
+        <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
+        <input type="password" id="login-pass" placeholder="PASSWORD">
+        
+        <div style="display:flex; align-items:center; width:100%; margin-bottom:20px; gap: 8px;">
+            <input type="checkbox" id="remember-me" style="width:20px; height:20px; cursor: pointer;">
+            <label for="remember-me" style="font-weight:bold; color:#666; font-size: 0.9rem; cursor: pointer;">Ingat Sandi & ID</label>
+        </div>
+        <button onclick="handleLogin()">MASUK</button>
+    </div>
+</div>
+
+<div class="header">
+    <div class="shop-name">KOPI SETENGAH EMPAT</div>
+    <div id="branch-display">UNIT</div>
+    <button class="logout-btn" onclick="logout()">🚪</button>
+</div>
+
+<div id="page-pos" class="page active">
+    <!-- Area Navigasi Atas yang Statis -->
+    <div style="flex-shrink: 0; background: var(--secondary);">
+        <div class="mode-tabs" style="margin: 10px 15px 5px 15px;">
+            <button id="m-online" class="m-tab active" onclick="setMasterMode('ONLINE')">ORDER ONLINE</button>
+            <button id="m-dinein" class="m-tab" onclick="setMasterMode('DINEIN')">DINE IN</button>
+        </div>
+        
+        <div style="padding: 5px 15px 5px 15px;">
+            <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ede6da; font-size:0.9rem; font-weight:bold; background-color: #fff; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);" oninput="renderMenu()">
+        </div>
+
+        <div id="cat-nav" class="nav-tabs">
+            <button class="tab active" onclick="changeCategory('ICE')">ICE</button>
+            <button class="tab" onclick="changeCategory('HOT')">HOT</button>
+            <button class="tab" onclick="changeCategory('PAKET')">PAKET</button>
+            <button class="tab" onclick="changeCategory('SNACKS')">ROTI</button>
+            <button class="tab" onclick="changeCategory('EXTRA')">EXTRA</button>
+        </div>
+    </div>
+    
+    <!-- Area Scroll Menu Produk -->
+    <main><div class="product-grid" id="product-grid"></div></main>
+    
+    <div class="footer-cart">
+        <div style="background:#fdfcf9; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--admin);">Pot. Diskon:</label>
+                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #ede6da; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
+                </div>
+            </div>
+            
+            <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
+                <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div class="platform-selector-box">
+                    <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
+                    <button class="platform-btn" data-p="Grab%" onclick="selectActivePlatform('Grab%')">GRAB%</button>
+                    <button class="platform-btn" data-p="Gojek" onclick="selectActivePlatform('Gojek')">GOJEK</button>
+                    <button class="platform-btn" data-p="Shopee" onclick="selectActivePlatform('Shopee')">SHOPEE</button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 4px;">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #7a6e67;">Total Transaksi:</span>
+            <div id="total-price-display" style="font-size:1.4rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
+        </div>
+        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:6px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
+    </div>
+</div>
+
+<div id="page-history" class="page">
+    <main>
+        <h3 style="color: var(--primary);">Riwayat Pesanan Hari Ini</h3>
+        <div class="table-container">
+            <table>
+                <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
+                <tbody id="history-tbody"></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div id="page-report" class="page">
+    <main>
+        <div id="admin-panel" style="display:none; background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
+                <option value="ALL">SEMUA CABANG</option>
+                <option value="KS4-TD">TANDUR</option>
+                <option value="KS4-KB">KEBON Jeruk</option>
+                <option value="KS4-CK">CIKINI</option>
+                <option value="KS4-MT">MENTENG</option>
+                <option value="KS4-CP">CEMPUT</option>
+                <option value="KS4-OT">OTISTA</option>
+                <option value="KS4-ST">SUNTER</option>
+            </select>
+        </div>
+
+        <div class="range-tabs" style="margin-top: 10px;">
+            <button id="r-today" class="r-tab active" onclick="setRange('today')">HARI INI</button>
+            <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button>
+            <button id="r-week" class="r-tab" onclick="openDateModal('range')">MINGGUAN</button>
+            <button id="r-month" class="r-tab" onclick="openDateModal('month')">BULANAN</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; margin-bottom: 10px;">
+            <h3 style="color:var(--primary); margin:0;">Laporan: <span id="rep-title">HARI INI</span></h3>
+            <button onclick="exportToExcel()" class="btn-excel"><span>📊</span> EXCEL</button>
+        </div>
+
+        <div id="report-summary-box"></div>
+        <div id="report-details-box"></div>
+        
+        <div id="admin-history-box" style="display:none; margin-top:25px;">
+            <h3 style="color:var(--admin); border-bottom: 2px solid var(--admin); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
+                    <tbody id="admin-history-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-delete-report-box"></div> 
+    </main>
+</div>
+
+<div id="page-mgmt" class="page">
+    <main>
+        <h3 style="color: var(--primary);">Manajemen Menu</h3>
+        
+        <div id="admin-mgmt-filter" style="background: #fff3e0; padding: 15px; border-radius:15px; border: 2px solid var(--admin); margin-bottom:15px;">
+            <label style="font-weight:bold; color:var(--admin); font-size:0.8rem;">Pilih Target Cabang untuk Diedit:</label>
+            <select id="mgmt-branch-select" onchange="changeMgmtBranch()" style="width:100%; padding:12px; margin-top:5px; border-radius:10px; border:1px solid #ddd; font-weight:bold;">
+                <option value="ALL">✅ SEMUA CABANG SEKALIGUS</option>
+                <option value="KS4-TD">TANDUR</option>
+                <option value="KS4-KB">KEBON JERUK</option>
+                <option value="KS4-CK">CIKINI</option>
+                <option value="KS4-MT">MENTENG</option>
+                <option value="KS4-CP">CEMPUT</option>
+                <option value="KS4-OT">OTISTA</option>
+                <option value="KS4-ST">SUNTER</option>
+            </select>
+        </div>
+
+        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
+            <h4 style="margin:0 0 10px 0; color:var(--admin);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
+            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
+                <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
+            </select>
+
+            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            
+            <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            
+            <div id="ojol-price-inputs-container">
+                <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <input type="number" id="new-price-grab" placeholder="Harga Grab/Grab%" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                </div>
+            </div>
+            
+            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+                <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
+            </select>
+
+            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#fdfbf7; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
+            
+            <div id="komponen-panel" style="display:none; background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px;">
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--primary); margin-bottom:10px; display:block;">Pengaturan Fisik Cup & Susu (Otomatis Dihitung)</label>
+                
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Jenis Wadah</label>
+                        <select id="new-wadah" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                            <option value="Cup Kecil">Cup Kecil</option>
+                            <option value="Cup Besar">Cup Besar</option>
+                            <option value="Cup Hot">Cup Hot</option>
+                            <option value="1 Liter">Botol 1 Liter</option>
+                            <option value="500 ML">Botol 500 ML</option>
+                            <option value="Tanpa Wadah">Tanpa Wadah (Roti dll)</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Total Cup Keluar</label>
+                        <input type="number" id="new-qty-wadah" placeholder="Cth: 3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Susu</label>
+                        <input type="number" id="new-qty-susu" placeholder="Cth: 2" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Non-Susu</label>
+                        <input type="number" id="new-qty-non" placeholder="Cth: 1" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
+        </div>
+        
+        <div id="mgmt-list"></div>
+    </main>
+</div>
+
+<nav class="bottom-nav" id="main-nav">
+    <button class="nav-btn active" id="btn-nav-pos" onclick="showPage('pos')">Kasir</button>
+    <button class="nav-btn" id="btn-nav-history" onclick="showPage('history')">Riwayat</button>
+    <button class="nav-btn" id="btn-nav-report" onclick="showPage('report')">Laporan</button>
+    <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
+</nav>
+
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+
+<div id="modal-payment" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 style="color:var(--primary); margin-bottom:15px;">Pilih Metode Pembayaran</h3>
+        <div id="payment-methods-list"></div>
+        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+    </div>
+</div>
+
+<div id="modal-cash" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai</h3>
+        <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
+        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #ede6da; text-align:center; margin-bottom:20px;">
+        <div style="display:flex; gap:10px;">
+            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center">
+    <h3 id="rec-header">STRUK</h3>
+    <div id="rec-branch" style="font-size:0.7rem"></div>
+    <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
+    <table id="rec-table" style="margin-top:10px;"></table>
+    <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
+    
+    <div id="modal-btns-confirm">
+        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
+        <!-- Tombol Batal Input Baru untuk Mode Online/Dine In -->
+        <button style="width:100%;padding:12px;background:#e74c3c;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:8px;font-size:1rem;cursor:pointer;" onclick="closeModal()">❌ BATAL / KEMBALI EDIT</button>
+        <button id="btn-change-pay-modal" style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
+    </div>
+    
+    <div id="modal-btns-close" style="display:none; margin-top:20px;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
+            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
+        </div>
+        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
+    </div>
+</div></div>
+
+<div id="modal-date" class="modal">
+    <div class="modal-content" style="text-align:center">
+        <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
+        <div id="date-input-container" style="margin-top:15px;"></div>
+        <div style="display:flex; gap:10px; margin-top:25px;">
+            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('beforeunload', function (e) {
+        if (Object.keys(cart).length > 0) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    const firebaseConfig = { apiKey: "AIzaSyCBt2sJ3FGhKuxgZS6wqGz7l4A0ewkvkzs", authDomain: "kasir-setengah4.firebaseapp.com", databaseURL: "https://kasir-setengah4-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "kasir-setengah4", storageBucket: "kasir-setengah4.appspot.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    const transRef = db.ref('transactions_master_v39'); 
+    const menuRef = db.ref('master_menu_v40'); 
+
+    const users = { "KS4-TD": { name: "Tanjung Duren", pass: "1245" }, "KS4-KB": { name: "Kebon Jeruk", pass: "1425" }, "KS4-CK": { name: "Cikini", pass: "3265" }, "KS4-MT": { name: "Menteng", pass: "9865" }, "KS4-CP": { name: "Cempaka Putih", pass: "7845" }, "KS4-OT": { name: "Otista", pass: "1478" }, "KS4-ST": { name: "Sunter", pass: "1312" }, "KS4-ADM": { name: "ADMIN", pass: "9812" } };
+
+    const initialData = { ONLINE: [], DINEIN: [] };
+
+    let allMenusData = {}; 
+    let localMenu = { ONLINE: [], DINEIN: [] }; 
+    let masterMode = "ONLINE", activeCat = "ICE", cart = {}, currentBranchId = "", allTransactions = [];
+    let currentFilteredTransactions = [];
+    let activeRange = "today", filterTypeTemp = "today", filterDate1 = "", filterDate2 = "";
+    
+    let selectedPaymentMethod = ""; 
+    let currentCashReceived = 0; 
+    let currentCashChange = 0;   
+    
+    window.rawbtPrintText = "";
+    let currentViewedTransId = null;
+    let currentPuasId = null;
+
+    const getSafeArray = (obj) => {
+        if (!obj) return [];
+        if (Array.isArray(obj)) return obj.filter(Boolean);
+        return Object.values(obj).filter(Boolean);
+    };
+
+    function parseCartKey(key) {
+        if(key.includes('_')) {
+            let p = key.split('_');
+            return { id: p[0], platform: p[1] };
+        }
+        return { id: key, platform: 'Normal' };
+    }
+
+    function getItemPrice(item, method) {
+        if (!item) return 0;
+        if (method === 'Grab' || method === 'Grab%') return item.priceGrab || item.price;
+        if (method === 'Gojek') return item.priceGojek || item.price;
+        if (method === 'Shopee') return item.priceShopee || item.price;
+        return item.price;
+    }
+
+    function parseFirebaseMenus(data) {
+        let result = {};
+        let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+        if (!data) data = {};
+        
+        let needDatabaseClean = false;
+
+        branchKeys.forEach(b => {
+            let onlineData = (data[b] && data[b].ONLINE) ? getSafeArray(data[b].ONLINE) : [];
+            let dineinData = (data[b] && data[b].DINEIN) ? getSafeArray(data[b].DINEIN) : [];
+            
+            if (b !== "ALL") {
+                let initialOnlineLength = onlineData.length;
+                let initialDineinLength = dineinData.length;
+                
+                onlineData = onlineData.filter(x => !x.isNewCustom);
+                dineinData = dineinData.filter(x => !x.isNewCustom);
+                
+                if (onlineData.length !== initialOnlineLength || dineinData.length !== initialDineinLength) {
+                    needDatabaseClean = true;
+                }
+            }
+
+            onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
+            dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
+
+            onlineData = onlineData.filter(x => x.id !== 37);
+            dineinData = dineinData.filter(x => x.id !== 37);
+
+            result[b] = { ONLINE: onlineData, DINEIN: dineinData };
+        });
+
+        if (needDatabaseClean) {
+            setTimeout(() => { menuRef.set(result); }, 500);
+        }
+
+        return result;
+    }
+
+    function getAllUniqueMenus() {
+        let unique = []; let ids = new Set();
+        for (let b in allMenusData) {
+            ['ONLINE', 'DINEIN'].forEach(m => {
+                getSafeArray(allMenusData[b][m]).forEach(item => {
+                    if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
+                });
+            });
+        }
+        let historyFallback = [ { id: 37, name: "2x Kopsu", price: 47500, cat: "PAKET" } ];
+        historyFallback.forEach(item => {
+            if (!ids.has(item.id)) { ids.add(item.id); unique.push(item); }
+        });
+        return unique;
+    }
+
+    function checkSession() {
+        const savedLogin = localStorage.getItem('ks4_saved_login');
+        if(savedLogin) {
+            const dataLogin = JSON.parse(savedLogin);
+            document.getElementById('login-user').value = dataLogin.u;
+            document.getElementById('login-pass').value = dataLogin.p;
+            document.getElementById('remember-me').checked = true;
+        }
+        const session = localStorage.getItem('ks4_session');
+        if (session) {
+            const data = JSON.parse(session);
+            const now = new Date().getTime();
+            if (now - data.timestamp < 3600000 * 12) { 
+                currentBranchId = data.branchId;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('branch-display').innerText = users[currentBranchId] ? users[currentBranchId].name : currentBranchId;
+                
+                if(currentBranchId === "KS4-ADM") {
+                    document.body.classList.add('admin-mode');
+                    document.getElementById('admin-panel').style.display = 'block';
+                    showPage('report');
+                } else { 
+                    document.body.classList.remove('admin-mode');
+                    showPage('pos'); setMasterMode('ONLINE'); 
+                }
+            } else { localStorage.removeItem('ks4_session'); }
+        }
+    }
+    window.onload = checkSession;
+
+    function buildMergedBranchMenu(branchId) {
+        let globalData = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+        let branchData = allMenusData[branchId] || { ONLINE: [], DINEIN: [] };
+
+        let result = { ONLINE: [], DINEIN: [] };
+
+        ['ONLINE', 'DINEIN'].forEach(m => {
+            let combined = [];
+            let addedIds = new Set();
+
+            getSafeArray(branchData[m]).forEach(item => {
+                combined.push(item);
+                addedIds.add(item.id);
+            });
+
+            getSafeArray(globalData[m]).forEach(item => {
+                if (!addedIds.has(item.id)) {
+                    combined.push(item);
+                    addedIds.add(item.id);
+                }
+            });
+
+            result[m] = combined;
+        });
+
+        return result;
+    }
+
+    menuRef.on('value', snap => {
+        try {
+            allMenusData = parseFirebaseMenus(snap.val());
+            if (currentBranchId && currentBranchId !== "KS4-ADM") {
+                localMenu = buildMergedBranchMenu(currentBranchId);
+            } else {
+                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+            }
+            renderMenu(); 
+            renderMgmt();
+            toggleMgmtPriceInputs();
+        } catch (e) {
+            console.error("Gagal memuat menu:", e);
+        }
+    });
+
+    transRef.on('value', snap => {
+        allTransactions = snap.val() ? Object.values(snap.val()).reverse() : [];
+        if(currentBranchId) { updateReport(); updateHistory(); }
+    });
+
+    function handleLogin() {
+        const u = document.getElementById('login-user').value.toUpperCase(), p = document.getElementById('login-pass').value;
+        if (users[u] && users[u].pass === p) {
+            currentBranchId = u;
+            localStorage.setItem('ks4_session', JSON.stringify({ branchId: u, timestamp: new Date().getTime() }));
+            if(document.getElementById('remember-me').checked) { localStorage.setItem('ks4_saved_login', JSON.stringify({u: u, p: p})); } 
+            else { localStorage.removeItem('ks4_saved_login'); }
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('branch-display').innerText = users[currentBranchId].name;
+            
+            if (currentBranchId !== "KS4-ADM") {
+                localMenu = buildMergedBranchMenu(currentBranchId);
+            } else {
+                localMenu = allMenusData["ALL"] || { ONLINE: [], DINEIN: [] };
+            }
+
+            renderMenu();
+            renderMgmt();
+            toggleMgmtPriceInputs();
+
+            if(u === "KS4-ADM") {
+                document.body.classList.add('admin-mode');
+                document.getElementById('admin-panel').style.display = 'block';
+                showPage('report');
+            } else { 
+                document.body.classList.remove('admin-mode');
+                showPage('pos'); setMasterMode('ONLINE'); 
+            }
+        } else { alert("Login Gagal! ID atau Password Salah."); }
+    }
+
+    function logout() { localStorage.removeItem('ks4_session'); location.reload(); }
+    
+    function setMasterMode(m) { 
+        masterMode = m; cart = {}; 
+        document.getElementById('m-online').classList.toggle('active', m === 'ONLINE'); 
+        document.getElementById('m-dinein').classList.toggle('active', m === 'DINEIN'); 
+        if(document.getElementById('search-menu')) { document.getElementById('search-menu').value = ''; }
+        
+        const platformSelector = document.getElementById('online-platform-container');
+        if (m === 'ONLINE') {
+            selectedPaymentMethod = ""; 
+            document.getElementById('label-mode').innerText = "MODE: ONLINE";
+            platformSelector.style.display = "flex";
+            document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+            document.getElementById('platform-warning-text').style.color = "#d35400";
+        } else {
+            selectedPaymentMethod = "Tunai"; 
+            document.getElementById('label-mode').innerText = "MODE: DINE IN";
+            platformSelector.style.display = "none";
+        }
+        
+        changeCategory('ICE'); updateUI(); 
+    }
+
+    function selectActivePlatform(p) {
+        selectedPaymentMethod = p;
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-p') === p);
+        });
+        document.getElementById('platform-warning-text').innerText = "✅ PLATFORM TERPILIH: " + p.toUpperCase();
+        document.getElementById('platform-warning-text').style.color = "var(--primary)";
+        renderMenu();
+        updateUI();
+    }
+    
+    function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
+
+    function openDateModal(type) {
+        filterTypeTemp = type; const container = document.getElementById('date-input-container'); const title = document.getElementById('date-modal-title');
+        if(type === 'day') { title.innerText = "Laporan Harian"; container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; } 
+        else if(type === 'range') { title.innerText = "Laporan Mingguan / Kustom"; container.innerHTML = `<div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Mulai Tanggal:</div><input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size:1rem;"><div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Hingga Tanggal:</div><input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; } 
+        else if(type === 'month') { title.innerText = "Laporan Bulanan"; container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; }
+        document.getElementById('modal-date').classList.add('show');
+    }
+
+    function applyDateFilter() {
+        filterDate1 = document.getElementById('date-val1')?.value || ''; filterDate2 = document.getElementById('date-val2')?.value || '';
+        if(!filterDate1) return alert("Pilih tanggal terlebih dahulu!");
+        if(filterTypeTemp === 'range' && !filterDate2) return alert("Pilih tanggal akhir!");
+        activeRange = filterTypeTemp; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
+        let tabId = "r-day"; if(activeRange === 'range') tabId = "r-week"; if(activeRange === 'month') tabId = "r-month"; document.getElementById(tabId).classList.add('active');
+        let titleStr = ""; if(activeRange === 'day') titleStr = filterDate1; if(activeRange === 'range') titleStr = filterDate1 + " s/d " + filterDate2; if(activeRange === 'month') titleStr = "Bulan " + filterDate1;
+        document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
+    }
+
+    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes(`'${c}'`))); renderMenu(); }
+    
+    function renderMenu() {
+        const grid = document.getElementById('product-grid'); grid.innerHTML = '';
+        if(!localMenu || !localMenu[masterMode]) return;
+        const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+        
+        let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
+        
+        if(searchText !== '') { 
+            displayList = displayList.filter(m => m.name.split(' | ')[0].toLowerCase().includes(searchText)); 
+        } else { 
+            displayList = displayList.filter(m => m.cat === activeCat); 
+        }
+        
+        displayList.forEach(item => {
+            let displayName = item.name.split(' | ')[0]; 
+            let isPuas = displayName.toLowerCase().includes("puas");
+            
+            let q = 0;
+            for(let k in cart) {
+                if(k === 'extraBread') continue;
+                let parsed = parseCartKey(k);
+                if(parsed.id == item.id) q += cart[k];
+            }
+            
+            let act = isPuas ? `openBreadModal(${item.id})` : `updateCartNormal(${item.id}, 1, ${isPuas})`;
+            
+            let mainPriceHtml = "";
+            let ojolPricesHtml = "";
+            
+            if (masterMode === "ONLINE") {
+                mainPriceHtml = ""; 
+                let grb = item.priceGrab || item.price;
+                let gjk = item.priceGojek || item.price;
+                let shp = item.priceShopee || item.price;
+                
+                let grabClass = (selectedPaymentMethod === 'Grab' || selectedPaymentMethod === 'Grab%') ? 'ojol-row highlighted-platform' : 'ojol-row';
+                let gojekClass = selectedPaymentMethod === 'Gojek' ? 'ojol-row highlighted-platform' : 'ojol-row';
+                let shopeeClass = selectedPaymentMethod === 'Shopee' ? 'ojol-row highlighted-platform' : 'ojol-row';
+
+                ojolPricesHtml = `<div class="ojol-prices-box" style="margin-top: 5px;">
+                    <div class="${gojekClass}"><span>Gojek:</span><span>Rp ${gjk.toLocaleString()}</span></div>
+                    <div class="${shopeeClass}"><span>Shopee:</span><span>Rp ${shp.toLocaleString()}</span></div>
+                    <div class="${grabClass}"><span>Grab/Grab%:</span><span>Rp ${grb.toLocaleString()}</span></div>
+                </div>`;
+            } else {
+                mainPriceHtml = `<p>Rp ${item.price.toLocaleString()}</p>`;
+            }
+
+            let innerContent = `<h4>${displayName}</h4>
+            ${mainPriceHtml}
+            ${ojolPricesHtml}
+            <div class="qty-controls" style="visibility:${q>0?'visible':'hidden'}">
+                <button class="btn-q" onclick="event.stopPropagation(); updateCartNormal(${item.id}, -1, ${isPuas})">-</button>
+                <b style="color:var(--primary); font-size:1.1rem;">${q}</b>
+                <button class="btn-q" onclick="event.stopPropagation(); ${act}">+</button>
+            </div>`;
+
+            grid.innerHTML += `<div class="card" onclick="${act}">${innerContent}</div>`;
+        });
+        
+        if(displayList.length === 0 && searchText !== '') { grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #888; margin-top: 20px; font-weight: bold;">Menu "${searchText}" tidak ditemukan.</div>`; }
+    }
+
+    function updateCartNormal(id, d, isPuas) { 
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            alert("Silakan pilih saluran platform ojol (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            return;
+        }
+        if(isPuas && d < 0 && cart.extraBread) cart.extraBread.pop(); 
+        cart[id] = (cart[id] || 0) + d; 
+        if(cart[id] <= 0) delete cart[id]; 
+        renderMenu(); updateUI(); 
+    }
+
+    function openBreadModal(id) {
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            alert("Silakan pilih saluran platform ojol (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu di bagian bawah!");
+            return;
+        }
+        currentPuasId = String(id);
+        document.getElementById('modal-bread').classList.add('show');
+    }
+
+    function updateUI() { 
+        let t = 0; 
+        const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
+        for(let key in cart) { 
+            if(key=='extraBread') continue; 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
+            if(m) {
+                let platformPrice = getItemPrice(m, selectedPaymentMethod || 'Normal');
+                t += platformPrice * cart[key]; 
+            }
+        } 
+        document.getElementById('total-price-display').innerText = `Rp ${Math.max(0, t-(parseInt(document.getElementById('discount-input').value)||0)).toLocaleString()}`; 
+    }
+
+    function openPaymentMethod() {
+        if(Object.keys(cart).length === 0) return alert("Pilih menu terlebih dahulu!");
+        if(masterMode === "ONLINE" && !selectedPaymentMethod) {
+            return alert("Gagal memproses! Anda wajib memilih kasir platform (GRAB / GRAB% / GOJEK / SHOPEE) terlebih dahulu agar harga sesuai.");
+        }
+        
+        closeModal(); 
+        
+        if (masterMode === "ONLINE") {
+            currentCashReceived = 0;
+            currentCashChange = 0;
+            openCheckout(); 
+        } else {
+            let methodsContainer = document.getElementById('payment-methods-list');
+            methodsContainer.innerHTML = `
+                <button class="btn-pay-method" onclick="selectPayment('QRIS')">QRIS</button>
+                <button class="btn-pay-method" onclick="selectPayment('Tunai')">Tunai</button>
+            `;
+            document.querySelectorAll('.btn-pay-method').forEach(btn => {
+                if(btn.innerText === selectedPaymentMethod) btn.classList.add('selected');
+            });
+            document.getElementById('modal-payment').classList.add('show');
+        }
+    }
+
+    function selectPayment(method) {
+        selectedPaymentMethod = method;
+        document.querySelectorAll('.btn-pay-method').forEach(btn => {
+            btn.classList.toggle('selected', btn.innerText === method);
+        });
+        closeModal();
+        
+        if (method === "Tunai") {
+            openCashModal(); 
+        } else {
+            currentCashReceived = 0;
+            currentCashChange = 0;
+            openCheckout(); 
+        }
+    }
+
+    function openCashModal() {
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let key in cart) {
+            if(key==='extraBread') continue;
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
+        }
+        let finalTotal = Math.max(0, s - d);
+        
+        document.getElementById('cash-total-display').innerText = "Total Belanja: Rp " + finalTotal.toLocaleString('id-ID');
+        document.getElementById('cash-input-val').value = '';
+        document.getElementById('modal-cash').classList.add('show');
+        
+        setTimeout(() => { document.getElementById('cash-input-val').focus(); }, 100);
+    }
+
+    function processCash() {
+        let cash = parseInt(document.getElementById('cash-input-val').value) || 0;
+        
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let key in cart) {
+            if(key==='extraBread') continue;
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
+        }
+        let finalTotal = Math.max(0, s - d);
+
+        if (cash < finalTotal) {
+            alert("Nominal uang tunai kurang dari total belanja!");
+            return;
+        }
+
+        currentCashReceived = cash;
+        currentCashChange = cash - finalTotal;
+        
+        closeModal();
+        openCheckout();
+    }
+    
+    function updateReport() {
+        const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
+        const now = new Date(); const nowStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        
+        const filtered = allTransactions.filter(t => { 
+            if(t.isDeleted === true) return false; 
+            const d = new Date(t.date); 
+            const tDateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0'); 
+            const tMonthStr = tDateStr.slice(0, 7); 
+            let dOk = false; 
+            if (activeRange === 'today') dOk = (tDateStr === nowStr || d.toDateString() === now.toDateString()); 
+            else if (activeRange === 'day') dOk = (tDateStr === filterDate1); 
+            else if (activeRange === 'range') dOk = (tDateStr >= filterDate1 && tDateStr <= filterDate2); 
+            else if (activeRange === 'month') dOk = (tMonthStr === filterDate1); 
+            let bOk = (currentBranchId === "KS4-ADM") ? (bF === "ALL" || t.branchId === bF) : t.branchId === currentBranchId; 
+            return dOk && bOk; 
+        });
+
+        const deletedTransactions = allTransactions.filter(t => {
+            if(t.isDeleted !== true) return false;
+            const d = new Date(t.date);
+            const tDateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+            let dOk = false;
+            if (activeRange === 'today') dOk = (tDateStr === nowStr);
+            else dOk = true;
+            let bOk = (bF === "ALL" || t.branchId === bF);
+            return dOk && bOk;
+        });
+
+        currentFilteredTransactions = filtered;
+        let om=0, k_raw=0, b=0, h=0, r=0, rc=0, rv=0, rb=0, l1=0, ml500=0;
+        let cupSusu = 0, cupNonSusu = 0; let l1Susu = 0, l1NonSusu = 0; let ml500Susu = 0, ml500NonSusu = 0;
+        let catItems = { "ICE": {}, "HOT": {}, "PAKET": {}, "SNACKS": {}, "EXTRA": {} };
+        
+        let payMethods = { "Grab": 0, "Grab%": 0, "Gojek": 0, "Shopee": 0, "QRIS": 0, "Tunai": 0 };
+        
+        let allItems = getAllUniqueMenus(); 
+
+        filtered.forEach(t => { 
+            om += t.total; 
+            let method = t.paymentMethod || "Tunai";
+            if(payMethods[method] !== undefined) payMethods[method] += t.total;
+
+            for(let key in t.items) { 
+                if(key==='extraBread') continue; 
+                let parsed = parseCartKey(key);
+                let m = allItems.find(x => x.id == parsed.id); 
+                if(!m) continue; 
+                
+                let q = t.items[key]; 
+                let nameLower = m.name.toLowerCase(); 
+                let displayName = m.name.split(' | ')[0]; 
+                let kategori = m.cat || "EXTRA"; 
+                catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
+
+                if (m.isNewCustom && m.name.includes("WADAH:")) {
+                    let parts = m.name.split(' | ');
+                    let metadata = parts[2] || ""; 
+                    
+                    let wType = "Cup Kecil", wQty = 0, sQty = 0, nQty = 0;
+                    let metaParts = metadata.split(',');
+                    metaParts.forEach(mp => {
+                        if(mp.startsWith("WADAH:")) wType = mp.replace("WADAH:", "");
+                        if(mp.startsWith("QTY:")) wQty = parseInt(mp.replace("QTY:", "")) || 0;
+                        if(mp.startsWith("SUSU:")) sQty = parseInt(mp.replace("SUSU:", "")) || 0;
+                        if(mp.startsWith("NON:")) nQty = parseInt(mp.replace("NON:", "")) || 0;
+                    });
+
+                    let totalWadah = wQty * q; 
+                    let totalSusu = sQty * q;
+                    let totalNon = nQty * q;
+
+                    if (wType === "Cup Kecil") {
+                        k_raw += totalWadah; 
+                        cupSusu += totalSusu; cupNonSusu += totalNon;
+                    } else if (wType === "Cup Besar") {
+                        b += totalWadah; k_raw += totalWadah; 
+                        cupSusu += totalSusu; cupNonSusu += totalNon;
+                    } else if (wType === "Cup Hot") {
+                        h += totalWadah;
+                        cupSusu += totalSusu; cupNonSusu += totalNon;
+                    } else if (wType === "1 Liter") {
+                        l1 += totalWadah;
+                        l1Susu += totalSusu; l1NonSusu += totalNon;
+                    } else if (wType === "500 ML") {
+                        ml500 += totalWadah;
+                        ml500Susu += totalSusu; ml500NonSusu += totalNon;
+                    }
+
+                } else {
+                    let isPaketBotol = nameLower.includes("1 liter") || nameLower.includes("500ml"); 
+                    if(nameLower.includes("1 liter")) l1 += q; 
+                    if(nameLower.includes("500ml")) ml500 += q; 
+                    
+                    if(!isPaketBotol) { 
+                        if(nameLower.includes("besar")) b += q; 
+                        else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
+                        else if(nameLower.includes("roti coklat")) rc += q; 
+                        else if(nameLower.includes("roti vanila")) rv += q; 
+                        else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
+                        else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
+                        else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
+                        else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
+                        else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
+                    } 
+                    
+                    if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
+                        if (nameLower.includes("1 liter")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) l1NonSusu += q; 
+                            else l1Susu += q; 
+                        } else if (nameLower.includes("500ml")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("remon") || nameLower.includes("shaken") || nameLower.includes("teh") || nameLower.includes("non susu")) ml500NonSusu += q; 
+                            else ml500Susu += q; 
+                        } else if (nameLower.includes("4x") || nameLower.includes("buy3get1")) { 
+                            cupSusu += (3 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("puas")) { 
+                            cupSusu += (1 * q); 
+                        } else if (nameLower.includes("paling laku")) { 
+                            cupSusu += (1 * q); cupNonSusu += (1 * q); 
+                        } else if (nameLower.includes("favorite")) { 
+                            cupSusu += (2 * q); 
+                        } else if (nameLower.includes("5x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (5 * q); 
+                            else cupSusu += (5 * q); 
+                        } else if (nameLower.includes("2x")) { 
+                            if (nameLower.includes("americano") || nameLower.includes("shaken") || nameLower.includes("remon") || nameLower.includes("non susu")) cupNonSusu += (2 * q); 
+                            else cupSusu += (2 * q); 
+                        } else { 
+                            let isNonSusu = ["americano", "long black", "lemon tea", "remon", "shaken", "sugar cane", "teh tarik", "teh susu legit", "non susu"].some(ns => nameLower.includes(ns)); 
+                            if (isNonSusu) cupNonSusu += q; 
+                            else cupSusu += q; 
+                        } 
+                    } 
+                } 
+            } 
+            if(t.extraBread) t.extraBread.forEach(bid => { 
+                if(bid==41) { rc++; catItems["SNACKS"]["Roti Coklat"] = (catItems["SNACKS"]["Roti Coklat"] || 0) + 1; } 
+                if(bid==42) { rv++; catItems["SNACKS"]["Roti Vanila"] = (catItems["SNACKS"]["Roti Vanila"] || 0) + 1; } 
+                if(bid==43) { rb++; catItems["SNACKS"]["Roti Blueberry"] = (catItems["SNACKS"]["Roti Blueberry"] || 0) + 1; } 
+            }); 
+        });
+
+        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">`;
+        if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Grab%"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab%: <b>Rp ${payMethods["Grab%"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Shopee"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Shopee: <b>Rp ${payMethods["Shopee"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["QRIS"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">QRIS: <b>Rp ${payMethods["QRIS"].toLocaleString('id-ID')}</b></div>`;
+        if(payMethods["Tunai"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Tunai: <b>Rp ${payMethods["Tunai"].toLocaleString('id-ID')}</b></div>`;
+        paymentHtml += `</div>`;
+
+        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #ede6da; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        
+        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
+        if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
+        
+        if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#ede6da; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
+        
+        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #ede6da; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        
+        if(currentBranchId === "KS4-ADM") { 
+            document.getElementById('admin-history-box').style.display = 'block'; 
+            let histHtml = ''; 
+            filtered.forEach(t => { 
+                histHtml += `<tr>
+                    <td style="text-align:left;">
+                        ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> 
+                        ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
+                        <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                    </td>
+                    <td style="text-align:left;">
+                        <b>${t.branchName}</b><br>
+                        <span style="font-size:0.65rem; color:#888;">${t.mode}</span>
+                    </td>
+                    <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
+                    <td style="text-align:left;">
+                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
+                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                    </td>
+                </tr>`; 
+            }); 
+            if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
+            document.getElementById('admin-history-tbody').innerHTML = histHtml; 
+
+            let auditBox = document.getElementById('admin-audit-box');
+            if(!auditBox){
+                const newDiv = document.createElement('div');
+                newDiv.id = 'admin-audit-box';
+                newDiv.style.marginTop = '25px';
+                document.getElementById('admin-history-box').parentNode.insertBefore(newDiv, document.getElementById('admin-delete-report-box'));
+                auditBox = newDiv;
+            }
+            
+            let auditHtml = `<h3 style="color:#c0392b; border-bottom: 2px solid #c0392b; padding-bottom:5px;">⚠️ Log Pembatalan / Struk Dihapus (Audit Pusat)</h3>
+                             <div class="table-container">
+                                <table style="background: #f9f9f9;">
+                                    <thead>
+                                        <tr style="background:#f2dede; color:#a94442;">
+                                            <th style="text-align:left;">WAKTU DIAUDIT</th>
+                                            <th style="text-align:left;">CABANG / OLEH</th>
+                                            <th style="text-align:left;">NOMINAL</th>
+                                            <th style="text-align:left;">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+            
+            deletedTransactions.forEach(at => {
+                let delTime = at.deletedAt ? new Date(at.deletedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
+                auditHtml += `<tr style="color: #c0392b; font-style: italic;">
+                    <td style="text-align:left;">${new Date(at.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}<br>${delTime}</td>
+                    <td style="text-align:left;"><b>${at.branchName}</b><br><small>User: ${at.deletedBy || 'Unknown'}</small></td>
+                    <td style="text-align:left;">Rp ${at.total.toLocaleString()}</td>
+                    <td style="text-align:left;"><button style="background:#7f8c8d; color:white; border:none; padding:6px; border-radius:5px; width:100%;" onclick="viewStruk('${at.id}')">CEK DETAIL</button></td>
+                </tr>`;
+            });
+            
+            if(deletedTransactions.length === 0) auditHtml += `<tr><td colspan="4" style="text-align:center; color:#999;">Aman. Tidak ada struk yang dihapus cabang hari ini.</td></tr>`;
+            auditHtml += `</tbody></table></div>`;
+            auditBox.innerHTML = auditHtml;
+
+        } else { 
+            document.getElementById('admin-history-box').style.display = 'none'; 
+            if(document.getElementById('admin-audit-box')) document.getElementById('admin-audit-box').style.display = 'none';
+        }
+        
+        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
+    }
+
+    function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
+    
+    function updateHistory() { 
+        if (currentBranchId === "KS4-ADM") return; 
+        const now = new Date(); 
+        const list = allTransactions.filter(t => { 
+            const txDate = new Date(t.date); 
+            return t.branchId === currentBranchId && t.isDeleted !== true && txDate.toDateString() === now.toDateString(); 
+        }); 
+        document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
+            return `<tr>
+                <td style="text-align:left;">
+                    ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
+                    <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                </td>
+                <td style="text-align:left;">
+                    <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#4a3b32'}">${t.mode}</span>
+                </td>
+                <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
+                <td style="text-align:left;">
+                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                </td>
+            </tr>`; 
+        }).join(''); 
+    }
+    
+    function deleteTrans(id) { 
+        if(confirm("Apakah Anda yakin ingin membatalkan/menghapus transaksi ini? Tindakan ini akan dicatat di log sistem pusat.")) { 
+            transRef.once('value', s => { 
+                const data = s.val(); 
+                for (let k in data) { 
+                    if (data[k].id == id) { 
+                        transRef.child(k).update({
+                            isDeleted: true,
+                            deletedAt: new Date().toISOString(),
+                            deletedBy: currentBranchId
+                        }); 
+                        break; 
+                    } 
+                } 
+            }); 
+        } 
+    }
+
+    function deleteTransFromModal() {
+        if(!currentViewedTransId) return;
+        if(confirm("Hapus transaksi ini?\n\nTindakan pembatalan struk ini akan otomatis dipantau oleh Admin Pusat.")) {
+            transRef.once('value', s => { 
+                const data = s.val(); 
+                for (let k in data) { 
+                    if (data[k].id == currentViewedTransId) { 
+                        transRef.child(k).update({
+                            isDeleted: true,
+                            deletedAt: new Date().toISOString(),
+                            deletedBy: currentBranchId
+                        }).then(() => {
+                            alert("Transaksi berhasil dibatalkan.");
+                            closeModal();
+                        });
+                        break; 
+                    } 
+                } 
+            });
+        }
+    }
+
+    function buildPrintArea(items, extraBread, total, disc, branchName, dateStr, mode, paymentMethod, cashReceived, cashChange) {
+        let d = new Date(dateStr); let idPesanan = "ORD-" + d.getTime().toString().slice(-5); let tanggal = d.toLocaleDateString('id-ID', {day: '2-digit', month: '2-digit', year: 'numeric'}); let waktu = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+        
+        let p = `<div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:5px;">KOPI SETENGAH 4</div><div style="text-align:center; font-size:12px; margin-bottom:10px;">${branchName.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><div style="font-size:11px; margin-bottom:5px;">ID Pesanan: ${idPesanan}<br>Tanggal: ${tanggal} ${waktu}<br>Tipe: ${mode}<br>Bayar via: ${paymentMethod.toUpperCase()}</div><div style="border-bottom:1px dashed #000; margin-bottom:5px;"></div><table style="width:100%; font-size:11px; text-align:left; border-collapse:collapse;">`; 
+        const list = [...getSafeArray(localMenu.ONLINE), ...getSafeArray(localMenu.DINEIN)]; 
+        for(let key in items) { 
+            if(key === 'extraBread') continue; 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
+            if(m) { 
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
+                let displayName = m.name.split(' | ')[0]; 
+                let p_price = getItemPrice(m, platformToUse);
+                p += `<tr><td colspan="2" style="padding:2px 0;">${displayName}</td></tr><tr><td style="padding:0 0 4px 0;">${items[key]}x Rp ${p_price.toLocaleString('id-ID')}</td><td style="text-align:right; padding:0 0 4px 0;">Rp ${(p_price*items[key]).toLocaleString('id-ID')}</td></tr>`; 
+            } 
+        } 
+        if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); p += `<tr><td colspan="2" style="padding:2px 0;">${rn}</td></tr><tr><td style="padding:0 0 4px 0;">1x Rp 0</td><td style="text-align:right; padding:0 0 4px 0;">Rp 0</td></tr>`; }); } 
+        p += `</table><div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:5px;"></div>`; 
+        if(disc && disc > 0) { p += `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Diskon:</span><span>-Rp ${disc.toLocaleString('id-ID')}</span></div>`; } 
+        p += `<div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-top:5px;"><span>TOTAL:</span><span>Rp ${total.toLocaleString('id-ID')}</span></div>`;
+        
+        if (paymentMethod === "Tunai" && cashReceived) {
+            p += `<div style="display:flex; justify-content:space-between; font-size:12px; margin-top:3px;"><span>Tunai:</span><span>Rp ${cashReceived.toLocaleString('id-ID')}</span></div>`;
+            p += `<div style="display:flex; justify-content:space-between; font-size:12px;"><span>Kembali:</span><span>Rp ${cashChange.toLocaleString('id-ID')}</span></div>`;
+        }
+        
+        p += `<div style="border-bottom:1px dashed #000; margin-top:5px; margin-bottom:10px;"></div><div style="text-align:center; font-size:11px; margin-bottom:15px;">Terima Kasih<br>@kopisetengahempat</div>`;
+        document.getElementById('print-area').innerHTML = p;
+        
+        function rataTengah(teks) { let spasi = Math.max(0, Math.floor((32 - teks.length) / 2)); return " ".repeat(spasi) + teks + "\n"; }
+        let txt = "\n"; txt += rataTengah("KOPI SETENGAH 4"); txt += rataTengah(branchName.toUpperCase()); txt += "--------------------------------\n"; txt += "ID Pesanan : " + idPesanan + "\n"; txt += "Tanggal    : " + tanggal + " " + waktu + "\n"; txt += "Tipe       : " + mode + "\n"; txt += "Bayar via  : " + paymentMethod.toUpperCase() + "\n"; txt += "--------------------------------\n"; 
+        for(let key in items) { 
+            if(key === 'extraBread') continue; 
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id); 
+            if(m) { 
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : paymentMethod;
+                let displayName = m.name.split(' | ')[0]; 
+                let p_price = getItemPrice(m, platformToUse);
+                txt += displayName + "\n"; 
+                let qtyLine = items[key] + "x Rp" + p_price.toLocaleString('id-ID'); 
+                let subtotal = "Rp" + (p_price * items[key]).toLocaleString('id-ID'); 
+                let spaceCount = 32 - qtyLine.length - subtotal.length; 
+                txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; 
+            } 
+        } 
+        if(extraBread && extraBread.length > 0) { extraBread.forEach(bid => { let rn = bid==41 ? 'Roti Coklat' : (bid==42 ? 'Roti Vanila' : 'Roti Blueberry'); txt += rn + "\n"; let qtyLine = "1x Rp0"; let subtotal = "Rp0"; let spaceCount = 32 - qtyLine.length - subtotal.length; txt += qtyLine + " ".repeat(Math.max(1, spaceCount)) + subtotal + "\n"; }); } 
+        txt += "--------------------------------\n"; 
+        if(disc && disc > 0) { let dLine = "Diskon:"; let dVal = "-Rp" + disc.toLocaleString('id-ID'); let spc = 32 - dLine.length - dVal.length; txt += dLine + " ".repeat(Math.max(1, spc)) + dVal + "\n"; } 
+        let tLine = "TOTAL:"; let tVal = "Rp" + total.toLocaleString('id-ID'); let spcT = 32 - tLine.length - tVal.length; txt += tLine + " ".repeat(Math.max(1, spcT)) + tVal + "\n"; 
+        
+        if (paymentMethod === "Tunai" && cashReceived) {
+            let cLine = "Tunai:"; let cVal = "Rp" + cashReceived.toLocaleString('id-ID'); let spcC = 32 - cLine.length - cVal.length; txt += cLine + " ".repeat(Math.max(1, spcC)) + cVal + "\n";
+            let kLine = "Kembali:"; let kVal = "Rp" + cashChange.toLocaleString('id-ID'); let spcK = 32 - kLine.length - kVal.length; txt += kLine + " ".repeat(Math.max(1, spcK)) + kVal + "\n";
+        }
+        
+        txt += "--------------------------------\n"; txt += rataTengah("Terima Kasih"); txt += rataTengah("@kopisetengahempat"); txt += "\n\n\n"; window.rawbtPrintText = txt;
+    }
+
+    function cetakRawBT() { if(!window.rawbtPrintText) return alert("Belum ada data struk!"); let teksEncoded = encodeURIComponent(window.rawbtPrintText); let rawbtLink = "rawbt:" + teksEncoded; if (window.AppInventor) { window.AppInventor.setWebViewString(rawbtLink); } else { window.location.href = rawbtLink; } }
+    
+    function viewStruk(id) { 
+        currentViewedTransId = id; 
+        const t = allTransactions.find(x => x.id == id); let h = ''; 
+        let allItems = getAllUniqueMenus();
+        for(let key in t.items) { 
+            if(key==='extraBread') continue; 
+            let parsed = parseCartKey(key);
+            let m = allItems.find(x => x.id == parsed.id); 
+            if(m) { 
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : t.paymentMethod;
+                let displayName = m.name.split(' | ')[0]; 
+                let p_price = getItemPrice(m, platformToUse);
+                h += `<tr><td>${displayName}</td><td>x${t.items[key]}</td><td style="text-align:right">${(p_price*t.items[key]).toLocaleString('id-ID')}</td></tr>`; 
+            } 
+        } 
+        if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
+        if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        
+        if (t.paymentMethod === "Tunai" && t.cashReceived) {
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
+        }
+        
+        document.getElementById('rec-table').innerHTML = h; 
+        document.getElementById('rec-total').innerText = "TOTAL: Rp " + t.total.toLocaleString('id-ID'); 
+        document.getElementById('rec-branch').innerText = t.branchName + " | " + new Date(t.date).toLocaleString('id-ID'); 
+        document.getElementById('rec-method').innerText = "Via: " + (t.paymentMethod || "Tunai");
+        buildPrintArea(t.items, t.extraBread, t.total, t.disc, t.branchName, t.date, t.mode, (t.paymentMethod || "Tunai"), t.cashReceived || 0, t.cashChange || 0); 
+        
+        if(t.mode === "ONLINE") {
+            document.getElementById('btn-change-pay-modal').style.display = 'none';
+        } else {
+            document.getElementById('btn-change-pay-modal').style.display = 'block';
+        }
+
+        document.getElementById('modal-receipt').classList.add('show'); document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+    }
+    
+    function changeMgmtBranch() { renderMgmt(); }
+
+    function toggleMgmtPriceInputs() {
+        const mode = document.getElementById('new-mode').value;
+        const container = document.getElementById('ojol-price-inputs-container');
+        if (mode === 'DINEIN') { container.style.display = 'none'; } else { container.style.display = 'block'; }
+    }
+
+    function addNewMenu() { 
+        if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Hanya Admin yang diizinkan menambah menu baru."); }
+        
+        const n = document.getElementById('new-name').value;
+        const p = parseInt(document.getElementById('new-price').value);
+        const m = document.getElementById('new-mode').value;
+        const c = document.getElementById('new-cat').value;
+        
+        let pGrab = p; let pGojek = p; let pShopee = p;
+        if (m === 'ONLINE') {
+            pGrab = parseInt(document.getElementById('new-price-grab').value) || p;
+            pGojek = parseInt(document.getElementById('new-price-gojek').value) || p;
+            pShopee = parseInt(document.getElementById('new-price-shopee').value) || p;
+        }
+        
+        let finalName = "";
+        const panel = document.getElementById('komponen-panel');
+        if (panel.style.display === 'block') {
+            const wadah = document.getElementById('new-wadah').value;
+            const qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0;
+            const qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0;
+            const qtyNon = parseInt(document.getElementById('new-qty-non').value) || 0;
+            if (qtyWadah > 0 && (qtySusu + qtyNon) > qtyWadah) { return alert("Total Cup Susu + Non-Susu tidak boleh melebihi Total Cup Keluar!"); }
+            finalName = `${n} | ${c} | WADAH:${wadah},QTY:${qtyWadah},SUSU:${qtySusu},NON:${qtyNon}`;
+        } else {
+            finalName = `${n} | ${c} | WADAH:Tanpa Wadah,QTY:0,SUSU:0,NON:0`;
+        }
+
+        if(!n || !p || !m) { return alert("Harap lengkapi Nama dan Harga Normal Menu!"); } 
+
+        let targetMenus = [];
+        let sel = document.getElementById('mgmt-branch-select').value;
+        if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+        else targetMenus = [sel];
+
+        let maxId = 0;
+        targetMenus.forEach(b => {
+            if(allMenusData[b]) {
+                ['ONLINE','DINEIN'].forEach(mo => { maxId = 0;
+                    getSafeArray(allMenusData[b][mo]).forEach(it => {
+                        if(it.id && it.id < 100000 && it.id > maxId) maxId = it.id;
+                    });
+                });
+            }
+        });
+        if(maxId === 0) maxId = 50; 
+        let nextId = maxId + 1;
+
+        targetMenus.forEach(b => {
+            if(!allMenusData[b]) { allMenusData[b] = { ONLINE: [], DINEIN: [] }; }
+            if(!allMenusData[b].ONLINE) allMenusData[b].ONLINE = [];
+            if(!allMenusData[b].DINEIN) allMenusData[b].DINEIN = [];
+            
+            let items = getSafeArray(allMenusData[b][m]);
+            items.push({ id: nextId, name: finalName, price: p, priceGrab: pGrab, priceGojek: pGojek, priceShopee: pShopee, cat: c });
+            allMenusData[b][m] = items;
+        });
+        
+        menuRef.set(allMenusData).then(() => {
+            alert("Menu Baru Berhasil Ditambahkan ke Target Cabang!"); 
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-price').value = '';
+            if (m === 'ONLINE') {
+                document.getElementById('new-price-grab').value = '';
+                document.getElementById('new-price-gojek').value = '';
+                document.getElementById('new-price-shopee').value = '';
+            }
+        }).catch(err => {
+            alert("Gagal menyimpan ke database: " + err.message);
+        });
+    }
+    
+    function renderMgmt() { 
+        try {
+            const list = document.getElementById('mgmt-list'); if(!list) return; list.innerHTML = ''; 
+            if (!currentBranchId) return; 
+            let viewBranch = currentBranchId;
+            let isAdmin = (currentBranchId === "KS4-ADM");
+            
+            if (isAdmin) {
+                let selElem = document.getElementById('mgmt-branch-select'); if(selElem) viewBranch = selElem.value;
+                if (viewBranch === "ALL") { list.innerHTML += `<div style="background:#e74c3c; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini mengubah data SELURUH CABANG!</div>`; }
+            }
+            
+            let mgmtMenu = isAdmin ? (allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] }) : buildMergedBranchMenu(viewBranch);
+            ['ONLINE', 'DINEIN'].forEach(m => { 
+                let html = `<h4 style="margin-top:20px; color:var(--admin); border-bottom:2px solid #ede6da; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
+                let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
+                if (items.length === 0) {
+                    html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`;
+                } else {
+                    items.forEach(item => { 
+                        let pText = `Rp ${item.price.toLocaleString('id-ID')}`;
+                        if(m === 'ONLINE' && (item.priceGrab || item.priceGojek || item.priceShopee)) {
+                            pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`;
+                        }
+                        
+                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>`;
+                        if (isAdmin) {
+                            actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>`;
+                        }
+
+                        html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ede6da;">
+                            <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
+                            <div>
+                                ${actionButtons}
+                            </div>
+                        </div>`; 
+                    }); 
+                }
+                list.innerHTML += html;
+            }); 
+        } catch(e) { console.error("Gagal memuat list:", e); }
+    }
+
+    function editM(m, id) { 
+        let targetMenus = [];
+        if (currentBranchId === "KS4-ADM") {
+            let sel = document.getElementById('mgmt-branch-select').value;
+            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
+            else targetMenus = [sel];
+        } else { targetMenus = [currentBranchId]; }
+
+        let currentItem = null;
+        if (allMenusData[targetMenus[0]] && allMenusData[targetMenus[0]][m]) {
+            currentItem = getSafeArray(allMenusData[targetMenus[0]][m]).find(x => x.id == id);
+        }
+        if (!currentItem && allMenusData["ALL"] && allMenusData["ALL"][m]) {
+            currentItem = getSafeArray(allMenusData["ALL"][m]).find(x => x.id == id);
+        }
+        if(!currentItem) return alert("Menu tidak ditemukan!");
+
+        const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
+        const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
+        
+        let newPriceGrab = newPrice; let newPriceGojek = newPrice; let newPriceShopee = newPrice;
+        if (m === 'ONLINE') {
+            newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
+            newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
+            newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
+        }
+
+        targetMenus.forEach(b => {
+            if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
+            let items = getSafeArray(allMenusData[b][m]); 
+            let idx = items.findIndex(x=>x.id==id);
+            
+            if(idx !== -1) {
+                items[idx].name = newName; items[idx].price = parseInt(newPrice);
+                items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
+            } else {
+                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
+            }
+            allMenusData[b][m] = items;
+        });
+        menuRef.set(allMenusData); 
+    }
+
+    function delM(m, id) { 
+        if (currentBranchId !== "KS4-ADM") { 
+            return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); 
+        }
+
+        if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
+            let targetMenus = [];
+            let sel = document.getElementById('mgmt-branch-select').value;
+
+            if (sel === "ALL") {
+                targetMenus = Object.keys(allMenusData);
+            } else {
+                targetMenus = [sel];
+            }
+
+            targetMenus.forEach(b => {
+                if(!allMenusData[b]) return;
+
+                if(allMenusData[b][m]) {
+                    let items = getSafeArray(allMenusData[b][m]);
+
+                    let idx = items.findIndex(x => String(x.id) === String(id));
+
+                    if(idx !== -1) {
+                        items[idx].isHidden = true;
+                        allMenusData[b][m] = items;
+                    }
+                }
+            });
+
+            menuRef.set(allMenusData).then(()=>{
+                renderMenu();
+                alert("Menu berhasil disembunyikan.");
+            });
+        } 
+    }
+    
+    function openCheckout() { 
+        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
+        for(let key in cart) { 
+            if(key==='extraBread') continue; 
+            let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
+            let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
+            let displayName = m.name.split(' | ')[0]; 
+            h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
+        } 
+        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
+        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
+        let finalTotal = Math.max(0, s-d); 
+        
+        if (selectedPaymentMethod === "Tunai") {
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
+        }
+        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
+        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
+        
+        if(masterMode === "ONLINE") {
+            document.getElementById('btn-change-pay-modal').style.display = 'none';
+        } else {
+            document.getElementById('btn-change-pay-modal').style.display = 'block';
+        }
+
+        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
+    }
+    
+    function confirmPayment() { 
+        let d = parseInt(document.getElementById('discount-input').value) || 0;
+        let t = { 
+            id: Date.now(), 
+            date: new Date().toISOString(), 
+            branchId: currentBranchId, 
+            branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, 
+            items: {...cart}, 
+            extraBread: cart.extraBread ? [...cart.extraBread] : [], 
+            mode: masterMode, 
+            disc: d, 
+            total: 0, 
+            paymentMethod: selectedPaymentMethod, 
+            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, 
+            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0,
+            isDeleted: false,
+            deletedAt: "",
+            deletedBy: ""
+        }; 
+        for(let key in cart) { 
+            if(key==='extraBread') continue; 
+            let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
+            if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
+        } 
+        t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
+        transRef.push(t).then(() => { 
+            cart = {}; document.getElementById('discount-input').value = 0; 
+            if(masterMode === "ONLINE") {
+                selectedPaymentMethod = "";
+                document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+                document.getElementById('platform-warning-text').style.color = "#d35400";
+            }
+            updateUI(); renderMenu(); 
+            document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
+            alert("Transaksi Berhasil!"); 
+        }); 
+    }
+    
+    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
+    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
+    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { cart[currentPuasId] = (cart[currentPuasId] || 0) + 1; currentPuasId = null; } renderMenu(); updateUI(); closeModal(); }
+</script>
+</body>
+</html>
