@@ -1414,23 +1414,8 @@
         menuRef.set(allMenusData); 
     }
 
-    
-function delM(id){
-  let allMenusData = JSON.parse(localStorage.getItem("allMenusData")) || {};
-
-  Object.keys(allMenusData).forEach(branch => {
-    allMenusData[branch] = allMenusData[branch].filter(x => {
-      // hapus juga jika nama pandan aren latte (case insensitive)
-      if (x.name && x.name.toLowerCase().includes("pandan aren latte")) return false;
-      return String(x.id) !== String(id);
-    });
-  });
-
-  localStorage.setItem("allMenusData", JSON.stringify(allMenusData));
-  alert("Menu berhasil dihapus!");
-  if (typeof renderMenu === "function") renderMenu();
-}
-
+    function delM(m, id) { 
+        if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); }
         
         if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
             let targetMenus = [];
