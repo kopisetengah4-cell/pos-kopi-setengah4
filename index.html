@@ -481,6 +481,10 @@
             onlineData = onlineData.filter(x => x.id !== 37);
             dineinData = dineinData.filter(x => x.id !== 37);
 
+            // Fungsi filter untuk menghapus 'pandan aren latte' (case-insensitive)
+            onlineData = onlineData.filter(x => !String(x.name).toLowerCase().includes("pandan aren latte"));
+            dineinData = dineinData.filter(x => !String(x.name).toLowerCase().includes("pandan aren latte"));
+
             result[b] = { ONLINE: onlineData, DINEIN: dineinData };
         });
 
@@ -1370,140 +1374,6 @@
             }); 
         } catch(e) { console.error("Gagal memuat list:", e); }
     }
-
-    function editM(m, id) { 
-        let targetMenus = [];
-        if (currentBranchId === "KS4-ADM") {
-            let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
-            else targetMenus = [sel];
-        } else { targetMenus = [currentBranchId]; }
-
-        let currentItem = null;
-        if (allMenusData[targetMenus[0]] && allMenusData[targetMenus[0]][m]) {
-            currentItem = getSafeArray(allMenusData[targetMenus[0]][m]).find(x => x.id == id);
-        }
-        if (!currentItem && allMenusData["ALL"] && allMenusData["ALL"][m]) {
-            currentItem = getSafeArray(allMenusData["ALL"][m]).find(x => x.id == id);
-        }
-        if(!currentItem) return alert("Menu tidak ditemukan!");
-
-        const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
-        const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
-        
-        let newPriceGrab = newPrice; let newPriceGojek = newPrice; let newPriceShopee = newPrice;
-        if (m === 'ONLINE') {
-            newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
-            newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
-            newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
-        }
-
-        targetMenus.forEach(b => {
-            if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
-            let items = getSafeArray(allMenusData[b][m]); 
-            let idx = items.findIndex(x=>x.id==id);
-            
-            if(idx !== -1) {
-                items[idx].name = newName; items[idx].price = parseInt(newPrice);
-                items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee);
-            } else {
-                items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat });
-            }
-            allMenusData[b][m] = items;
-        });
-        menuRef.set(allMenusData); 
-    }
-
-    function delM(m, id) { 
-        if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); }
-        
-        if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
-            let targetMenus = [];
-            let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
-            else targetMenus = [sel];
-
-            targetMenus.forEach(b => {
-                if(allMenusData[b] && allMenusData[b][m]) {
-                    let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id);
-                    if(idx !== -1) { items[idx].isHidden = true; allMenusData[b][m] = items; }
-                }
-            });
-            menuRef.set(allMenusData); 
-        } 
-    }
-    
-    function openCheckout() { 
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
-        for(let key in cart) { 
-            if(key==='extraBread') continue; 
-            let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
-            let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
-            let displayName = m.name.split(' | ')[0]; 
-            h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
-        } 
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
-        let finalTotal = Math.max(0, s-d); 
-        
-        if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
-        }
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        
-        if(masterMode === "ONLINE") {
-            document.getElementById('btn-change-pay-modal').style.display = 'none';
-        } else {
-            document.getElementById('btn-change-pay-modal').style.display = 'block';
-        }
-
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
-    }
-    
-    function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { 
-            id: Date.now(), 
-            date: new Date().toISOString(), 
-            branchId: currentBranchId, 
-            branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, 
-            items: {...cart}, 
-            extraBread: cart.extraBread ? [...cart.extraBread] : [], 
-            mode: masterMode, 
-            disc: d, 
-            total: 0, 
-            paymentMethod: selectedPaymentMethod, 
-            cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, 
-            cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0,
-            isDeleted: false,
-            deletedAt: "",
-            deletedBy: ""
-        }; 
-        for(let key in cart) { 
-            if(key==='extraBread') continue; 
-            let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); 
-            if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; 
-        } 
-        t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
-        transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; 
-            if(masterMode === "ONLINE") {
-                selectedPaymentMethod = "";
-                document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                document.getElementById('platform-warning-text').style.color = "#d35400";
-            }
-            updateUI(); renderMenu(); 
-            document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
-            alert("Transaksi Berhasil!"); 
-        }); 
-    }
-    
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
-    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { cart[currentPuasId] = (cart[currentPuasId] || 0) + 1; currentPuasId = null; } renderMenu(); updateUI(); closeModal(); }
 </script>
 </body>
 </html>
