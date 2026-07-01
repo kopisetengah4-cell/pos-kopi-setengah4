@@ -472,9 +472,9 @@
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
-            // Menghapus Pandan Aren Latte secara permanen (ID 37)
-            onlineData = onlineData.filter(x => x.id !== 37);
-            dineinData = dineinData.filter(x => x.id !== 37);
+            // Menghapus Pandan Aren Latte dan Aren Pdn Latte secara permanen berdasarkan ID maupun kemiripan teks nama
+            onlineData = onlineData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
+            dineinData = dineinData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
 
             result[b] = { ONLINE: onlineData, DINEIN: dineinData };
         });
