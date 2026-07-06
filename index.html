@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -1320,11 +1320,23 @@ if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
 
     function delM(m, id) { 
         if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); }
-        if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
-            let targetMenus = []; let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"]; else targetMenus = [sel];
-            targetMenus.forEach(b => { if(allMenusData[b] && allMenusData[b][m]) { let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id); if(idx !== -1) { items[idx].isHidden = true; allMenusData[b][m] = items; } } });
-            menuRef.set(allMenusData); 
+        if(confirm("Apakah Anda yakin ingin menghapus menu ini secara permanen dari cabang/target yang dipilih?")) { 
+            let targetMenus = []; 
+            let sel = document.getElementById('mgmt-branch-select').value;
+            if (sel === "ALL") {
+                targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"]; 
+            } else {
+                targetMenus = [sel];
+            }
+            targetMenus.forEach(b => { 
+                if(allMenusData[b] && allMenusData[b][m]) { 
+                    let items = getSafeArray(allMenusData[b][m]); 
+                    allMenusData[b][m] = items.filter(x => x.id != id); 
+                } 
+            });
+            menuRef.set(allMenusData).then(() => {
+                alert("Menu berhasil dihapus secara permanen!");
+            }); 
         } 
     }
     
