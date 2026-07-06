@@ -669,10 +669,9 @@
         const searchInput = document.getElementById('search-menu'); const searchText = searchInput ? searchInput.value.toLowerCase() : '';
         
         let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
-        let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
 
 // Sembunyikan Goldencano hanya di KS4-CK saat DINE IN
-if (currentBranchId === "KS4-CK" && masterMode === "DINEIN") {
+if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
     displayList = displayList.filter(item =>
         !item.name.toLowerCase().includes("goldencano")
     );
