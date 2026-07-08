@@ -1033,7 +1033,14 @@
         document.body.appendChild(S); 
         S.onload = function(){ 
             if(window.rawbt) { 
-                rawbt.printText(txt); \n            } else { \n                let pArea = document.getElementById('print-area'); \n                pArea.innerHTML = txt.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;'); \n                window.print(); \n            } \n        } \n    }
+                rawbt.printText(txt); 
+            } else { 
+                let pArea = document.getElementById('print-area'); 
+                pArea.innerHTML = txt.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;'); 
+                window.print(); 
+            } 
+        } 
+    }
 
     function deleteTransFromModal() { 
         if(!currentViewedTransId) return; 
@@ -1070,68 +1077,264 @@
         if(t.discount > 0) { 
             let trD = document.createElement('tr'); 
             trD.innerHTML = `<td style="text-align:left; padding:4px 0; color:var(--admin);">Diskon Potongan</td><td style="text-align:right; padding:4px 0; color:var(--admin);">-Rp ${t.discount.toLocaleString('id-ID')}</td>`; 
-            tbody.appendChild(trD); \n        } \n        if(t.paymentMethod === "TUNAI") { \n            let trCash = document.createElement('tr'); \n            trCash.innerHTML = `<td style="text-align:left; padding:4px 0; border-top:1px dashed #ccc;">Uang Tunai Cash</td><td style="text-align:right; padding:4px 0; border-top:1px dashed #ccc;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trCash); \n            let trChange = document.createElement('tr'); \n            trChange.innerHTML = `<td style="text-align:left; padding:4px 0; font-weight:bold;">Kembalian</td><td style="text-align:right; padding:4px 0; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trChange); \n        } \n        document.getElementById('rec-total').innerText = `Total: Rp ${t.total.toLocaleString('id-ID')}`; 
+            tbody.appendChild(trD); 
+        } 
+        if(t.paymentMethod === "TUNAI") { 
+            let trCash = document.createElement('tr'); 
+            trCash.innerHTML = `<td style="text-align:left; padding:4px 0; border-top:1px dashed #ccc;">Uang Tunai Cash</td><td style="text-align:right; padding:4px 0; border-top:1px dashed #ccc;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td>`; 
+            tbody.appendChild(trCash); 
+            let trChange = document.createElement('tr'); 
+            trChange.innerHTML = `<td style="text-align:left; padding:4px 0; font-weight:bold;">Kembalian</td><td style="text-align:right; padding:4px 0; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td>`; 
+            tbody.appendChild(trChange); 
+        } 
+        document.getElementById('rec-total').innerText = `Total: Rp ${t.total.toLocaleString('id-ID')}`; 
         document.getElementById('modal-btns-confirm').style.display = 'none'; 
         document.getElementById('modal-btns-close').style.display = 'block'; 
         document.getElementById('modal-receipt').classList.add('show'); 
     }
 
     function filterTransactionsByRange(list, range, d1, d2) { 
-        let now = new Date(); \n        let start = 0, end = 9999999999999; \n        if(range === 'today') { \n            start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); \n            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime(); \n        } else if(range === 'day' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, p[2]).getTime(); \n            end = new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'range' && d1 && d2) { \n            let p1 = d1.split('-'), p2 = d2.split('-'); \n            start = new Date(p1[0], p1[1]-1, p1[2]).getTime(); \n            end = new Date(p2[0], p2[1]-1, p2[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'month' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, 1).getTime(); \n            end = new Date(p[0], p[1], 0, 23, 59, 59, 999).getTime(); \n        } \n        return list.filter(x => x && x.timestamp >= start && x.timestamp <= end); \n    }
+        let now = new Date(); 
+        let start = 0, end = 9999999999999; 
+        if(range === 'today') { 
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); 
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime(); 
+        } else if(range === 'day' && d1) { 
+            let p = d1.split('-'); 
+            start = new Date(p[0], p[1]-1, p[2]).getTime(); 
+            end = new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999).getTime(); 
+        } else if(range === 'range' && d1 && d2) { 
+            let p1 = d1.split('-'), p2 = d2.split('-'); 
+            start = new Date(p1[0], p1[1]-1, p1[2]).getTime(); 
+            end = new Date(p2[0], p2[1]-1, p2[2], 23, 59, 59, 999).getTime(); 
+        } else if(range === 'month' && d1) { 
+            let p = d1.split('-'); 
+            start = new Date(p[0], p[1]-1, 1).getTime(); 
+            end = new Date(p[0], p[1], 0, 23, 59, 59, 999).getTime(); 
+        } 
+        return list.filter(x => x && x.timestamp >= start && x.timestamp <= end); 
+    }
 
     function setRange(r) { 
-        activeRange = r; \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        if(r==='today') document.getElementById('r-today').classList.add('active'); \n        updateReport(); \n    }
+        activeRange = r; 
+        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); 
+        if(r==='today') document.getElementById('r-today').classList.add('active'); 
+        updateReport(); 
+    }
 
     function openDateModal(type) { 
-        filterTypeTemp = type; \n        let container = document.getElementById('date-input-container'); \n        if(!container) return;
-        container.innerHTML = ''; \n        let nowStr = new Date().toISOString().split('T')[0]; \n        if(type === 'day') { \n            document.getElementById('date-modal-title').innerText = "Pilih Tanggal Harian"; \n            container.innerHTML = `<input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; \n        } else if(type === 'range') { \n            document.getElementById('date-modal-title').innerText = "Pilih Rentang Tanggal"; \n            container.innerHTML = `\n                <input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%; margin-bottom:10px;">\n                <div style="font-weight:bold;color:#666;margin-bottom:10px;">Sampai Dengan:</div>\n                <input type="date" id="f-d2" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">\n            `; \n        } else if(type === 'month') { \n            document.getElementById('date-modal-title').innerText = "Pilih Bulan"; \n            let mStr = nowStr.substring(0,7); \n            container.innerHTML = `<input type="month" id="f-d1" value="${mStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; \n        } \n        document.getElementById('modal-date').classList.add('show'); \n    }
+        filterTypeTemp = type; 
+        let container = document.getElementById('date-input-container'); 
+        if(!container) return;
+        container.innerHTML = ''; 
+        let nowStr = new Date().toISOString().split('T')[0]; 
+        if(type === 'day') { 
+            document.getElementById('date-modal-title').innerText = "Pilih Tanggal Harian"; 
+            container.innerHTML = `<input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; 
+        } else if(type === 'range') { 
+            document.getElementById('date-modal-title').innerText = "Pilih Rentang Tanggal"; 
+            container.innerHTML = `
+                <input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%; margin-bottom:10px;">
+                <div style="font-weight:bold;color:#666;margin-bottom:10px;">Sampai Dengan:</div>
+                <input type="date" id="f-d2" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">
+            `; 
+        } else if(type === 'month') { 
+            document.getElementById('date-modal-title').innerText = "Pilih Bulan"; 
+            let mStr = nowStr.substring(0,7); 
+            container.innerHTML = `<input type="month" id="f-d1" value="${mStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; 
+        } 
+        document.getElementById('modal-date').classList.add('show'); 
+    }
 
     function applyDateFilter() { 
-        filterDate1 = document.getElementById('f-d1') ? document.getElementById('f-d1').value : ""; \n        filterDate2 = document.getElementById('f-d2') ? document.getElementById('f-d2').value : ""; \n        activeRange = filterTypeTemp; \n        closeModal(); \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        let tabEl = document.getElementById('r-'+filterTypeTemp);
-        if(tabEl) tabEl.classList.add('active'); \n        updateReport(); \n    }
+        filterDate1 = document.getElementById('f-d1') ? document.getElementById('f-d1').value : ""; 
+        filterDate2 = document.getElementById('f-d2') ? document.getElementById('f-d2').value : ""; 
+        activeRange = filterTypeTemp; 
+        closeModal(); 
+        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); 
+        let tabEl = document.getElementById('r-'+filterTypeTemp);
+        if(tabEl) tabEl.classList.add('active'); 
+        updateReport(); 
+    }
 
     function updateHistory() { 
-        let tbody = document.getElementById('history-tbody'); \n        if(!tbody) return; \n        tbody.innerHTML = ''; \n        let todayTrans = filterTransactionsByRange(allTransactions, 'today').filter(x => x && x.branchId === currentBranchId); \n        todayTrans.forEach(t => { \n            let tr = document.createElement('tr'); \n            let dStr = new Date(t.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}); \n            tr.innerHTML = `\n                <td style="text-align:left;"><b>${dStr}</b><br><span style="font-size:0.65rem;color:#7a6e67">${t.mode}</span></td>\n                <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td><button style="padding:6px 10px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>\n            `; \n            tbody.appendChild(tr); \n        }); \n    }
+        let tbody = document.getElementById('history-tbody'); 
+        if(!tbody) return; 
+        tbody.innerHTML = ''; 
+        let todayTrans = filterTransactionsByRange(allTransactions, 'today').filter(x => x && x.branchId === currentBranchId); 
+        todayTrans.forEach(t => { 
+            let tr = document.createElement('tr'); 
+            let dStr = new Date(t.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}); 
+            tr.innerHTML = `
+                <td style="text-align:left;"><b>${dStr}</b><br><span style="font-size:0.65rem;color:#7a6e67">${t.mode}</span></td>
+                <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>
+                <td><button style="padding:6px 10px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>
+            `; 
+            tbody.appendChild(tr); 
+        }); 
+    }
 
     function updateReport() { 
-        let titleSpan = document.getElementById('rep-title'); \n        if(!titleSpan) return; \n        if(activeRange === 'today') titleSpan.innerText = "HARI INI"; \n        else if(activeRange === 'day') titleSpan.innerText = filterDate1; \n        else if(activeRange === 'range') titleSpan.innerText = filterDate1 + " s/d " + filterDate2; \n        else if(activeRange === 'month') titleSpan.innerText = filterDate1; \n
+        let titleSpan = document.getElementById('rep-title'); 
+        if(!titleSpan) return; 
+        if(activeRange === 'today') titleSpan.innerText = "HARI INI"; 
+        else if(activeRange === 'day') titleSpan.innerText = filterDate1; 
+        else if(activeRange === 'range') titleSpan.innerText = filterDate1 + " s/d " + filterDate2; 
+        else if(activeRange === 'month') titleSpan.innerText = filterDate1; 
 
         let branchFilterElement = document.getElementById('branch-filter');
-        let branchFilter = branchFilterElement ? branchFilterElement.value : "ALL"; \n        let baseList = allTransactions; \n        if(currentBranchId !== "KS4-ADM") { \n            branchFilter = currentBranchId; \n        } else { \n            let admTbody = document.getElementById('admin-history-tbody'); \n            if(admTbody) {
-                admTbody.innerHTML = ''; \n                let admFiltered = filterTransactionsByRange(allTransactions, activeRange); \n                if(branchFilter !== "ALL") admFiltered = admFiltered.filter(x => x && x.branchId === branchFilter); \n                admFiltered.forEach(t => { \n                    let tr = document.createElement('tr'); \n                    let timeStr = new Date(t.timestamp).toLocaleDateString('id-ID',{month:'short',day:'numeric'}) + ' ' + new Date(t.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); \n                    tr.innerHTML = `\n                        <td style="text-align:left;"><b>${timeStr}</b><br><span style="font-size:0.65rem;color:#e67e22;font-weight:bold;">${t.branchName}</span></td>\n                        <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>\n                        <td><button style="padding:6px 10px; background:var(--admin); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>\n                    `; \n                    admTbody.appendChild(tr); \n                }); \n                
-                let delBox = document.getElementById('admin-delete-report-box'); \n                if(delBox) {
-                    if(branchFilter !== "ALL" && admFiltered.length > 0) { \n                        delBox.innerHTML = `<button onclick="bulkDeleteBranchReport('${branchFilter}')" style="width:100%; padding:12px; background:#c0392b; color:white; font-weight:bold; border:none; border-radius:10px; margin-top:20px; cursor:pointer;">⚠️ HAPUS SEMUA DATA (${branchFilter}) PADA PERIODE INI</button>`; \n                    } else { delBox.innerHTML = ''; } 
+        let branchFilter = branchFilterElement ? branchFilterElement.value : "ALL"; 
+        let baseList = allTransactions; 
+        if(currentBranchId !== "KS4-ADM") { 
+            branchFilter = currentBranchId; 
+        } else { 
+            let admTbody = document.getElementById('admin-history-tbody'); 
+            if(admTbody) {
+                admTbody.innerHTML = ''; 
+                let admFiltered = filterTransactionsByRange(allTransactions, activeRange); 
+                if(branchFilter !== "ALL") admFiltered = admFiltered.filter(x => x && x.branchId === branchFilter); 
+                admFiltered.forEach(t => { 
+                    let tr = document.createElement('tr'); 
+                    let timeStr = new Date(t.timestamp).toLocaleDateString('id-ID',{month:'short',day:'numeric'}) + ' ' + new Date(t.timestamp).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); 
+                    tr.innerHTML = `
+                        <td style="text-align:left;"><b>${timeStr}</b><br><span style="font-size:0.65rem;color:#e67e22;font-weight:bold;">${t.branchName}</span></td>
+                        <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>
+                        <td><button style="padding:6px 10px; background:var(--admin); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>
+                    `; 
+                    admTbody.appendChild(tr); 
+                }); 
+                
+                let delBox = document.getElementById('admin-delete-report-box'); 
+                if(delBox) {
+                    if(branchFilter !== "ALL" && admFiltered.length > 0) { 
+                        delBox.innerHTML = `<button onclick="bulkDeleteBranchReport('${branchFilter}')" style="width:100%; padding:12px; background:#c0392b; color:white; font-weight:bold; border:none; border-radius:10px; margin-top:20px; cursor:pointer;">⚠️ HAPUS SEMUA DATA (${branchFilter}) PADA PERIODE INI</button>`; 
+                    } else { delBox.innerHTML = ''; } 
                 }
             }
-        } \n
+        } 
 
-        let filtered = filterTransactionsByRange(baseList, activeRange); \n        if(branchFilter !== "ALL") filtered = filtered.filter(x => x && x.branchId === branchFilter); \n        currentFilteredTransactions = filtered; \n
+        let filtered = filterTransactionsByRange(baseList, activeRange); 
+        if(branchFilter !== "ALL") filtered = filtered.filter(x => x && x.branchId === branchFilter); 
+        currentFilteredTransactions = filtered; 
 
-        let sumGrab = 0, sumGrabPct = 0, sumGojek = 0, sumShopee = 0, sumQris = 0, sumTunai = 0, sumDiscount = 0, sumTotal = 0; \n        let itemCounts = {}, breadCounts = {}; \n        let cupKecil = 0, cupBesar = 0, cupHot = 0, botol1L = 0, botol500 = 0, cupSusu = 0, cupNonSusu = 0; \n
+        let sumGrab = 0, sumGrabPct = 0, sumGojek = 0, sumShopee = 0, sumQris = 0, sumTunai = 0, sumDiscount = 0, sumTotal = 0; 
+        let itemCounts = {}, breadCounts = {}; 
+        let cupKecil = 0, cupBesar = 0, cupHot = 0, botol1L = 0, botol500 = 0, cupSusu = 0, cupNonSusu = 0; 
 
-        filtered.forEach(t => { \n            if(!t) return;
-            if(t.paymentMethod === 'Grab') sumGrab += t.total; \n            if(t.paymentMethod === 'Grab%') sumGrabPct += t.total; \n            if(t.paymentMethod === 'Gojek') sumGojek += t.total; \n            if(t.paymentMethod === 'Shopee') sumShopee += t.total; \n            if(t.paymentMethod === 'QRIS') sumQris += t.total; \n            if(t.paymentMethod === 'TUNAI') sumTunai += t.total; \n            sumDiscount += (t.discount || 0); \n            sumTotal += t.total; \n
+        filtered.forEach(t => { 
+            if(!t) return;
+            if(t.paymentMethod === 'Grab') sumGrab += t.total; 
+            if(t.paymentMethod === 'Grab%') sumGrabPct += t.total; 
+            if(t.paymentMethod === 'Gojek') sumGojek += t.total; 
+            if(t.paymentMethod === 'Shopee') sumShopee += t.total; 
+            if(t.paymentMethod === 'QRIS') sumQris += t.total; 
+            if(t.paymentMethod === 'TUNAI') sumTunai += t.total; 
+            sumDiscount += (t.discount || 0); 
+            sumTotal += t.total; 
 
-            if(t.items) { \n                t.items.forEach(it => { \n                    if(!it) return;
-                    itemCounts[it.name] = (itemCounts[it.name] || 0) + it.qty; \n                    let qW = parseInt(it.qtyWadah) || 0; \n                    let qS = parseInt(it.qtySusu) || 0; \n                    let qN = parseInt(it.qtyNonSusu) || 0; \n                    if(it.wadah === "Cup Kecil") cupKecil += (qW * it.qty); \n                    if(it.wadah === "Cup Besar") cupBesar += (qW * it.qty); \n                    if(it.wadah === "Cup Hot") cupHot += (qW * it.qty); \n                    if(it.wadah === "1 Liter") botol1L += (qW * it.qty); \n                    if(it.wadah === "500 ML") botol500 += (qW * it.qty); \n                    cupSusu += (qS * it.qty); \n                    cupNonSusu += (qN * it.qty); \n                }); \n            } \n            if(t.extraBread) { \n                t.extraBread.forEach(b => { if(b) breadCounts[b.name] = (breadCounts[b.name] || 0) + 1; }); \n            } \n        }); \n
+            if(t.items) { 
+                t.items.forEach(it => { 
+                    if(!it) return;
+                    itemCounts[it.name] = (itemCounts[it.name] || 0) + it.qty; 
+                    let qW = parseInt(it.qtyWadah) || 0; 
+                    let qS = parseInt(it.qtySusu) || 0; 
+                    let qN = parseInt(it.qtyNonSusu) || 0; 
+                    if(it.wadah === "Cup Kecil") cupKecil += (qW * it.qty); 
+                    if(it.wadah === "Cup Besar") cupBesar += (qW * it.qty); 
+                    if(it.wadah === "Cup Hot") cupHot += (qW * it.qty); 
+                    if(it.wadah === "1 Liter") botol1L += (qW * it.qty); 
+                    if(it.wadah === "500 ML") botol500 += (qW * it.qty); 
+                    cupSusu += (qS * it.qty); 
+                    cupNonSusu += (qN * it.qty); 
+                }); 
+            } 
+            if(t.extraBread) { 
+                t.extraBread.forEach(b => { if(b) breadCounts[b.name] = (breadCounts[b.name] || 0) + 1; }); 
+            } 
+        }); 
 
-        let sBox = document.getElementById('report-summary-box'); \n        if(sBox) {
-            sBox.innerHTML = `\n                <div style="background:white; padding:15px; border-radius:12px; border:1px solid #ede6da; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.75rem;">\n                    <div>GRAB: <b>Rp ${sumGrab.toLocaleString('id-ID')}</b></div>\n                    <div>GRAB%: <b>Rp ${sumGrabPct.toLocaleString('id-ID')}</b></div>\n                    <div>GOJEK: <b>Rp ${sumGojek.toLocaleString('id-ID')}</b></div>\n                    <div>SHOPEE: <b>Rp ${sumShopee.toLocaleString('id-ID')}</b></div>\n                    <div>QRIS: <b>Rp ${sumQris.toLocaleString('id-ID')}</b></div>\n                    <div>TUNAI: <b>Rp ${sumTunai.toLocaleString('id-ID')}</b></div>\n                    <div style="grid-column:1/3; border-top:1px dashed #ccc; padding-top:5px; color:var(--admin)">Total Pot. Diskon: <b>Rp ${sumDiscount.toLocaleString('id-ID')}</b></div>\n                    <div style="grid-column:1/3; font-size:1.1rem; color:var(--primary)"><b>GRAND TOTAL: Rp ${sumTotal.toLocaleString('id-ID')}</b></div>\n                </div>\n            `; 
-        } \n
+        let sBox = document.getElementById('report-summary-box'); 
+        if(sBox) {
+            sBox.innerHTML = `
+                <div style="background:white; padding:15px; border-radius:12px; border:1px solid #ede6da; display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.75rem;">
+                    <div>GRAB: <b>Rp ${sumGrab.toLocaleString('id-ID')}</b></div>
+                    <div>GRAB%: <b>Rp ${sumGrabPct.toLocaleString('id-ID')}</b></div>
+                    <div>GOJEK: <b>Rp ${sumGojek.toLocaleString('id-ID')}</b></div>
+                    <div>SHOPEE: <b>Rp ${sumShopee.toLocaleString('id-ID')}</b></div>
+                    <div>QRIS: <b>Rp ${sumQris.toLocaleString('id-ID')}</b></div>
+                    <div>TUNAI: <b>Rp ${sumTunai.toLocaleString('id-ID')}</b></div>
+                    <div style="grid-column:1/3; border-top:1px dashed #ccc; padding-top:5px; color:var(--admin)">Total Pot. Diskon: <b>Rp ${sumDiscount.toLocaleString('id-ID')}</b></div>
+                    <div style="grid-column:1/3; font-size:1.1rem; color:var(--primary)"><b>GRAND TOTAL: Rp ${sumTotal.toLocaleString('id-ID')}</b></div>
+                </div>
+            `; 
+        } 
 
-        let dBox = document.getElementById('report-details-box'); \n        if(dBox) {
-            let sortedItems = Object.keys(itemCounts).sort((a,b) => itemCounts[b] - itemCounts[a]); \n            let itemsHtml = sortedItems.map(k => `<tr><td style="text-align:left;">${k}</td><td style="font-weight:bold;">${itemCounts[k]}</td></tr>`).join(''); \n            let sortedBreads = Object.keys(breadCounts).sort((a,b) => breadCounts[b] - breadCounts[a]); \n            let breadsHtml = sortedBreads.map(k => `<tr><td style="text-align:left; color:#7f8c8d;">🍞 ${k} (Paket)</td><td style="font-weight:bold; color:#7f8c8d;">${breadCounts[k]}</td></tr>`).join(''); \n
+        let dBox = document.getElementById('report-details-box'); 
+        if(dBox) {
+            let sortedItems = Object.keys(itemCounts).sort((a,b) => itemCounts[b] - itemCounts[a]); 
+            let itemsHtml = sortedItems.map(k => `<tr><td style="text-align:left;">${k}</td><td style="font-weight:bold;">${itemCounts[k]}</td></tr>`).join(''); 
+            let sortedBreads = Object.keys(breadCounts).sort((a,b) => breadCounts[b] - breadCounts[a]); 
+            let breadsHtml = sortedBreads.map(k => `<tr><td style="text-align:left; color:#7f8c8d;">🍞 ${k} (Paket)</td><td style="font-weight:bold; color:#7f8c8d;">${breadCounts[k]}</td></tr>`).join(''); 
 
-            dBox.innerHTML = `\n                <h4 style="color:var(--primary); margin:15px 0 5px 0;">Kuantitas Menu Terjual</h4>\n                <div class="table-container"><table><thead><tr><th style="text-align:left;">NAMA MENU</th><th>QTY</th></tr></thead><tbody>${itemsHtml}${breadsHtml}</tbody></table></div>\n                \n                <h4 style="color:var(--primary); margin:20px 0 5px 0;">Logistik Fisik (Otomatis)</h4>\n                <div class="table-container" style="background:#fdfbf7;">\n                    <table style="font-family:monospace;">\n                        <thead><tr><th style="text-align:left;">KOMPONEN</th><th>TOTAL KELUAR</th></tr></thead>\n                        <tbody>\n                        <tr><td style="text-align:left;">Cup Kecil</td><td style="font-weight:bold;color:var(--primary);">${cupKecil} pcs</td></tr>\n                        <tr><td style="text-align:left;">Cup Besar</td><td style="font-weight:bold;color:var(--primary);">${cupBesar} pcs</td></tr>\n                        <tr><td style="text-align:left;">Cup Hot</td><td style="font-weight:bold;color:var(--primary);">${cupHot} pcs</td></tr>\n                        <tr><td style="text-align:left;">Botol 1 Liter</td><td style="font-weight:bold;color:var(--primary);">${botol1L} pcs</td></tr>\n                        <tr><td style="text-align:left;">Botol 500 ML</td><td style="font-weight:bold;color:var(--primary);">${botol500} pcs</td></tr>\n                        <tr style="border-top:2px solid #ede6da;"><td style="text-align:left;font-weight:bold;color:#27ae60;">CUP SUSU (TOTAL)</td><td style="font-weight:bold;color:#27ae60;font-size:0.85rem;">${cupSusu} x takaran</td></tr>\n                        <tr><td style="text-align:left;font-weight:bold;color:#2980b9;">CUP NON-SUSU (TOTAL)</td><td style="font-weight:bold;color:#2980b9;font-size:0.85rem;">${cupNonSusu} x takaran</td></tr>\n                        </tbody>\n                    </table>\n                </div>\n            `; 
-        } \n    }
+            dBox.innerHTML = `
+                <h4 style="color:var(--primary); margin:15px 0 5px 0;">Kuantitas Menu Terjual</h4>
+                <div class="table-container"><table><thead><tr><th style="text-align:left;">NAMA MENU</th><th>QTY</th></tr></thead><tbody>${itemsHtml}${breadsHtml}</tbody></table></div>
+                
+                <h4 style="color:var(--primary); margin:20px 0 5px 0;">Logistik Fisik (Otomatis)</h4>
+                <div class="table-container" style="background:#fdfbf7;">
+                    <table style="font-family:monospace;">
+                        <thead><tr><th style="text-align:left;">KOMPONEN</th><th>TOTAL KELUAR</th></tr></thead>
+                        <tbody>
+                        <tr><td style="text-align:left;">Cup Kecil</td><td style="font-weight:bold;color:var(--primary);">${cupKecil} pcs</td></tr>
+                        <tr><td style="text-align:left;">Cup Besar</td><td style="font-weight:bold;color:var(--primary);">${cupBesar} pcs</td></tr>
+                        <tr><td style="text-align:left;">Cup Hot</td><td style="font-weight:bold;color:var(--primary);">${cupHot} pcs</td></tr>
+                        <tr><td style="text-align:left;">Botol 1 Liter</td><td style="font-weight:bold;color:var(--primary);">${botol1L} pcs</td></tr>
+                        <tr><td style="text-align:left;">Botol 500 ML</td><td style="font-weight:bold;color:var(--primary);">${botol500} pcs</td></tr>
+                        <tr style="border-top:2px solid #ede6da;"><td style="text-align:left;font-weight:bold;color:#27ae60;">CUP SUSU (TOTAL)</td><td style="font-weight:bold;color:#27ae60;font-size:0.85rem;">${cupSusu} x takaran</td></tr>
+                        <tr><td style="text-align:left;font-weight:bold;color:#2980b9;">CUP NON-SUSU (TOTAL)</td><td style="font-weight:bold;color:#2980b9;font-size:0.85rem;">${cupNonSusu} x takaran</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `; 
+        } 
+    }
 
     function bulkDeleteBranchReport(bKey) { 
         if(confirm(`⚠️ WARNING PERMANEN! Apakah Anda benar-benar yakin ingin MENGHAPUS SEMUA DATA transaksi cabang [${bKey}] yang tampil di laporan saat ini?`)) { 
-            if(confirm("Sekali lagi konfirmasi, tindakan ini TIDAK BISA DIKEMBALIKAN! Hapus?")) { \n                let promises = currentFilteredTransactions.map(t => transRef.child(t.id).remove()); \n                Promise.all(promises).then(() => { alert("Seluruh data laporan cabang tersebut berhasil dibersihkan!"); }); \n            } \n        } \n    }
+            if(confirm("Sekali lagi konfirmasi, tindakan ini TIDAK BISA DIKEMBALIKAN! Hapus?")) { 
+                let promises = currentFilteredTransactions.map(t => transRef.child(t.id).remove()); 
+                Promise.all(promises).then(() => { alert("Seluruh data laporan cabang tersebut berhasil dibersihkan!"); }); 
+            } 
+        } 
+    }
 
     function exportToExcel() { 
-        if(currentFilteredTransactions.length === 0) { alert("Tidak ada data untuk diexport!"); return; } \n        let rows = []; \n        rows.push(["ID TRANSAKSI", "WAKTU", "CABANG", "MODE", "METODE PEMBAYARAN", "SUBTOTAL", "DISKON", "GRAND TOTAL", "DETAIL ITEM"]); \n        currentFilteredTransactions.forEach(t => { \n            if(!t) return;
-            let dStr = new Date(t.timestamp).toLocaleString('id-ID'); \n            let itemStr = t.items ? t.items.map(it => it ? `${it.name}(x${it.qty})` : '').join(', ') : ''; \n            if(t.extraBread && t.extraBread.length > 0) { itemStr += ' | Roti Paket: ' + t.extraBread.map(b=>b?b.name:'').join(', '); } \n            rows.push([t.id, dStr, t.branchName, t.mode, t.paymentMethod, t.subtotal, t.discount, t.total, itemStr]); \n        }); \n        let wb = XLSX.utils.book_new(); \n        let ws = XLSX.utils.aoa_to_sheet(rows); \n        XLSX.utils.book_append_sheet(wb, ws, "Laporan POS"); \n        let fName = `Laporan_POS_${document.getElementById('rep-title').innerText.replace(/ /g, '_')}.xlsx`; \n        XLSX.writeFile(wb, fName); \n    }
+        if(currentFilteredTransactions.length === 0) { alert("Tidak ada data untuk diexport!"); return; } 
+        let rows = []; 
+        rows.push(["ID TRANSAKSI", "WAKTU", "CABANG", "MODE", "METODE PEMBAYARAN", "SUBTOTAL", "DISKON", "GRAND TOTAL", "DETAIL ITEM"]); 
+        currentFilteredTransactions.forEach(t => { 
+            if(!t) return;
+            let dStr = new Date(t.timestamp).toLocaleString('id-ID'); 
+            let itemStr = t.items ? t.items.map(it => it ? `${it.name}(x${it.qty})` : '').join(', ') : ''; 
+            if(t.extraBread && t.extraBread.length > 0) { itemStr += ' | Roti Paket: ' + t.extraBread.map(b=>b?b.name:'').join(', '); } 
+            rows.push([t.id, dStr, t.branchName, t.mode, t.paymentMethod, t.subtotal, t.discount, t.total, itemStr]); 
+        }); 
+        let wb = XLSX.utils.book_new(); 
+        let ws = XLSX.utils.aoa_to_sheet(rows); 
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan POS"); 
+        let fName = `Laporan_POS_${document.getElementById('rep-title').innerText.replace(/ /g, '_')}.xlsx`; 
+        XLSX.writeFile(wb, fName); 
+    }
 
     function changeMgmtBranch() { renderMgmtList(); }
 
@@ -1146,18 +1349,110 @@
         ['ONLINE', 'DINEIN'].forEach(mMode => { 
             let headerMode = document.createElement('h3'); 
             headerMode.style.color = '#2c3e50'; 
-            headerMode.style.background = '#ecf0f1'; \n            headerMode.style.padding = '8px 12px'; \n            headerMode.style.borderRadius = '8px'; \n            headerMode.style.marginTop = '20px'; \n            headerMode.innerText = `MODE MENU: ${mMode}`; \n            listDiv.appendChild(headerMode); \n            \n            let items = getSafeArray(data[mMode]); \n            categories.forEach(cat => { \n                let catItems = items.filter(x => x && x.category === cat); \n                if(catItems.length === 0) return; \n                let catH = document.createElement('div'); \n                catH.className = 'cat-header'; \n                catH.innerText = `${cat} (${mMode})`; \n                listDiv.appendChild(catH); \n                \n                catItems.forEach(item => { \n                    if(!item) return;
-                    let div = document.createElement('div'); \n                    div.className = 'mg-card'; \n                    if(item.isHidden) div.style.opacity = '0.4'; \n                    let priceInfo = `Rp ${item.price.toLocaleString('id-ID')}`; \n                    if(mMode === "ONLINE") { priceInfo = `DineIn: ${item.price} | GRB: ${item.priceGrab||item.price} | GJK: ${item.priceGojek||item.price} | SHP: ${item.priceShopee||item.price}`; } \n                    let logistikInfo = `<br><span style="font-size:0.65rem;color:#7f8c8d;font-family:monospace;">📦 ${item.wadah||'Tanpa Wadah'}(x${item.qtyWadah||0}) | Susu(x${item.qtySusu||0}) | Non-Susu(x${item.qtyNonSusu||0})</span>`; \n                    div.innerHTML = `\n                        <div>\n                            <b style="font-size:0.85rem;">${item.name}</b> <span style="font-size:0.65rem;color:#999;">(ID:${item.id})</span>\n                            <br><span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${priceInfo}</span>\n                            ${logistikInfo}\n                        </div>\n                        <div style="display:flex; gap:5px;">\n                            <button onclick="editMenuPricePrompt('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#3498db; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">✏️ HARGA</button>\n                            <button onclick="toggleHideMenu('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#f1c40f; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">${item.isHidden?'👁️ BUKA':'🙈 SEMBUNYI'}</button>\n                            <button onclick="deleteMenuCloud('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">🗑️</button>\n                        </div>\n                    `; \n                    listDiv.appendChild(div); \n                }); \n            }); \n        }); \n    }
+            headerMode.style.background = '#ecf0f1'; 
+            headerMode.style.padding = '8px 12px'; 
+            headerMode.style.borderRadius = '8px'; 
+            headerMode.style.marginTop = '20px'; 
+            headerMode.innerText = `MODE MENU: ${mMode}`; 
+            listDiv.appendChild(headerMode); 
+            
+            let items = getSafeArray(data[mMode]); 
+            categories.forEach(cat => { 
+                let catItems = items.filter(x => x && x.category === cat); 
+                if(catItems.length === 0) return; 
+                let catH = document.createElement('div'); 
+                catH.className = 'cat-header'; 
+                catH.innerText = `${cat} (${mMode})`; 
+                listDiv.appendChild(catH); 
+                
+                catItems.forEach(item => { 
+                    if(!item) return;
+                    let div = document.createElement('div'); 
+                    div.className = 'mg-card'; 
+                    if(item.isHidden) div.style.opacity = '0.4'; 
+                    let priceInfo = `Rp ${item.price.toLocaleString('id-ID')}`; 
+                    if(mMode === "ONLINE") { priceInfo = `DineIn: ${item.price} | GRB: ${item.priceGrab||item.price} | GJK: ${item.priceGojek||item.price} | SHP: ${item.priceShopee||item.price}`; } 
+                    let logistikInfo = `<br><span style="font-size:0.65rem;color:#7f8c8d;font-family:monospace;">📦 ${item.wadah||'Tanpa Wadah'}(x${item.qtyWadah||0}) | Susu(x${item.qtySusu||0}) | Non-Susu(x${item.qtyNonSusu||0})</span>`; 
+                    div.innerHTML = `
+                        <div>
+                            <b style="font-size:0.85rem;">${item.name}</b> <span style="font-size:0.65rem;color:#999;">(ID:${item.id})</span>
+                            <br><span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${priceInfo}</span>
+                            ${logistikInfo}
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button onclick="editMenuPricePrompt('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#3498db; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">✏️ HARGA</button>
+                            <button onclick="toggleHideMenu('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#f1c40f; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">${item.isHidden?'👁️ BUKA':'🙈 SEMBUNYI'}</button>
+                            <button onclick="deleteMenuCloud('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">🗑️</button>
+                        </div>
+                    `; 
+                    listDiv.appendChild(div); 
+                }); 
+            }); 
+        }); 
+    }
 
     function addNewMenu() { 
-        let targetBranch = document.getElementById('mgmt-branch-select').value; \n        let mMode = document.getElementById('new-mode').value; \n        let name = document.getElementById('new-name').value.trim(); \n        let price = parseInt(document.getElementById('new-price').value) || 0; \n        let cat = document.getElementById('new-cat').value; \n        \n        let priceGrab = parseInt(document.getElementById('new-price-grab').value) || price; \n        let priceGojek = parseInt(document.getElementById('new-price-gojek').value) || price; \n        let priceShopee = parseInt(document.getElementById('new-price-shopee').value) || price; \n
+        let targetBranch = document.getElementById('mgmt-branch-select').value; 
+        let mMode = document.getElementById('new-mode').value; 
+        let name = document.getElementById('new-name').value.trim(); 
+        let price = parseInt(document.getElementById('new-price').value) || 0; 
+        let cat = document.getElementById('new-cat').value; 
+        
+        let priceGrab = parseInt(document.getElementById('new-price-grab').value) || price; 
+        let priceGojek = parseInt(document.getElementById('new-price-gojek').value) || price; 
+        let priceShopee = parseInt(document.getElementById('new-price-shopee').value) || price; 
 
-        let wadah = document.getElementById('new-wadah').value; \n        let qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0; \n        let qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0; \n        let qtyNonSusu = parseInt(document.getElementById('new-qty-non').value) || 0; \n
+        let wadah = document.getElementById('new-wadah').value; 
+        let qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0; 
+        let qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0; 
+        let qtyNonSusu = parseInt(document.getElementById('new-qty-non').value) || 0; 
 
-        if(!name || price <= 0) { alert("Nama dan Harga wajib diisi!"); return; } \n        let newId = Date.now(); \n        let item = { \n            id: newId, name: name, price: price, category: cat, \n            wadah: wadah, qtyWadah: qtyWadah, qtySusu: qtySusu, qtyNonSusu: qtyNonSusu, \n            isNewCustom: true \n        }; \n        if(mMode === "ONLINE") { item.priceGrab = priceGrab; item.priceGojek = priceGojek; item.priceShopee = priceShopee; } \n        \n        let currentList = allMenusData[targetBranch] && allMenusData[targetBranch][mMode] ? getSafeArray(allMenusData[targetBranch][mMode]) : []; \n        currentList.push(item); \n        \n        menuRef.child(targetBranch).child(mMode).set(currentList).then(() => { \n            alert("Menu Baru Berhasil Ditambahkan!"); \n            document.getElementById('new-name').value = ''; \n            document.getElementById('new-price').value = ''; \n            document.getElementById('new-price-grab').value = ''; \n            document.getElementById('new-price-gojek').value = ''; \n            document.getElementById('new-price-shopee').value = ''; \n            document.getElementById('new-qty-wadah').value = ''; \n            document.getElementById('new-qty-susu').value = ''; \n            document.getElementById('new-qty-non').value = ''; \n            document.getElementById('komponen-panel').style.display = 'none'; \n            document.getElementById('admin-add-menu-box').querySelector('button[type="button"]').style.display = 'block'; \n        }); \n    }
+        if(!name || price <= 0) { alert("Nama dan Harga wajib diisi!"); return; } 
+        let newId = Date.now(); 
+        let item = { 
+            id: newId, name: name, price: price, category: cat, 
+            wadah: wadah, qtyWadah: qtyWadah, qtySusu: qtySusu, qtyNonSusu: qtyNonSusu, 
+            isNewCustom: true 
+        }; 
+        if(mMode === "ONLINE") { item.priceGrab = priceGrab; item.priceGojek = priceGojek; item.priceShopee = priceShopee; } 
+        
+        let currentList = allMenusData[targetBranch] && allMenusData[targetBranch][mMode] ? getSafeArray(allMenusData[targetBranch][mMode]) : []; 
+        currentList.push(item); 
+        
+        menuRef.child(targetBranch).child(mMode).set(currentList).then(() => { 
+            alert("Menu Baru Berhasil Ditambahkan!"); 
+            document.getElementById('new-name').value = ''; 
+            document.getElementById('new-price').value = ''; 
+            document.getElementById('new-price-grab').value = ''; 
+            document.getElementById('new-price-gojek').value = ''; 
+            document.getElementById('new-price-shopee').value = ''; 
+            document.getElementById('new-qty-wadah').value = ''; 
+            document.getElementById('new-qty-susu').value = ''; 
+            document.getElementById('new-qty-non').value = ''; 
+            document.getElementById('komponen-panel').style.display = 'none'; 
+            document.getElementById('admin-add-menu-box').querySelector('button[type="button"]').style.display = 'block'; 
+        }); 
+    }
 
     function editMenuPricePrompt(bKey, mMode, id) { 
-        let currentList = getSafeArray(allMenusData[bKey][mMode]); \n        let item = currentList.find(x => x && x.id === id); \n        if(!item) return; \n        \n        if(mMode === "DINEIN") { \n            let p = prompt(`Masukkan Harga Baru untuk ${item.name}:`, item.price); \n            if(p === null) return; \n            let nP = parseInt(p) || 0; \n            if(nP <= 0) return; \n            item.price = nP; \n        } else { \n            let pDine = prompt(`[1/4] Masukkan Harga Dine In / Normal Baru untuk ${item.name}:`, item.price); if(pDine===null) return; item.price = parseInt(pDine)||item.price; \n            let pGrb = prompt(`[2/4] Masukkan Harga GRAB Baru untuk ${item.name}:`, item.priceGrab||item.price); if(pGrb===null) return; item.priceGrab = parseInt(pGrb)||item.price; \n            let pGjk = prompt(`[3/4] Masukkan Harga GOJEK Baru untuk ${item.name}:`, item.priceGojek||item.price); if(pGjk===null) return; item.priceGojek = parseInt(pGjk)||item.price; \n            let pShp = prompt(`[4/4] Masukkan Harga SHOPEE Baru untuk ${item.name}:`, item.priceShopee||item.price); if(pShp===null) return; item.priceShopee = parseInt(pShp)||item.price; \n        } \n        menuRef.child(bKey).child(mMode).set(currentList).then(() => alert("Harga Berhasil Diperbarui!")); \n    }
+        let currentList = getSafeArray(allMenusData[bKey][mMode]); 
+        let item = currentList.find(x => x && x.id === id); 
+        if(!item) return; 
+        
+        if(mMode === "DINEIN") { 
+            let p = prompt(`Masukkan Harga Baru untuk ${item.name}:`, item.price); 
+            if(p === null) return; 
+            let nP = parseInt(p) || 0; 
+            if(nP <= 0) return; 
+            item.price = nP; 
+        } else { 
+            let pDine = prompt(`[1/4] Masukkan Harga Dine In / Normal Baru untuk ${item.name}:`, item.price); if(pDine===null) return; item.price = parseInt(pDine)||item.price; 
+            let pGrb = prompt(`[2/4] Masukkan Harga GRAB Baru untuk ${item.name}:`, item.priceGrab||item.price); if(pGrb===null) return; item.priceGrab = parseInt(pGrb)||item.price; 
+            let pGjk = prompt(`[3/4] Masukkan Harga GOJEK Baru untuk ${item.name}:`, item.priceGojek||item.price); if(pGjk===null) return; item.priceGojek = parseInt(pGjk)||item.price; 
+            let pShp = prompt(`[4/4] Masukkan Harga SHOPEE Baru untuk ${item.name}:`, item.priceShopee||item.price); if(pShp===null) return; item.priceShopee = parseInt(pShp)||item.price; 
+        } 
+        menuRef.child(bKey).child(mMode).set(currentList).then(() => alert("Harga Berhasil Diperbarui!")); 
+    }
 
     function toggleHideMenu(bKey, mMode, id) { 
         let currentList = getSafeArray(allMenusData[bKey][mMode]); 
