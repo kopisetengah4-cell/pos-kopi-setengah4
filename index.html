@@ -236,7 +236,8 @@
 
         <div class="range-tabs" style="margin-top: 10px;">
             <button id="r-today" class="r-tab active" onclick="setRange('today')">HARI INI</button>
-            <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button> <button id="r-week" class="r-tab" onclick="openDateModal('range')">MINGGUAN</button>
+            <button id="r-day" class="r-tab" onclick="openDateModal('day')">HARIAN</button> 
+            <button id="r-week" class="r-tab" onclick="openDateModal('range')">MINGGUAN</button>
             <button id="r-month" class="r-tab" onclick="openDateModal('month')">BULANAN</button>
         </div>
 
@@ -452,7 +453,7 @@
     };
 
     function parseCartKey(key) {
-        if(key.includes('_')) {
+        if(typeof key === 'string' && key.includes('_')) {
             let p = key.split('_');
             return { id: p[0], platform: p[1] };
         }
@@ -467,19 +468,15 @@
         return item.price;
     }
 
-    // --- DI SINI PERBAIKAN FATAL ERROR LOGIN SCREEN STUCK ---
     function parseFirebaseMenus(data) {
         let result = {};
         let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
         
-        // Proteksi jika database kosong total
         if (!data || typeof data !== 'object') data = {};
-        
         let needDatabaseClean = false;
         
         branchKeys.forEach(b => {
             try {
-                // Memberikan penahan default {} jika objek cabang kosong agar tidak crash saat membaca properti ONLINE/DINEIN
                 let bData = data[b] || {};
                 let onlineData = bData.ONLINE ? getSafeArray(bData.ONLINE) : [];
                 let dineinData = bData.DINEIN ? getSafeArray(bData.DINEIN) : [];
@@ -503,7 +500,6 @@
                 result[b] = { ONLINE: onlineData, DINEIN: dineinData };
             } catch (err) {
                 console.error("Gagal memproses data untuk cabang " + b + ":", err);
-                // Jika satu cabang error, berikan array kosong agar cabang lain dan proses login tidak ikut terkunci
                 result[b] = { ONLINE: [], DINEIN: [] };
             }
         });
@@ -999,42 +995,106 @@
 
     function generateRawbtText(t) { 
         if(!t) return "";
-        let dateStr = new Date(t.timestamp).toLocaleString('id-ID'); \n        let txt = `================================\\n`; \n        txt += `       KOPI SETENGAH EMPAT      \\n`; \n        txt += `   ${t.branchName.toUpperCase()}\\n`; \n        txt += `--------------------------------\\n`; \n        txt += `Waktu: ${dateStr}\\n`; \n        txt += `Mode : ${t.mode} (${t.paymentMethod})\\n`; \n        txt += `--------------------------------\\n`; \n        if(t.items) {
+        let dateStr = new Date(t.timestamp).toLocaleString('id-ID'); 
+        let txt = "================================\n"; 
+        txt += "       KOPI SETENGAH EMPAT      \n"; 
+        txt += "   " + t.branchName.toUpperCase() + "\n"; 
+        txt += "--------------------------------\n"; 
+        txt += "Waktu: " + dateStr + "\n"; 
+        txt += "Mode : " + t.mode + " (" + t.paymentMethod + ")\n"; 
+        txt += "--------------------------------\n"; 
+        if(t.items) {
             t.items.forEach(it => { 
-                txt += `${it.name.padEnd(22)} x${it.qty}\\n`; 
+                txt += it.name.padEnd(22) + " x" + it.qty + "\n"; 
                 let sub = (it.price * it.qty).toLocaleString('id-ID'); 
-                txt += `${''.padEnd(15)} Rp ${sub.padStart(12)}\\n`; 
+                txt += "".padEnd(15) + " Rp " + sub.padStart(12) + "\n"; 
             }); 
         }
-        if(t.extraBread && t.extraBread.length > 0){ \n            t.extraBread.forEach(b => { txt += ` + ${b.name}\\n`; }); \n        } \n        txt += `--------------------------------\\n`; \n        if(t.discount > 0) { txt += `Pot. Diskon  : Rp ${t.discount.toLocaleString('id-ID').padStart(12)}\\n`; } \n        txt += `TOTAL TAGIHAN: Rp ${t.total.toLocaleString('id-ID').padStart(12)}\\n`; \n        if(t.paymentMethod === "TUNAI") { \n            txt += `Bayar Tunai  : Rp ${t.cashReceived.toLocaleString('id-ID').padStart(12)}\\n`; \n            txt += `Kembalian    : Rp ${t.cashChange.toLocaleString('id-ID').padStart(12)}\\n`; \n        } \n        txt += `================================\\n\\n\\n\\n`; \n        return txt; \n    }
+        if(t.extraBread && t.extraBread.length > 0){ 
+            t.extraBread.forEach(b => { txt += " + " + b.name + "\n"; }); 
+        } 
+        txt += "--------------------------------\n"; 
+        if(t.discount > 0) { txt += "Pot. Diskon  : Rp " + t.discount.toLocaleString('id-ID').padStart(12) + "\n"; } 
+        txt += "TOTAL TAGIHAN: Rp " + t.total.toLocaleString('id-ID').padStart(12) + "\n"; 
+        if(t.paymentMethod === "TUNAI") { 
+            txt += "Bayar Tunai  : Rp " + t.cashReceived.toLocaleString('id-ID').padStart(12) + "\n"; 
+            txt += "Kembalian    : Rp " + t.cashChange.toLocaleString('id-ID').padStart(12) + "\n"; 
+        } 
+        txt += "================================\n\n\n\n"; 
+        return txt; 
+    }
 
     function cetakRawBT() { 
-        let t = allTransactions.find(x => x.id === currentViewedTransId); \n        if(!t) { alert("Data struk tidak ditemukan!"); return; } \n        let txt = generateRawbtText(t); \n        let S = document.createElement('script'); \n        S.src = 'https://rawbt.ru/js/rawbt-api.js'; \n        document.body.appendChild(S); \n        S.onload = function(){ \n            if(window.rawbt) { \n                rawbt.printText(txt); \n            } else { \n                let pArea = document.getElementById('print-area'); \n                pArea.innerHTML = txt.replace(/\\n/g, '<br>').replace(/ /g, '&nbsp;'); \n                window.print(); \n            } \n        } \n    }
+        let t = allTransactions.find(x => x.id === currentViewedTransId); 
+        if(!t) { alert("Data struk tidak ditemukan!"); return; } 
+        let txt = generateRawbtText(t); 
+        let S = document.createElement('script'); 
+        S.src = 'https://rawbt.ru/js/rawbt-api.js'; 
+        document.body.appendChild(S); 
+        S.onload = function(){ 
+            if(window.rawbt) { 
+                rawbt.printText(txt); \n            } else { \n                let pArea = document.getElementById('print-area'); \n                pArea.innerHTML = txt.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;'); \n                window.print(); \n            } \n        } \n    }
 
-    function deleteTransFromModal() { \n        if(!currentViewedTransId) return; \n        if(confirm("Apakah Anda yakin ingin MENGHAPUS transaksi ini secara permanen dari Cloud?")) { \n            transRef.child(currentViewedTransId).remove().then(() => { \n                alert("Transaksi Berhasil Dihapus!"); \n                closeModal(); \n            }); \n        } \n    }
+    function deleteTransFromModal() { 
+        if(!currentViewedTransId) return; 
+        if(confirm("Apakah Anda yakin ingin MENGHAPUS transaksi ini secara permanen dari Cloud?")) { 
+            transRef.child(currentViewedTransId).remove().then(() => { 
+                alert("Transaksi Berhasil Dihapus!"); 
+                closeModal(); 
+            }); 
+        } 
+    }
 
-    function viewDetailHistory(id) { \n        let t = allTransactions.find(x => x.id === id); \n        if(!t) return; \n        currentViewedTransId = id; \n        document.getElementById('rec-header').innerText = "STRUK RINCIAN"; \n        document.getElementById('rec-branch').innerText = t.branchName.toUpperCase() + " | " + new Date(t.timestamp).toLocaleString('id-ID'); \n        document.getElementById('rec-method').innerText = "METODE BAYAR: " + t.paymentMethod.toUpperCase(); \n        let tbody = document.getElementById('rec-table'); tbody.innerHTML = ''; \n        if(t.items) {
+    function viewDetailHistory(id) { 
+        let t = allTransactions.find(x => x.id === id); 
+        if(!t) return; 
+        currentViewedTransId = id; 
+        document.getElementById('rec-header').innerText = "STRUK RINCIAN"; 
+        document.getElementById('rec-branch').innerText = t.branchName.toUpperCase() + " | " + new Date(t.timestamp).toLocaleString('id-ID'); 
+        document.getElementById('rec-method').innerText = "METODE BAYAR: " + t.paymentMethod.toUpperCase(); 
+        let tbody = document.getElementById('rec-table'); tbody.innerHTML = ''; 
+        if(t.items) {
             t.items.forEach(it => { 
                 let tr = document.createElement('tr'); 
                 tr.innerHTML = `<td style="text-align:left; padding:4px 0;">${it.name} x${it.qty}</td><td style="text-align:right; padding:4px 0;">Rp ${(it.price*it.qty).toLocaleString('id-ID')}</td>`; 
                 tbody.appendChild(tr); 
             }); 
         }
-        if(t.extraBread && t.extraBread.length > 0){ \n            t.extraBread.forEach(b => { \n                let trB = document.createElement('tr'); \n                trB.innerHTML = `<td style="text-align:left; padding:2px 0 2px 15px; color:#666; font-size:0.7rem;">+ ${b.name}</td><td style="text-align:right; padding:2px 0; color:#666; font-size:0.7rem;">Incl.</td>`; \n                tbody.appendChild(trB); \n            }); \n        } \n        if(t.discount > 0) { \n            let trD = document.createElement('tr'); \n            trD.innerHTML = `<td style="text-align:left; padding:4px 0; color:var(--admin);">Diskon Potongan</td><td style="text-align:right; padding:4px 0; color:var(--admin);">-Rp ${t.discount.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trD); \n        } \n        if(t.paymentMethod === "TUNAI") { \n            let trCash = document.createElement('tr'); \n            trCash.innerHTML = `<td style="text-align:left; padding:4px 0; border-top:1px dashed #ccc;">Uang Tunai Cash</td><td style="text-align:right; padding:4px 0; border-top:1px dashed #ccc;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trCash); \n            let trChange = document.createElement('tr'); \n            trChange.innerHTML = `<td style="text-align:left; padding:4px 0; font-weight:bold;">Kembalian</td><td style="text-align:right; padding:4px 0; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trChange); \n        } \n        document.getElementById('rec-total').innerText = `Total: Rp ${t.total.toLocaleString('id-ID')}`; \n        document.getElementById('modal-btns-confirm').style.display = 'none'; \n        document.getElementById('modal-btns-close').style.display = 'block'; \n        document.getElementById('modal-receipt').classList.add('show'); \n    }
+        if(t.extraBread && t.extraBread.length > 0){ 
+            t.extraBread.forEach(b => { 
+                let trB = document.createElement('tr'); 
+                trB.innerHTML = `<td style="text-align:left; padding:2px 0 2px 15px; color:#666; font-size:0.7rem;">+ ${b.name}</td><td style="text-align:right; padding:2px 0; color:#666; font-size:0.7rem;">Incl.</td>`; 
+                tbody.appendChild(trB); 
+            }); 
+        } 
+        if(t.discount > 0) { 
+            let trD = document.createElement('tr'); 
+            trD.innerHTML = `<td style="text-align:left; padding:4px 0; color:var(--admin);">Diskon Potongan</td><td style="text-align:right; padding:4px 0; color:var(--admin);">-Rp ${t.discount.toLocaleString('id-ID')}</td>`; 
+            tbody.appendChild(trD); \n        } \n        if(t.paymentMethod === "TUNAI") { \n            let trCash = document.createElement('tr'); \n            trCash.innerHTML = `<td style="text-align:left; padding:4px 0; border-top:1px dashed #ccc;">Uang Tunai Cash</td><td style="text-align:right; padding:4px 0; border-top:1px dashed #ccc;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trCash); \n            let trChange = document.createElement('tr'); \n            trChange.innerHTML = `<td style="text-align:left; padding:4px 0; font-weight:bold;">Kembalian</td><td style="text-align:right; padding:4px 0; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td>`; \n            tbody.appendChild(trChange); \n        } \n        document.getElementById('rec-total').innerText = `Total: Rp ${t.total.toLocaleString('id-ID')}`; 
+        document.getElementById('modal-btns-confirm').style.display = 'none'; 
+        document.getElementById('modal-btns-close').style.display = 'block'; 
+        document.getElementById('modal-receipt').classList.add('show'); 
+    }
 
-    function filterTransactionsByRange(list, range, d1, d2) { \n        let now = new Date(); \n        let start = 0, end = 9999999999999; \n        if(range === 'today') { \n            start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); \n            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime(); \n        } else if(range === 'day' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, p[2]).getTime(); \n            end = new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'range' && d1 && d2) { \n            let p1 = d1.split('-'), p2 = d2.split('-'); \n            start = new Date(p1[0], p1[1]-1, p1[2]).getTime(); \n            end = new Date(p2[0], p2[1]-1, p2[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'month' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, 1).getTime(); \n            end = new Date(p[0], p[1], 0, 23, 59, 59, 999).getTime(); \n        } \n        return list.filter(x => x && x.timestamp >= start && x.timestamp <= end); \n    }
+    function filterTransactionsByRange(list, range, d1, d2) { 
+        let now = new Date(); \n        let start = 0, end = 9999999999999; \n        if(range === 'today') { \n            start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); \n            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime(); \n        } else if(range === 'day' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, p[2]).getTime(); \n            end = new Date(p[0], p[1]-1, p[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'range' && d1 && d2) { \n            let p1 = d1.split('-'), p2 = d2.split('-'); \n            start = new Date(p1[0], p1[1]-1, p1[2]).getTime(); \n            end = new Date(p2[0], p2[1]-1, p2[2], 23, 59, 59, 999).getTime(); \n        } else if(range === 'month' && d1) { \n            let p = d1.split('-'); \n            start = new Date(p[0], p[1]-1, 1).getTime(); \n            end = new Date(p[0], p[1], 0, 23, 59, 59, 999).getTime(); \n        } \n        return list.filter(x => x && x.timestamp >= start && x.timestamp <= end); \n    }
 
-    function setRange(r) { \n        activeRange = r; \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        if(r==='today') document.getElementById('r-today').classList.add('active'); \n        updateReport(); \n    }
+    function setRange(r) { 
+        activeRange = r; \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        if(r==='today') document.getElementById('r-today').classList.add('active'); \n        updateReport(); \n    }
 
-    function openDateModal(type) { \n        filterTypeTemp = type; \n        let container = document.getElementById('date-input-container'); \n        if(!container) return;
+    function openDateModal(type) { 
+        filterTypeTemp = type; \n        let container = document.getElementById('date-input-container'); \n        if(!container) return;
         container.innerHTML = ''; \n        let nowStr = new Date().toISOString().split('T')[0]; \n        if(type === 'day') { \n            document.getElementById('date-modal-title').innerText = "Pilih Tanggal Harian"; \n            container.innerHTML = `<input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; \n        } else if(type === 'range') { \n            document.getElementById('date-modal-title').innerText = "Pilih Rentang Tanggal"; \n            container.innerHTML = `\n                <input type="date" id="f-d1" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%; margin-bottom:10px;">\n                <div style="font-weight:bold;color:#666;margin-bottom:10px;">Sampai Dengan:</div>\n                <input type="date" id="f-d2" value="${nowStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">\n            `; \n        } else if(type === 'month') { \n            document.getElementById('date-modal-title').innerText = "Pilih Bulan"; \n            let mStr = nowStr.substring(0,7); \n            container.innerHTML = `<input type="month" id="f-d1" value="${mStr}" style="padding:12px; font-size:1.1rem; border-radius:8px; border:1px solid #ccc; width:100%;">`; \n        } \n        document.getElementById('modal-date').classList.add('show'); \n    }
 
-    function applyDateFilter() { \n        filterDate1 = document.getElementById('f-d1') ? document.getElementById('f-d1').value : ""; \n        filterDate2 = document.getElementById('f-d2') ? document.getElementById('f-d2').value : ""; \n        activeRange = filterTypeTemp; \n        closeModal(); \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        let tabEl = document.getElementById('r-'+filterTypeTemp);
+    function applyDateFilter() { 
+        filterDate1 = document.getElementById('f-d1') ? document.getElementById('f-d1').value : ""; \n        filterDate2 = document.getElementById('f-d2') ? document.getElementById('f-d2').value : ""; \n        activeRange = filterTypeTemp; \n        closeModal(); \n        document.querySelectorAll('.r-tab').forEach(t => t.classList.remove('active')); \n        let tabEl = document.getElementById('r-'+filterTypeTemp);
         if(tabEl) tabEl.classList.add('active'); \n        updateReport(); \n    }
 
-    function updateHistory() { \n        let tbody = document.getElementById('history-tbody'); \n        if(!tbody) return; \n        tbody.innerHTML = ''; \n        let todayTrans = filterTransactionsByRange(allTransactions, 'today').filter(x => x && x.branchId === currentBranchId); \n        todayTrans.forEach(t => { \n            let tr = document.createElement('tr'); \n            let dStr = new Date(t.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}); \n            tr.innerHTML = `\n                <td style="text-align:left;"><b>${dStr}</b><br><span style="font-size:0.65rem;color:#7a6e67">${t.mode}</span></td>\n                <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td><button style="padding:6px 10px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>\n            `; \n            tbody.appendChild(tr); \n        }); \n    }
+    function updateHistory() { 
+        let tbody = document.getElementById('history-tbody'); \n        if(!tbody) return; \n        tbody.innerHTML = ''; \n        let todayTrans = filterTransactionsByRange(allTransactions, 'today').filter(x => x && x.branchId === currentBranchId); \n        todayTrans.forEach(t => { \n            let tr = document.createElement('tr'); \n            let dStr = new Date(t.timestamp).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}); \n            tr.innerHTML = `\n                <td style="text-align:left;"><b>${dStr}</b><br><span style="font-size:0.65rem;color:#7a6e67">${t.mode}</span></td>\n                <td>${(t.paymentMethod==='Grab')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Grab%')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Gojek')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='Shopee')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='QRIS')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td>${(t.paymentMethod==='TUNAI')?t.total.toLocaleString('id-ID'):'-'}</td>\n                <td><button style="padding:6px 10px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="viewDetailHistory('${t.id}')">👁️</button></td>\n            `; \n            tbody.appendChild(tr); \n        }); \n    }
 
-    function updateReport() { \n        let titleSpan = document.getElementById('rep-title'); \n        if(!titleSpan) return; \n        if(activeRange === 'today') titleSpan.innerText = "HARI INI"; \n        else if(activeRange === 'day') titleSpan.innerText = filterDate1; \n        else if(activeRange === 'range') titleSpan.innerText = filterDate1 + " s/d " + filterDate2; \n        else if(activeRange === 'month') titleSpan.innerText = filterDate1; \n
+    function updateReport() { 
+        let titleSpan = document.getElementById('rep-title'); \n        if(!titleSpan) return; \n        if(activeRange === 'today') titleSpan.innerText = "HARI INI"; \n        else if(activeRange === 'day') titleSpan.innerText = filterDate1; \n        else if(activeRange === 'range') titleSpan.innerText = filterDate1 + " s/d " + filterDate2; \n        else if(activeRange === 'month') titleSpan.innerText = filterDate1; \n
 
         let branchFilterElement = document.getElementById('branch-filter');
         let branchFilter = branchFilterElement ? branchFilterElement.value : "ALL"; \n        let baseList = allTransactions; \n        if(currentBranchId !== "KS4-ADM") { \n            branchFilter = currentBranchId; \n        } else { \n            let admTbody = document.getElementById('admin-history-tbody'); \n            if(admTbody) {
@@ -1065,27 +1125,55 @@
             dBox.innerHTML = `\n                <h4 style="color:var(--primary); margin:15px 0 5px 0;">Kuantitas Menu Terjual</h4>\n                <div class="table-container"><table><thead><tr><th style="text-align:left;">NAMA MENU</th><th>QTY</th></tr></thead><tbody>${itemsHtml}${breadsHtml}</tbody></table></div>\n                \n                <h4 style="color:var(--primary); margin:20px 0 5px 0;">Logistik Fisik (Otomatis)</h4>\n                <div class="table-container" style="background:#fdfbf7;">\n                    <table style="font-family:monospace;">\n                        <thead><tr><th style="text-align:left;">KOMPONEN</th><th>TOTAL KELUAR</th></tr></thead>\n                        <tbody>\n                        <tr><td style="text-align:left;">Cup Kecil</td><td style="font-weight:bold;color:var(--primary);">${cupKecil} pcs</td></tr>\n                        <tr><td style="text-align:left;">Cup Besar</td><td style="font-weight:bold;color:var(--primary);">${cupBesar} pcs</td></tr>\n                        <tr><td style="text-align:left;">Cup Hot</td><td style="font-weight:bold;color:var(--primary);">${cupHot} pcs</td></tr>\n                        <tr><td style="text-align:left;">Botol 1 Liter</td><td style="font-weight:bold;color:var(--primary);">${botol1L} pcs</td></tr>\n                        <tr><td style="text-align:left;">Botol 500 ML</td><td style="font-weight:bold;color:var(--primary);">${botol500} pcs</td></tr>\n                        <tr style="border-top:2px solid #ede6da;"><td style="text-align:left;font-weight:bold;color:#27ae60;">CUP SUSU (TOTAL)</td><td style="font-weight:bold;color:#27ae60;font-size:0.85rem;">${cupSusu} x takaran</td></tr>\n                        <tr><td style="text-align:left;font-weight:bold;color:#2980b9;">CUP NON-SUSU (TOTAL)</td><td style="font-weight:bold;color:#2980b9;font-size:0.85rem;">${cupNonSusu} x takaran</td></tr>\n                        </tbody>\n                    </table>\n                </div>\n            `; 
         } \n    }
 
-    function bulkDeleteBranchReport(bKey) { \n        if(confirm(`⚠️ WARNING PERMANEN! Apakah Anda benar-benar yakin ingin MENGHAPUS SEMUA DATA transaksi cabang [${bKey}] yang tampil di laporan saat ini?`)) { \n            if(confirm("Sekali lagi konfirmasi, tindakan ini TIDAK BISA DIKEMBALIKAN! Hapus?")) { \n                let promises = currentFilteredTransactions.map(t => transRef.child(t.id).remove()); \n                Promise.all(promises).then(() => { alert("Seluruh data laporan cabang tersebut berhasil dibersihkan!"); }); \n            } \n        } \n    }
+    function bulkDeleteBranchReport(bKey) { 
+        if(confirm(`⚠️ WARNING PERMANEN! Apakah Anda benar-benar yakin ingin MENGHAPUS SEMUA DATA transaksi cabang [${bKey}] yang tampil di laporan saat ini?`)) { 
+            if(confirm("Sekali lagi konfirmasi, tindakan ini TIDAK BISA DIKEMBALIKAN! Hapus?")) { \n                let promises = currentFilteredTransactions.map(t => transRef.child(t.id).remove()); \n                Promise.all(promises).then(() => { alert("Seluruh data laporan cabang tersebut berhasil dibersihkan!"); }); \n            } \n        } \n    }
 
-    function exportToExcel() { \n        if(currentFilteredTransactions.length === 0) { alert("Tidak ada data untuk diexport!"); return; } \n        let rows = []; \n        rows.push(["ID TRANSAKSI", "WAKTU", "CABANG", "MODE", "METODE PEMBAYARAN", "SUBTOTAL", "DISKON", "GRAND TOTAL", "DETAIL ITEM"]); \n        currentFilteredTransactions.forEach(t => { \n            if(!t) return;
+    function exportToExcel() { 
+        if(currentFilteredTransactions.length === 0) { alert("Tidak ada data untuk diexport!"); return; } \n        let rows = []; \n        rows.push(["ID TRANSAKSI", "WAKTU", "CABANG", "MODE", "METODE PEMBAYARAN", "SUBTOTAL", "DISKON", "GRAND TOTAL", "DETAIL ITEM"]); \n        currentFilteredTransactions.forEach(t => { \n            if(!t) return;
             let dStr = new Date(t.timestamp).toLocaleString('id-ID'); \n            let itemStr = t.items ? t.items.map(it => it ? `${it.name}(x${it.qty})` : '').join(', ') : ''; \n            if(t.extraBread && t.extraBread.length > 0) { itemStr += ' | Roti Paket: ' + t.extraBread.map(b=>b?b.name:'').join(', '); } \n            rows.push([t.id, dStr, t.branchName, t.mode, t.paymentMethod, t.subtotal, t.discount, t.total, itemStr]); \n        }); \n        let wb = XLSX.utils.book_new(); \n        let ws = XLSX.utils.aoa_to_sheet(rows); \n        XLSX.utils.book_append_sheet(wb, ws, "Laporan POS"); \n        let fName = `Laporan_POS_${document.getElementById('rep-title').innerText.replace(/ /g, '_')}.xlsx`; \n        XLSX.writeFile(wb, fName); \n    }
 
     function changeMgmtBranch() { renderMgmtList(); }
 
-    function renderMgmtList() { \n        let listDiv = document.getElementById('mgmt-list'); \n        if(!listDiv) return; \n        listDiv.innerHTML = ''; \n        let targetBranch = document.getElementById('mgmt-branch-select').value; \n        let data = allMenusData[targetBranch] || { ONLINE: [], DINEIN: [] }; \n        let categories = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; \n        \n        ['ONLINE', 'DINEIN'].forEach(mMode => { \n            let headerMode = document.createElement('h3'); \n            headerMode.style.color = '#2c3e50'; \n            headerMode.style.background = '#ecf0f1'; \n            headerMode.style.padding = '8px 12px'; \n            headerMode.style.borderRadius = '8px'; \n            headerMode.style.marginTop = '20px'; \n            headerMode.innerText = `MODE MENU: ${mMode}`; \n            listDiv.appendChild(headerMode); \n            \n            let items = getSafeArray(data[mMode]); \n            categories.forEach(cat => { \n                let catItems = items.filter(x => x && x.category === cat); \n                if(catItems.length === 0) return; \n                let catH = document.createElement('div'); \n                catH.className = 'cat-header'; \n                catH.innerText = `${cat} (${mMode})`; \n                listDiv.appendChild(catH); \n                \n                catItems.forEach(item => { \n                    if(!item) return;
+    function renderMgmtList() { 
+        let listDiv = document.getElementById('mgmt-list'); 
+        if(!listDiv) return; 
+        listDiv.innerHTML = ''; 
+        let targetBranch = document.getElementById('mgmt-branch-select').value; 
+        let data = allMenusData[targetBranch] || { ONLINE: [], DINEIN: [] }; 
+        let categories = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; 
+        
+        ['ONLINE', 'DINEIN'].forEach(mMode => { 
+            let headerMode = document.createElement('h3'); 
+            headerMode.style.color = '#2c3e50'; 
+            headerMode.style.background = '#ecf0f1'; \n            headerMode.style.padding = '8px 12px'; \n            headerMode.style.borderRadius = '8px'; \n            headerMode.style.marginTop = '20px'; \n            headerMode.innerText = `MODE MENU: ${mMode}`; \n            listDiv.appendChild(headerMode); \n            \n            let items = getSafeArray(data[mMode]); \n            categories.forEach(cat => { \n                let catItems = items.filter(x => x && x.category === cat); \n                if(catItems.length === 0) return; \n                let catH = document.createElement('div'); \n                catH.className = 'cat-header'; \n                catH.innerText = `${cat} (${mMode})`; \n                listDiv.appendChild(catH); \n                \n                catItems.forEach(item => { \n                    if(!item) return;
                     let div = document.createElement('div'); \n                    div.className = 'mg-card'; \n                    if(item.isHidden) div.style.opacity = '0.4'; \n                    let priceInfo = `Rp ${item.price.toLocaleString('id-ID')}`; \n                    if(mMode === "ONLINE") { priceInfo = `DineIn: ${item.price} | GRB: ${item.priceGrab||item.price} | GJK: ${item.priceGojek||item.price} | SHP: ${item.priceShopee||item.price}`; } \n                    let logistikInfo = `<br><span style="font-size:0.65rem;color:#7f8c8d;font-family:monospace;">📦 ${item.wadah||'Tanpa Wadah'}(x${item.qtyWadah||0}) | Susu(x${item.qtySusu||0}) | Non-Susu(x${item.qtyNonSusu||0})</span>`; \n                    div.innerHTML = `\n                        <div>\n                            <b style="font-size:0.85rem;">${item.name}</b> <span style="font-size:0.65rem;color:#999;">(ID:${item.id})</span>\n                            <br><span style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${priceInfo}</span>\n                            ${logistikInfo}\n                        </div>\n                        <div style="display:flex; gap:5px;">\n                            <button onclick="editMenuPricePrompt('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#3498db; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">✏️ HARGA</button>\n                            <button onclick="toggleHideMenu('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#f1c40f; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">${item.isHidden?'👁️ BUKA':'🙈 SEMBUNYI'}</button>\n                            <button onclick="deleteMenuCloud('${targetBranch}','${mMode}',${item.id})" style="padding:6px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.7rem;">🗑️</button>\n                        </div>\n                    `; \n                    listDiv.appendChild(div); \n                }); \n            }); \n        }); \n    }
 
-    function addNewMenu() { \n        let targetBranch = document.getElementById('mgmt-branch-select').value; \n        let mMode = document.getElementById('new-mode').value; \n        let name = document.getElementById('new-name').value.trim(); \n        let price = parseInt(document.getElementById('new-price').value) || 0; \n        let cat = document.getElementById('new-cat').value; \n        \n        let priceGrab = parseInt(document.getElementById('new-price-grab').value) || price; \n        let priceGojek = parseInt(document.getElementById('new-price-gojek').value) || price; \n        let priceShopee = parseInt(document.getElementById('new-price-shopee').value) || price; \n
+    function addNewMenu() { 
+        let targetBranch = document.getElementById('mgmt-branch-select').value; \n        let mMode = document.getElementById('new-mode').value; \n        let name = document.getElementById('new-name').value.trim(); \n        let price = parseInt(document.getElementById('new-price').value) || 0; \n        let cat = document.getElementById('new-cat').value; \n        \n        let priceGrab = parseInt(document.getElementById('new-price-grab').value) || price; \n        let priceGojek = parseInt(document.getElementById('new-price-gojek').value) || price; \n        let priceShopee = parseInt(document.getElementById('new-price-shopee').value) || price; \n
 
         let wadah = document.getElementById('new-wadah').value; \n        let qtyWadah = parseInt(document.getElementById('new-qty-wadah').value) || 0; \n        let qtySusu = parseInt(document.getElementById('new-qty-susu').value) || 0; \n        let qtyNonSusu = parseInt(document.getElementById('new-qty-non').value) || 0; \n
 
         if(!name || price <= 0) { alert("Nama dan Harga wajib diisi!"); return; } \n        let newId = Date.now(); \n        let item = { \n            id: newId, name: name, price: price, category: cat, \n            wadah: wadah, qtyWadah: qtyWadah, qtySusu: qtySusu, qtyNonSusu: qtyNonSusu, \n            isNewCustom: true \n        }; \n        if(mMode === "ONLINE") { item.priceGrab = priceGrab; item.priceGojek = priceGojek; item.priceShopee = priceShopee; } \n        \n        let currentList = allMenusData[targetBranch] && allMenusData[targetBranch][mMode] ? getSafeArray(allMenusData[targetBranch][mMode]) : []; \n        currentList.push(item); \n        \n        menuRef.child(targetBranch).child(mMode).set(currentList).then(() => { \n            alert("Menu Baru Berhasil Ditambahkan!"); \n            document.getElementById('new-name').value = ''; \n            document.getElementById('new-price').value = ''; \n            document.getElementById('new-price-grab').value = ''; \n            document.getElementById('new-price-gojek').value = ''; \n            document.getElementById('new-price-shopee').value = ''; \n            document.getElementById('new-qty-wadah').value = ''; \n            document.getElementById('new-qty-susu').value = ''; \n            document.getElementById('new-qty-non').value = ''; \n            document.getElementById('komponen-panel').style.display = 'none'; \n            document.getElementById('admin-add-menu-box').querySelector('button[type="button"]').style.display = 'block'; \n        }); \n    }
 
-    function editMenuPricePrompt(bKey, mMode, id) { \n        let currentList = getSafeArray(allMenusData[bKey][mMode]); \n        let item = currentList.find(x => x && x.id === id); \n        if(!item) return; \n        \n        if(mMode === "DINEIN") { \n            let p = prompt(`Masukkan Harga Baru untuk ${item.name}:`, item.price); \n            if(p === null) return; \n            let nP = parseInt(p) || 0; \n            if(nP <= 0) return; \n            item.price = nP; \n        } else { \n            let pDine = prompt(`[1/4] Masukkan Harga Dine In / Normal Baru untuk ${item.name}:`, item.price); if(pDine===null) return; item.price = parseInt(pDine)||item.price; \n            let pGrb = prompt(`[2/4] Masukkan Harga GRAB Baru untuk ${item.name}:`, item.priceGrab||item.price); if(pGrb===null) return; item.priceGrab = parseInt(pGrb)||item.price; \n            let pGjk = prompt(`[3/4] Masukkan Harga GOJEK Baru untuk ${item.name}:`, item.priceGojek||item.price); if(pGjk===null) return; item.priceGojek = parseInt(pGjk)||item.price; \n            let pShp = prompt(`[4/4] Masukkan Harga SHOPEE Baru untuk ${item.name}:`, item.priceShopee||item.price); if(pShp===null) return; item.priceShopee = parseInt(pShp)||item.price; \n        } \n        menuRef.child(bKey).child(mMode).set(currentList).then(() => alert("Harga Berhasil Diperbarui!")); \n    }
+    function editMenuPricePrompt(bKey, mMode, id) { 
+        let currentList = getSafeArray(allMenusData[bKey][mMode]); \n        let item = currentList.find(x => x && x.id === id); \n        if(!item) return; \n        \n        if(mMode === "DINEIN") { \n            let p = prompt(`Masukkan Harga Baru untuk ${item.name}:`, item.price); \n            if(p === null) return; \n            let nP = parseInt(p) || 0; \n            if(nP <= 0) return; \n            item.price = nP; \n        } else { \n            let pDine = prompt(`[1/4] Masukkan Harga Dine In / Normal Baru untuk ${item.name}:`, item.price); if(pDine===null) return; item.price = parseInt(pDine)||item.price; \n            let pGrb = prompt(`[2/4] Masukkan Harga GRAB Baru untuk ${item.name}:`, item.priceGrab||item.price); if(pGrb===null) return; item.priceGrab = parseInt(pGrb)||item.price; \n            let pGjk = prompt(`[3/4] Masukkan Harga GOJEK Baru untuk ${item.name}:`, item.priceGojek||item.price); if(pGjk===null) return; item.priceGojek = parseInt(pGjk)||item.price; \n            let pShp = prompt(`[4/4] Masukkan Harga SHOPEE Baru untuk ${item.name}:`, item.priceShopee||item.price); if(pShp===null) return; item.priceShopee = parseInt(pShp)||item.price; \n        } \n        menuRef.child(bKey).child(mMode).set(currentList).then(() => alert("Harga Berhasil Diperbarui!")); \n    }
 
-    function toggleHideMenu(bKey, mMode, id) { \n        let currentList = getSafeArray(allMenusData[bKey][mMode]); \n        let item = currentList.find(x => x && x.id === id); \n        if(!item) return; \n        item.isHidden = !item.isHidden; \n        menuRef.child(bKey).child(mMode).set(currentList); \n    }
+    function toggleHideMenu(bKey, mMode, id) { 
+        let currentList = getSafeArray(allMenusData[bKey][mMode]); 
+        let item = currentList.find(x => x && x.id === id); 
+        if(!item) return; 
+        item.isHidden = !item.isHidden; 
+        menuRef.child(bKey).child(mMode).set(currentList); 
+    }
 
-    function deleteMenuCloud(bKey, mMode, id) { \n        if(confirm("Apakah Anda yakin ingin MENGHAPUS menu ini secara permanen dari Cloud?")) { \n            let currentList = getSafeArray(allMenusData[bKey][mMode]); \n            let filtered = currentList.filter(x => x && x.id !== id); \n            menuRef.child(bKey).child(mMode).set(filtered).then(() => alert("Menu Dihapus!")); \n        } \n    }
+    function deleteMenuCloud(bKey, mMode, id) { 
+        if(confirm("Apakah Anda yakin ingin MENGHAPUS menu ini secara permanen dari Cloud?")) { 
+            let currentList = getSafeArray(allMenusData[bKey][mMode]); 
+            let filtered = currentList.filter(x => x && x.id !== id); 
+            menuRef.child(bKey).child(mMode).set(filtered).then(() => alert("Menu Dihapus!")); 
+        } 
+    }
 
     checkSession();
 </script> 
