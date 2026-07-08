@@ -86,10 +86,10 @@
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
-        .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #ede6da; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { background: #fdfcf9; padding: 10px; text-align: center; border-bottom: 2px solid #ede6da; color: #7a6e67; font-weight: 800; }
-        td { padding: 10px; border-bottom: 1px solid #ede6da; text-align: center; color: var(--text); }
+        .table-container { background: white; border-radius: 12px; overflow-x: auto; border: 1px solid #ede6da; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 600px; }
+        th { background: #fdfcf9; padding: 10px; text-align: center; border-bottom: 2px solid #ede6da; color: #7a6e67; font-weight: 800; white-space: nowrap; }
+        td { padding: 10px; border-bottom: 1px solid #ede6da; text-align: center; color: var(--text); vertical-align: middle; }
         .row-total { background: #fff3e0; font-weight: bold; }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #ede6da; height: 70px; z-index: 6000; padding-bottom: env(safe-area-inset-bottom); }
@@ -201,7 +201,18 @@
         <h3 style="color: var(--primary);">Riwayat Pesanan Hari Ini</h3>
         <div class="table-container">
             <table>
-                <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">WAKTU / MODE</th>
+                        <th>GRAB</th>
+                        <th>GRAB%</th>
+                        <th>GOJEK</th>
+                        <th>SHOPEE</th>
+                        <th>QRIS</th>
+                        <th>TUNAI</th>
+                        <th>DETAIL</th>
+                    </tr>
+                </thead>
                 <tbody id="history-tbody"></tbody>
             </table>
         </div>
@@ -242,7 +253,18 @@
             <h3 style="color:var(--admin); border-bottom: 2px solid var(--admin); padding-bottom:5px;">Rincian Transaksi (Struk)</h3>
             <div class="table-container">
                 <table>
-                    <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">CABANG</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">AKSI</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">WAKTU / CABANG</th>
+                            <th>GRAB</th>
+                            <th>GRAB%</th>
+                            <th>GOJEK</th>
+                            <th>SHOPEE</th>
+                            <th>QRIS</th>
+                            <th>TUNAI</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
                     <tbody id="admin-history-tbody"></tbody>
                 </table>
             </div>
@@ -367,7 +389,7 @@
     <h3 id="rec-header">STRUK</h3>
     <div id="rec-branch" style="font-size:0.7rem"></div>
     <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
-    <table id="rec-table" style="margin-top:10px;"></table>
+    <table id="rec-table" style="margin-top:10px; min-width:unset; width:100%;"></table>
     <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
@@ -472,7 +494,6 @@
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
-            // Menghapus Pandan Aren Latte dan Aren Pdn Latte secara permanen berdasarkan ID maupun kemiripan teks nama
             onlineData = onlineData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
             dineinData = dineinData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
 
@@ -661,7 +682,7 @@
         document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
     }
 
-    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes(`'${c}'`))); renderMenu(); }
+    function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.toggle('active', t.getAttribute('onclick').includes(`'${c}'`))); renderMenu(); }
     
     function renderMenu() {
         const grid = document.getElementById('product-grid'); grid.innerHTML = '';
@@ -670,12 +691,9 @@
         
         let displayList = getSafeArray(localMenu[masterMode]).filter(m => !m.isHidden);
 
-// Sembunyikan Goldencano hanya di KS4-CK saat DINE IN
-if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
-    displayList = displayList.filter(item =>
-        !item.name.toLowerCase().includes("goldencano")
-    );
-}
+        if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
+            displayList = displayList.filter(item => !item.name.toLowerCase().includes("goldencano"));
+        }
         if(searchText !== '') { 
             displayList = displayList.filter(m => m.name.split(' | ')[0].toLowerCase().includes(searchText)); 
         } else { 
@@ -980,24 +998,28 @@ if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
             document.getElementById('admin-history-box').style.display = 'block'; 
             let histHtml = ''; 
             filtered.forEach(t => { 
+                let m = t.paymentMethod || 'Tunai';
                 histHtml += `<tr>
-                    <td style="text-align:left;">
-                        ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> 
-                        ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
-                        <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                    <td style="text-align:left; white-space:nowrap;">
+                        ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} - 
+                        ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
+                        <b>${t.branchName}</b> <small style="color:#666;">(${t.mode})</small>
                     </td>
-                    <td style="text-align:left;">
-                        <b>${t.branchName}</b><br>
-                        <span style="font-size:0.65rem; color:#888;">${t.mode}</span>
-                    </td>
-                    <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
-                    <td style="text-align:left;">
-                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
-                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                    <td>${m==='Grab' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>${m==='Grab%' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>${m==='Gojek' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>${m==='Shopee' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>${m==='QRIS' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>${m==='Tunai' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                    <td>
+                        <div style="display:flex; gap:4px; justify-content:center;">
+                            <button style="background:var(--primary); color:white; border:none; padding:6px 10px; border-radius:5px;" onclick="viewStruk('${t.id}')">STRUK</button>
+                            <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:5px;">HAPUS</button>
+                        </div>
                     </td>
                 </tr>`; 
             }); 
-            if(histHtml === '') histHtml = `<tr><td colspan="4" style="text-align:center">Kosong</td></tr>`; 
+            if(histHtml === '') histHtml = `<tr><td colspan="8" style="text-align:center">Kosong</td></tr>`; 
             document.getElementById('admin-history-tbody').innerHTML = histHtml; 
 
             let auditBox = document.getElementById('admin-audit-box');
@@ -1053,17 +1075,20 @@ if (currentBranchId === "CIKINI" && masterMode === "DINEIN") {
             return t.branchId === currentBranchId && t.isDeleted !== true && txDate.toDateString() === now.toDateString(); 
         }); 
         document.getElementById('history-tbody').innerHTML = list.slice(0,30).map(t => { 
+            let m = t.paymentMethod || 'Tunai';
             return `<tr>
-                <td style="text-align:left;">
+                <td style="text-align:left; white-space:nowrap;">
                     ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br>
-                    <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
-                </td>
-                <td style="text-align:left;">
                     <span style="font-weight:bold; color:${t.mode==='DINEIN'?'#2980b9':'#4a3b32'}">${t.mode}</span>
                 </td>
-                <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
-                <td style="text-align:left;">
-                    <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
+                <td>${m==='Grab' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>${m==='Grab%' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>${m==='Gojek' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>${m==='Shopee' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>${m==='QRIS' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>${m==='Tunai' ? '<b>Rp '+t.total.toLocaleString()+'</b>' : '-'}</td>
+                <td>
+                    <button style="background:var(--primary); color:white; border:none; padding:6px 10px; border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button>
                 </td>
             </tr>`; 
         }).join(''); 
