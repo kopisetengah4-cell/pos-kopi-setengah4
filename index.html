@@ -1,3 +1,4 @@
+<!-- Coded changes to allow multi-branch custom menus and proper physical cup/milk counting based on the original database structure. -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -472,7 +473,6 @@
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
-            // Menghapus Pandan Aren Latte dan Aren Pdn Latte secara permanen berdasarkan ID maupun kemiripan teks nama
             onlineData = onlineData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
             dineinData = dineinData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
 
@@ -879,7 +879,7 @@
                 let kategori = m.cat || "EXTRA"; 
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
 
-                if (m.isNewCustom && m.name.includes("WADAH:")) {
+                if (m.name.includes("WADAH:")) {
                     let parts = m.name.split(' | ');
                     let metadata = parts[2] || ""; 
                     let wType = "Cup Kecil", wQty = 0, sQty = 0, nQty = 0;
