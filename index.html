@@ -1265,107 +1265,172 @@
                 let selElem = document.getElementById('mgmt-branch-select'); if(selElem) viewBranch = selElem.value;
                 if (viewBranch === "ALL") { list.innerHTML += `<div style="background:#e74c3c; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini mengubah data SELURUH CABANG!</div>`; }
             }
-            let mgmtMenu = isAdmin ? (allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] }) : buildMergedBranchMenu(viewBranch);
-            ['ONLINE', 'DINEIN'].forEach(m => { 
-                let html = `<h4 style="margin-top:20px; color:var(--admin); border-bottom:2px solid #ede6da; padding-bottom:5px;">DAFTAR MENU ${m}</h4>`; 
-                let items = getSafeArray(mgmtMenu[m]).filter(x => !x.isHidden);
-                if (items.length === 0) { html += `<p style="text-align:center;color:#999;font-style:italic;">Belum ada menu di mode ini.</p>`; } 
-                else {
-                    items.forEach(item => { 
-                        let pText = `Rp ${item.price.toLocaleString('id-ID')}`;
-                        if(m === 'ONLINE' && (item.priceGrab || item.priceGojek || item.priceShopee)) { pText += `<br><span style="font-size:0.7rem; color:#888;">Grb: ${item.priceGrab||item.price} | Gjk: ${item.priceGojek||item.price} | Shp: ${item.priceShopee||item.price}</span>`; }
-                        let actionButtons = `<button style="background:#f1c40f; border:none; padding:8px 12px; border-radius:5px; font-weight:bold; margin-right:5px;" onclick="editM('${m}', ${item.id})">Edit</button>`;
-                        if (isAdmin) { actionButtons += `<button style="background:#e74c3c; color:white; border:none; padding:8px 12px; border-radius:5px; font-weight:bold;" onclick="delM('${m}', ${item.id})">X</button>`; }
-                        html += `<div class="mg-card" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:10px; margin-bottom:8px; border:1px solid #ede6da;">
-                            <div style="flex:1;"><b style="font-size:0.8rem;">${item.name}</b><br><span style="color:var(--primary);font-weight:bold;">${pText}</span></div>
-                            <div>${actionButtons}</div>
-                        </div>`; 
-                    }); 
+            
+            let targetBranchData = allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] };
+            ['ONLINE', 'DINEIN'].forEach(m => {
+                let arr = getSafeArray(targetBranchData[m]);
+                if(arr.length > 0) {
+                    list.innerHTML += `<h4 style="margin-top:15px; color:var(--primary); text-transform:uppercase;">MODE ${m}</h4>`;
+                    arr.forEach(item => {
+                        let displayName = item.name.split(' | ')[0];
+                        let statusText = item.isHidden ? "DISEMBUNYIKAN" : "AKTIF";
+                        let btnText = item.isHidden ? "👁️ TAMPILKAN" : "🙈 SEMBUNYIKAN";
+                        
+                        let priceInfo = `Rp ${item.price.toLocaleString()}`;
+                        if (m === 'ONLINE') {
+                            priceInfo = `Dine-in: Rp ${item.price.toLocaleString()} | Grab: Rp ${(item.priceGrab || item.price).toLocaleString()} | Gojek: Rp ${(item.priceGojek || item.price).toLocaleString()} | Shopee: Rp ${(item.priceShopee || item.price).toLocaleString()}`;
+                        }
+                        
+                        let adminButtons = isAdmin ? `
+                            <button onclick="toggleHideMenu('${viewBranch}', '${m}', ${item.id})" style="padding:6px 10px; background:var(--primary); color:white; border:none; border-radius:5px; font-size:0.7rem; font-weight:bold; cursor:pointer;">${btnText}</button>
+                            <button onclick="deleteMenu('${viewBranch}', '${m}', ${item.id})" style="padding:6px 10px; background:#e74c3c; color:white; border:none; border-radius:5px; font-size:0.7rem; font-weight:bold; cursor:pointer;">HAPUS</button>
+                        ` : `<span style="font-size:0.7rem; font-weight:bold; color:#777;">Hanya Admin</span>`;
+
+                        list.innerHTML += `
+                            <div class="mg-card">
+                                <div>
+                                    <b style="font-size:0.85rem;">${displayName}</b> (${item.cat})<br>
+                                    <span style="font-size:0.7rem; color:#666;">${priceInfo}</span><br>
+                                    <span style="font-size:0.7rem; font-weight:bold; color:${item.isHidden?'#e74c3c':'#27ae60'};">Status: ${statusText}</span>
+                                </div>
+                                <div style="display:flex; gap:5px;">
+                                    ${adminButtons}
+                                </div>
+                            </div>
+                        `;
+                    });
                 }
-                list.innerHTML += html;
-            }); 
-        } catch(e) { console.error("Gagal memuat list:", e); }
+            });
+        } catch(e) { console.error("Gagal merender manajemen menu:", e); }
     }
 
-    function editM(m, id) { 
-        let targetMenus = [];
-        if (currentBranchId === "KS4-ADM") {
-            let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"];
-            else targetMenus = [sel];
-        } else { targetMenus = [currentBranchId]; }
-        let currentItem = null;
-        if (allMenusData[targetMenus[0]] && allMenusData[targetMenus[0]][m]) { currentItem = getSafeArray(allMenusData[targetMenus[0]][m]).find(x => x.id == id); }
-        if (!currentItem && allMenusData["ALL"] && allMenusData["ALL"][m]) { currentItem = getSafeArray(allMenusData["ALL"][m]).find(x => x.id == id); }
-        if(!currentItem) return alert("Menu tidak ditemukan!");
-
-        const newName = prompt("Edit Nama Menu & Rincian (Format Asli Database):", currentItem.name); if(newName === null || newName.trim() === "") return;
-        const newPrice = prompt("Edit Harga Normal / Dine In:", currentItem.price); if(newPrice === null || newPrice.trim() === "") return;
-        let newPriceGrab = newPrice; let newPriceGojek = newPrice; let newPriceShopee = newPrice;
-        if (m === 'ONLINE') {
-            newPriceGrab = prompt("Edit Harga Grab:", currentItem.priceGrab || newPrice);
-            newPriceGojek = prompt("Edit Harga Gojek:", currentItem.priceGojek || newPrice);
-            newPriceShopee = prompt("Edit Harga Shopee:", currentItem.priceShopee || newPrice);
+    function toggleHideMenu(branch, mode, id) {
+        if(!allMenusData[branch] || !allMenusData[branch][mode]) return;
+        let arr = getSafeArray(allMenusData[branch][mode]);
+        let item = arr.find(x => x.id == id);
+        if(item) {
+            item.isHidden = !item.isHidden;
+            menuRef.set(allMenusData).then(() => { renderMgmt(); renderMenu(); });
         }
-        targetMenus.forEach(b => {
-            if(!allMenusData[b]) allMenusData[b] = { ONLINE: [], DINEIN: [] };
-            let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id);
-            if(idx !== -1) { items[idx].name = newName; items[idx].price = parseInt(newPrice); items[idx].priceGrab = parseInt(newPriceGrab); items[idx].priceGojek = parseInt(newPriceGojek); items[idx].priceShopee = parseInt(newPriceShopee); } 
-            else { items.push({ id: id, name: newName, price: parseInt(newPrice), priceGrab: parseInt(newPriceGrab), priceGojek: parseInt(newPriceGojek), priceShopee: parseInt(newPriceShopee), cat: currentItem.cat }); }
-            allMenusData[b][m] = items;
+    }
+
+    function deleteMenu(branch, mode, id) {
+        if(!confirm("Apakah Anda yakin ingin menghapus menu ini secara permanen dari pangkalan data?")) return;
+        if(!allMenusData[branch] || !allMenusData[branch][mode]) return;
+        allMenusData[branch][mode] = getSafeArray(allMenusData[branch][mode]).filter(x => x.id != id);
+        menuRef.set(allMenusData).then(() => { renderMgmt(); renderMenu(); });
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const targetPage = document.getElementById('page-' + p);
+        const targetBtn = document.getElementById('btn-nav-' + p);
+        if(targetPage) targetPage.classList.add('active');
+        if(targetBtn) targetBtn.classList.add('active');
+        
+        if(p === 'report') updateReport();
+        if(p === 'history') updateHistory();
+        if(p === 'mgmt') renderMgmt();
+    }
+
+    function openCheckout() {
+        let h = '';
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let key in cart) {
+            if(key==='extraBread') continue;
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) {
+                let platformToUse = parsed.platform !== 'Normal' ? parsed.platform : selectedPaymentMethod;
+                let p_price = getItemPrice(m, platformToUse);
+                s += p_price * cart[key];
+                h += `<tr><td>${m.name.split(' | ')[0]}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`;
+            }
+        }
+        let finalTotal = Math.max(0, s - d);
+        document.getElementById('rec-table').innerHTML = h;
+        document.getElementById('rec-total').innerText = "TOTAL: Rp " + finalTotal.toLocaleString('id-ID');
+        document.getElementById('rec-branch').innerText = (users[currentBranchId] ? users[currentBranchId].name : currentBranchId) + " | Tinjau Pesanan";
+        document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod;
+        
+        buildPrintArea(cart, cart.extraBread || [], finalTotal, d, (users[currentBranchId] ? users[currentBranchId].name : currentBranchId), new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange);
+        
+        document.getElementById('modal-receipt').classList.add('show');
+        document.getElementById('modal-btns-confirm').style.display = 'block';
+        document.getElementById('modal-btns-close').style.display = 'none';
+    }
+
+    function confirmPayment() {
+        let s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]);
+        for(let key in cart) {
+            if(key==='extraBread') continue;
+            let parsed = parseCartKey(key);
+            let m = list.find(x => x.id == parsed.id);
+            if(m) s += getItemPrice(m, selectedPaymentMethod) * cart[key];
+        }
+        let finalTotal = Math.max(0, s - d);
+        
+        let newTx = {
+            id: new Date().getTime(),
+            date: new Date().toISOString(),
+            branchId: currentBranchId,
+            branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId,
+            items: cart,
+            extraBread: cart.extraBread || [],
+            total: finalTotal,
+            disc: d,
+            mode: masterMode,
+            paymentMethod: selectedPaymentMethod,
+            cashReceived: currentCashReceived,
+            cashChange: currentCashChange
+        };
+        
+        transRef.push(newTx).then(() => {
+            alert("Transaksi Berhasil Disimpan!");
+            cart = {};
+            document.getElementById('discount-input').value = 0;
+            if(masterMode === "ONLINE") {
+                selectedPaymentMethod = "";
+                document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
+                document.getElementById('platform-warning-text').style.color = "#d35400";
+            }
+            renderMenu();
+            updateUI();
+            document.getElementById('modal-btns-confirm').style.display = 'none';
+            document.getElementById('modal-btns-close').style.display = 'block';
         });
-        menuRef.set(allMenusData); 
     }
 
-    function delM(m, id) { 
-        if (currentBranchId !== "KS4-ADM") { return alert("Akses Ditolak! Karyawan tidak diizinkan menghapus menu."); }
-        if(confirm("Sembunyikan/Hapus Menu Ini? Laporan terdahulu tidak akan rusak.")) { 
-            let targetMenus = []; let sel = document.getElementById('mgmt-branch-select').value;
-            if (sel === "ALL") targetMenus = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST"]; else targetMenus = [sel];
-            targetMenus.forEach(b => { if(allMenusData[b] && allMenusData[b][m]) { let items = getSafeArray(allMenusData[b][m]); let idx = items.findIndex(x=>x.id==id); if(idx !== -1) { items[idx].isHidden = true; allMenusData[b][m] = items; } } });
-            menuRef.set(allMenusData); 
-        } 
+    function selectBread(id, name) {
+        if(!cart.extraBread) cart.extraBread = [];
+        cart.extraBread.push(id);
+        closeModal();
+        updateCartNormal(currentPuasId, 1, true);
     }
-    
-    function openCheckout() { 
-        let h = '', s = 0, d = parseInt(document.getElementById('discount-input').value) || 0, list = getSafeArray(localMenu[masterMode]); 
-        for(let key in cart) { 
-            if(key==='extraBread') continue; 
-            let parsed = parseCartKey(key); let m = list.find(x => x.id == parsed.id); 
-            let p_price = getItemPrice(m, selectedPaymentMethod); s += p_price * cart[key]; 
-            let displayName = m.name.split(' | ')[0]; 
-            h += `<tr><td>${displayName}</td><td>x${cart[key]}</td><td style="text-align:right">${(p_price*cart[key]).toLocaleString('id-ID')}</td></tr>`; 
-        } 
-        if(cart.extraBread) cart.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(d > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${d.toLocaleString('id-ID')}</td></tr>`; 
-        let finalTotal = Math.max(0, s-d); 
-        if (selectedPaymentMethod === "Tunai") {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${currentCashReceived.toLocaleString('id-ID')}</td></tr>`;
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${currentCashChange.toLocaleString('id-ID')}</td></tr>`;
-        }
-        document.getElementById('rec-table').innerHTML = h; document.getElementById('rec-total').innerText = "TOTAL BAYAR: Rp " + finalTotal.toLocaleString('id-ID'); document.getElementById('rec-method').innerText = "Via: " + selectedPaymentMethod.toUpperCase();
-        buildPrintArea(cart, cart.extraBread, finalTotal, d, users[currentBranchId] ? users[currentBranchId].name : currentBranchId, new Date().toISOString(), masterMode, selectedPaymentMethod, currentCashReceived, currentCashChange); 
-        if(masterMode === "ONLINE") { document.getElementById('btn-change-pay-modal').style.display = 'none'; } else { document.getElementById('btn-change-pay-modal').style.display = 'block'; }
-        document.getElementById('modal-btns-confirm').style.display = 'block'; document.getElementById('modal-btns-close').style.display = 'none'; document.getElementById('modal-receipt').classList.add('show'); 
+
+    function closeModal() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
     }
-    
-    function confirmPayment() { 
-        let d = parseInt(document.getElementById('discount-input').value) || 0;
-        let t = { id: Date.now(), date: new Date().toISOString(), branchId: currentBranchId, branchName: users[currentBranchId] ? users[currentBranchId].name : currentBranchId, items: {...cart}, extraBread: cart.extraBread ? [...cart.extraBread] : [], mode: masterMode, disc: d, total: 0, paymentMethod: selectedPaymentMethod, cashReceived: selectedPaymentMethod === 'Tunai' ? currentCashReceived : 0, cashChange: selectedPaymentMethod === 'Tunai' ? currentCashChange : 0, isDeleted: false, deletedAt: "", deletedBy: "" }; 
-        for(let key in cart) { if(key==='extraBread') continue; let parsed = parseCartKey(key); let m = getSafeArray(localMenu[masterMode]).find(x => x.id == parsed.id); if(m) t.total += getItemPrice(m, selectedPaymentMethod) * cart[key]; } 
-        t.total -= d; t.total = Math.max(0, t.total); currentViewedTransId = t.id; 
-        transRef.push(t).then(() => { 
-            cart = {}; document.getElementById('discount-input').value = 0; 
-            if(masterMode === "ONLINE") { selectedPaymentMethod = ""; document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active')); document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:"; document.getElementById('platform-warning-text').style.color = "#d35400"; }
-            updateUI(); renderMenu(); 
-            document.getElementById('modal-btns-confirm').style.display = 'none'; document.getElementById('modal-btns-close').style.display = 'block'; 
-            alert("Transaksi Berhasil!"); 
-        }); 
+
+    function exportToExcel() {
+        if(currentFilteredTransactions.length === 0) return alert("Tidak ada data untuk diexport!");
+        let data = currentFilteredTransactions.map(t => ({
+            Tanggal: new Date(t.date).toLocaleDateString('id-ID'),
+            Jam: new Date(t.date).toLocaleTimeString('id-ID'),
+            Cabang: t.branchName,
+            Mode: t.mode,
+            Metode: t.paymentMethod || 'Tunai',
+            Total: t.total,
+            Diskon: t.disc || 0
+        }));
+        let ws = XLSX.utils.json_to_sheet(data);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+        XLSX.writeFile(wb, `Laporan_POS_${document.getElementById('rep-title').innerText}.xlsx`);
     }
-    
-    function showPage(p) { document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('btn-nav-'+p).classList.add('active'); if(p==='report') updateReport(); if(p==='history') updateHistory(); }
-    function closeModal() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('show')); }
-    function selectBread(id, name) { if(!cart.extraBread) cart.extraBread = []; cart.extraBread.push(id); if(currentPuasId) { cart[currentPuasId] = (cart[currentPuasId] || 0) + 1; currentPuasId = null; } renderMenu(); updateUI(); closeModal(); }
 </script>
 </body>
 </html>
