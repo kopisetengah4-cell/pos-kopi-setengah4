@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4a3b32">
     
-    <title>POS KS4 - Sunter Branch v76</title>
+    <title>POS KS4 - Sunter Branch v77</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -198,7 +198,7 @@
 
 <div id="page-history" class="page">
     <main>
-        <h3 style="color: var(--primary);">Riwayat Pesanan Hari Ini</h3>
+        <h3 style="color: var(--primary);">Riwayat Pesanan (<span id="hist-title">HARI INI</span>)</h3>
         <div class="table-container">
             <table>
                 <thead><tr><th style="text-align:left;">WAKTU / VIA</th><th style="text-align:left;">MODE</th><th style="text-align:left;">TOTAL</th><th style="text-align:left;">DETAIL</th></tr></thead>
@@ -289,7 +289,7 @@
             </div>
             
             <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-                <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
+                <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
 
             <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#fdfbf7; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
@@ -472,7 +472,6 @@
             onlineData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
             dineinData.forEach(x => { if (x.id > 100000 && !x.isNewCustom && String(x.name).includes("isCustom")) x.isHidden = true; });
 
-            // Menghapus Pandan Aren Latte dan Aren Pdn Latte secara permanen berdasarkan ID maupun kemiripan teks nama
             onlineData = onlineData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
             dineinData = dineinData.filter(x => x.id !== 37 && !String(x.name).toLowerCase().includes("pandan aren") && !String(x.name).toLowerCase().includes("aren pdn"));
 
@@ -641,7 +640,17 @@
         updateUI();
     }
     
-    function setRange(r) { if(r === 'today') { activeRange = 'today'; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); document.getElementById('r-today').classList.add('active'); document.getElementById('rep-title').innerText = "HARI INI"; updateReport(); } }
+    function setRange(r) { 
+        if(r === 'today') { 
+            activeRange = 'today'; 
+            document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active')); 
+            document.getElementById('r-today').classList.add('active'); 
+            document.getElementById('rep-title').innerText = "HARI INI"; 
+            document.getElementById('hist-title').innerText = "HARI INI";
+            updateReport(); 
+            updateHistory();
+        } 
+    }
 
     function openDateModal(type) {
         filterTypeTemp = type; const container = document.getElementById('date-input-container'); const title = document.getElementById('date-modal-title');
@@ -658,7 +667,11 @@
         activeRange = filterTypeTemp; document.querySelectorAll('.r-tab').forEach(b => b.classList.remove('active'));
         let tabId = "r-day"; if(activeRange === 'range') tabId = "r-week"; if(activeRange === 'month') tabId = "r-month"; document.getElementById(tabId).classList.add('active');
         let titleStr = ""; if(activeRange === 'day') titleStr = filterDate1; if(activeRange === 'range') titleStr = filterDate1 + " s/d " + filterDate2; if(activeRange === 'month') titleStr = "Bulan " + filterDate1;
-        document.getElementById('rep-title').innerText = titleStr; closeModal(); updateReport();
+        document.getElementById('rep-title').innerText = titleStr; 
+        document.getElementById('hist-title').innerText = titleStr;
+        closeModal(); 
+        updateReport(); 
+        updateHistory();
     }
 
     function changeCategory(c) { activeCat = c; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.getAttribute('onclick').includes(`'${c}'`))); renderMenu(); }
@@ -1041,22 +1054,38 @@
     
     function updateHistory() {
         if (currentBranchId === "KS4-ADM") return;
-        const now=new Date();
-        const list=allTransactions.filter(t=>{
-            const txDate=new Date(t.date);
-            return t.branchId===currentBranchId && t.isDeleted!==true && txDate.toDateString()===now.toDateString();
-        }).slice(0,100);
+        const now = new Date();
+        const nowStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+        
+        const list = allTransactions.filter(t => {
+            if (t.branchId !== currentBranchId || t.isDeleted === true) return false;
+            
+            const txDate = new Date(t.date);
+            const tDateStr = txDate.getFullYear() + "-" + String(txDate.getMonth() + 1).padStart(2, '0') + "-" + String(txDate.getDate()).padStart(2, '0');
+            const tMonthStr = tDateStr.slice(0, 7);
+            
+            if (activeRange === 'today') {
+                return (tDateStr === nowStr || txDate.toDateString() === now.toDateString());
+            } else if (activeRange === 'day') {
+                return (tDateStr === filterDate1);
+            } else if (activeRange === 'range') {
+                return (tDateStr >= filterDate1 && tDateStr <= filterDate2);
+            } else if (activeRange === 'month') {
+                return (tMonthStr === filterDate1);
+            }
+            return false;
+        });
 
-        const methods=['QRIS','Grab','Grab%','Gojek','Shopee','Tunai'];
-        let html='';
-        methods.forEach(method=>{
-            const rows=list.filter(t=>(t.paymentMethod||'Tunai')===method);
-            if(!rows.length) return;
-            html+=`<tr><td colspan="4" style="background:#4a3b32;color:#fff;font-weight:bold;text-align:center;padding:10px;">${method} (${rows.length} Struk)</td></tr>`;
-            rows.forEach(t=>{
-                html+=`<tr>
+        const methods = ['QRIS', 'Grab', 'Grab%', 'Gojek', 'Shopee', 'Tunai'];
+        let html = '';
+        methods.forEach(method => {
+            const rows = list.filter(t => (t.paymentMethod || 'Tunai') === method);
+            if (!rows.length) return;
+            html += `<tr><td colspan="4" style="background:#4a3b32;color:#fff;font-weight:bold;text-align:center;padding:10px;">${method} (${rows.length} Struk)</td></tr>`;
+            rows.forEach(t => {
+                html += `<tr>
                 <td style="text-align:left;">
-                ${new Date(t.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}<br>
+                ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} ${new Date(t.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}<br>
                 <span style="font-size:0.65rem;font-weight:bold;color:#d35400;">${method}</span>
                 </td>
                 <td style="text-align:left;"><span style="font-weight:bold;color:${t.mode==='DINEIN'?'#2980b9':'#4a3b32'}">${t.mode}</span></td>
@@ -1065,7 +1094,7 @@
                 </tr>`;
             });
         });
-        document.getElementById('history-tbody').innerHTML=html||'<tr><td colspan="4">Belum ada transaksi.</td></tr>';
+        document.getElementById('history-tbody').innerHTML = html || '<tr><td colspan="4">Belum ada transaksi pada rentang tanggal ini.</td></tr>';
     }
     
     function deleteTrans(id) { 
