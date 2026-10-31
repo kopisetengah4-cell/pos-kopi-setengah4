@@ -7,9 +7,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#4a3b32">
+    <meta name="theme-color" content="#0b0b0b">
     
-    <title>POS KS4 - Sunter Branch v77</title>
+    <title>POS KS4 - Sunter Branch v78 (Gold Edition)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -17,13 +17,16 @@
     
     <style>
         :root { 
-            --primary: #4a3b32; /* Cokelat Kopi hangat */
-            --secondary: #fdfbf7; /* Putih Cream lembut */
-            --card-bg: #ffffff;
-            --text: #3e342f; 
-            --admin: #d35400; 
-            --warning-bg: #fff3e0; 
-            --tab-inactive: #f0eae1;
+            --primary: #d4af37; /* Gold Mewah */
+            --primary-hover: #b38f27;
+            --secondary: #0b0b0b; /* Hitam Elegan */
+            --card-bg: #161616; /* Hitam Card */
+            --text: #f0f0f0; /* Putih/Terang */
+            --text-muted: #aaaaaa;
+            --admin: #e5c158; 
+            --warning-bg: #221d0c; 
+            --tab-inactive: #1f1f1f;
+            --border-color: #2a2a2a;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -50,72 +53,76 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .header { background: white; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .header { background: #121212; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); flex-shrink: 0; position: relative; padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        .shop-name { font-size: 1.6rem; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; margin-bottom: 2px; }
-        #branch-display { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .shop-name { font-size: 1.5rem; font-weight: 900; color: #ffffff; letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
+        #branch-display { font-size: 1.05rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); }
         
-        .logout-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; z-index: 10; }
+        .logout-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--primary); z-index: 10; }
         
         .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
         .page.active { display: flex; }
         
-        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: var(--text); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; }
-        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #login-screen { position: fixed; inset: 0; background: #000000; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; color: white; background-image: radial-gradient(circle at center, #1c1c1c 0%, #000000 100%); }
+        .login-box { background: #141414; padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; color: white; border: 1px solid var(--primary); box-shadow: 0 15px 35px rgba(212,175,55,0.15); }
+        .login-box h2 { color: var(--primary); letter-spacing: 1px; }
+        .login-box input[type="text"], .login-box input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; background: #1f1f1f; border: 1px solid var(--border-color); color: white; border-radius: 10px; font-size: 1rem; }
+        .login-box input:focus { border-color: var(--primary); outline: none; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; transition: 0.2s; }
+        .login-box button:hover { background: var(--primary-hover); }
 
-        .mode-tabs, .range-tabs { display: flex; background: var(--tab-inactive); padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-        .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #e3dad0; color: #7a6e67; transition: 0.2s; white-space: nowrap; }
-        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: white !important; }
+        .mode-tabs, .range-tabs { display: flex; background: var(--tab-inactive); padding: 5px; gap: 5px; flex-shrink: 0; border-radius: 12px; margin-bottom: 10px; flex-wrap: wrap; border: 1px solid var(--border-color); }
+        .m-tab, .r-tab { flex: 1; padding: 10px 5px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.65rem; cursor: pointer; background: #181818; color: var(--text-muted); transition: 0.2s; white-space: nowrap; }
+        .m-tab.active, .r-tab.active { background: var(--primary) !important; color: #000 !important; box-shadow: 0 2px 8px rgba(212,175,55,0.3); }
 
-        .nav-tabs { display: flex; background: var(--secondary); padding: 10px; gap: 8px; border-bottom: 1px solid #ede6da; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; position: relative; z-index: 5000; -webkit-overflow-scrolling: touch; }
-        .tab { padding: 12px 20px; border: none; border-radius: 20px; background: var(--tab-inactive); color: var(--text); font-weight: bold; white-space: nowrap; font-size: 0.8rem; cursor: pointer; display: inline-block; }
-        .tab.active { background: var(--primary); color: white; }
+        .nav-tabs { display: flex; background: var(--secondary); padding: 10px; gap: 8px; border-bottom: 1px solid var(--border-color); overflow-x: auto; scrollbar-width: none; flex-shrink: 0; position: relative; z-index: 5000; -webkit-overflow-scrolling: touch; }
+        .tab { padding: 12px 20px; border: none; border-radius: 20px; background: var(--tab-inactive); color: var(--text-muted); font-weight: bold; white-space: nowrap; font-size: 0.8rem; cursor: pointer; display: inline-block; border: 1px solid var(--border-color); }
+        .tab.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
         .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 5px; }
-        .card { background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid #ede6da; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px rgba(62,52,47,0.03); cursor: pointer; }
-        .card h4 { margin: 0; font-size: 0.75rem; height: 32px; overflow: hidden; color: var(--text); }
-        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.85rem; }
+        .card { background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: border-color 0.2s; }
+        .card:hover { border-color: var(--primary); }
+        .card h4 { margin: 0; font-size: 0.78rem; height: 32px; overflow: hidden; color: #ffffff; font-weight: 700; }
+        .card p { color: var(--primary); font-weight: bold; margin: 3px 0; font-size: 0.9rem; }
         
-        .card .ojol-prices-box { font-size: 0.68rem; color: #555; background: #f7f3eb; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; }
-        .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #e1dcd3; padding-bottom: 1px; }
+        .card .ojol-prices-box { font-size: 0.68rem; color: #bbb; background: #121212; padding: 6px 8px; border-radius: 8px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; font-family: monospace; border: 1px solid #222; }
+        .card .ojol-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed #262626; padding-bottom: 1px; }
         .card .ojol-row:last-child { border-bottom: none; padding-bottom: 0; }
-        .card .ojol-row.highlighted-platform { background: #fff9db; font-weight: bold; color: #d35400; padding: 2px 4px; border-radius: 4px; }
+        .card .ojol-row.highlighted-platform { background: #2a2205; font-weight: bold; color: var(--primary); padding: 2px 4px; border-radius: 4px; border: 1px solid #d4af3755; }
         
         .qty-controls { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        .btn-q { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--primary); color: #000; font-weight: 900; cursor: pointer; }
 
-        .table-container { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #ede6da; margin-top: 10px; }
+        .table-container { background: #141414; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { background: #fdfcf9; padding: 10px; text-align: center; border-bottom: 2px solid #ede6da; color: #7a6e67; font-weight: 800; }
-        td { padding: 10px; border-bottom: 1px solid #ede6da; text-align: center; color: var(--text); }
-        .row-total { background: #fff3e0; font-weight: bold; }
+        th { background: #1a1a1a; padding: 10px; text-align: center; border-bottom: 2px solid var(--border-color); color: var(--primary); font-weight: 800; }
+        td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center; color: var(--text); }
+        .row-total { background: #221d0c; font-weight: bold; color: var(--primary); }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: white; border-top: 1px solid #ede6da; height: 70px; z-index: 6000; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a3978e; font-size: 0.65rem; font-weight: 600; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #121212; border-top: 1px solid var(--border-color); height: 70px; z-index: 6000; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 15px rgba(0,0,0,0.5); }
+        .nav-btn { flex: 1; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .nav-btn.active { color: var(--primary); }
 
-        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: white; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 20px rgba(62,52,47,0.08); z-index: 4000; padding-bottom: env(safe-area-inset-bottom); }
+        .footer-cart { position: fixed; bottom: 70px; left: 0; right: 0; background: #141414; padding: 15px; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 25px rgba(0,0,0,0.6); z-index: 4000; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--primary); }
         
-        .platform-selector-box { display: flex; gap: 4px; background: #ede6da; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; }
-        .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: #7a6e67; transition: 0.2s; }
+        .platform-selector-box { display: flex; gap: 4px; background: #1f1f1f; padding: 3px; border-radius: 8px; width: 100%; margin-bottom: 5px; border: 1px solid var(--border-color); }
+        .platform-btn { flex: 1; border: none; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.7rem; cursor: pointer; background: transparent; color: var(--text-muted); transition: 0.2s; }
         .platform-btn.active[data-p="Grab"] { background: #27ae60; color: white; }
         .platform-btn.active[data-p="Grab%"] { background: #16a085; color: white; }
         .platform-btn.active[data-p="Gojek"] { background: #e74c3c; color: white; }
         .platform-btn.active[data-p="Shopee"] { background: #e67e22; color: white; }
 
-        .mg-card { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #ede6da; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .mg-card { background: #161616; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; text-align: left; }
         
-        .modal { display: none; position: fixed; inset: 0; background: rgba(62,52,47,0.6); z-index: 99999; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
         .modal.show { display: flex; }
-        .modal-content { background: white; width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; }
+        .modal-content { background: #161616; color: white; width: 92%; max-height: 85%; border-radius: 20px; padding: 20px; overflow-y: auto; font-family: monospace; border: 1px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         .cat-header { margin: 15px 0 5px 0; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
-        .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-excel { background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
-        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 2px solid #ede6da; background: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; color: var(--text); }
-        .btn-pay-method.selected { border-color: var(--primary); background: #fdfbf7; color: var(--primary); }
+        .btn-pay-method { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: #1f1f1f; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-pay-method.selected { border-color: var(--primary); background: #221d0c; color: var(--primary); }
 
         #print-area { display: none; }
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { display: block; position: absolute; left: 0; top: 0; width: 58mm; margin: 0; padding: 0; color: #000; font-family: 'Courier New', monospace; } @page { margin: 0; } }
@@ -127,13 +134,13 @@
 
 <div id="login-screen">
     <div class="login-box">
-        <h2 style="text-align:center; color:var(--primary)">POS KS4</h2>
+        <h2 style="text-align:center;">POS KS4</h2>
         <input type="text" id="login-user" placeholder="ID CABANG / ADMIN">
         <input type="password" id="login-pass" placeholder="PASSWORD">
         
         <div style="display:flex; align-items:center; width:100%; margin-bottom:20px; gap: 8px;">
-            <input type="checkbox" id="remember-me" style="width:20px; height:20px; cursor: pointer;">
-            <label for="remember-me" style="font-weight:bold; color:#666; font-size: 0.9rem; cursor: pointer;">Ingat Sandi & ID</label>
+            <input type="checkbox" id="remember-me" style="width:20px; height:20px; cursor: pointer; accent-color: var(--primary);">
+            <label for="remember-me" style="font-weight:bold; color:#aaa; font-size: 0.9rem; cursor: pointer;">Ingat Sandi & ID</label>
         </div>
         <button onclick="handleLogin()">MASUK</button>
     </div>
@@ -153,7 +160,7 @@
         </div>
         
         <div style="padding: 5px 15px 5px 15px;">
-            <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid #ede6da; font-size:0.9rem; font-weight:bold; background-color: #fff; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);" oninput="renderMenu()">
+            <input type="text" id="search-menu" placeholder="🔍 Cari nama menu..." style="width:100%; padding:12px 15px; border-radius:12px; border:1px solid var(--border-color); font-size:0.9rem; font-weight:bold; background-color: #141414; color: white; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);" oninput="renderMenu()">
         </div>
 
         <div id="cat-nav" class="nav-tabs">
@@ -168,17 +175,17 @@
     <main><div class="product-grid" id="product-grid"></div></main>
     
     <div class="footer-cart">
-        <div style="background:#fdfcf9; padding:10px; border-radius:12px; border: 1px dashed var(--primary); display:flex; flex-direction:column; gap:8px;">
+        <div style="background:#1a1a1a; padding:10px; border-radius:12px; border: 1px solid var(--primary); display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span id="label-mode" style="font-size:0.75rem; font-weight:900; color:var(--primary)">MODE: ONLINE</span>
                 <div style="display:flex; align-items:center; gap:5px;">
                     <label for="discount-input" style="font-size:0.7rem; font-weight:bold; color:var(--admin);">Pot. Diskon:</label>
-                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid #ede6da; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
+                    <input type="number" id="discount-input" value="0" style="width:85px; text-align:right; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:#121212; color:white; font-weight:bold; font-size:0.9rem;" oninput="updateUI()">
                 </div>
             </div>
             
             <div id="online-platform-container" style="display: flex; flex-direction: column; gap: 3px;">
-                <div style="font-size: 0.68rem; font-weight: 800; color: #d35400; text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: var(--primary); text-align: left; padding-left: 2px;" id="platform-warning-text">⚠️ KASIR WAJIB PILIH PLATFORM:</div>
                 <div class="platform-selector-box">
                     <button class="platform-btn" data-p="Grab" onclick="selectActivePlatform('Grab')">GRAB</button>
                     <button class="platform-btn" data-p="Grab%" onclick="selectActivePlatform('Grab%')">GRAB%</button>
@@ -189,10 +196,10 @@
         </div>
         
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 0 4px;">
-            <span style="font-size: 0.8rem; font-weight: 800; color: #7a6e67;">Total Transaksi:</span>
+            <span style="font-size: 0.8rem; font-weight: 800; color: var(--text-muted);">Total Transaksi:</span>
             <div id="total-price-display" style="font-size:1.4rem; font-weight:900; text-align:right; color: var(--primary);">Rp 0</div>
         </div>
-        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:6px; font-size:1rem;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
+        <button id="btn-pay-main" style="width:100%; padding:14px; background:var(--primary); color:#000; border:none; border-radius:12px; font-weight:900; margin-top:6px; font-size:1rem; cursor:pointer;" onclick="openPaymentMethod()">TINJAU & BAYAR</button>
     </div>
 </div>
 
@@ -210,8 +217,8 @@
 
 <div id="page-report" class="page">
     <main>
-        <div id="admin-panel" style="display:none; background: #fff3e0; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
-            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px;">
+        <div id="admin-panel" style="display:none; background: #221d0c; padding: 15px; border-bottom: 2px solid var(--admin); margin: -15px -15px 15px -15px;">
+            <select id="branch-filter" onchange="updateReport()" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom: 10px; background:#121212; color:white; border:1px solid var(--primary);">
                 <option value="ALL">SEMUA CABANG</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON Jeruk</option>
@@ -257,9 +264,9 @@
     <main>
         <h3 style="color: var(--primary);">Manajemen Menu</h3>
         
-        <div id="admin-mgmt-filter" style="background: #fff3e0; padding: 15px; border-radius:15px; border: 2px solid var(--admin); margin-bottom:15px;">
+        <div id="admin-mgmt-filter" style="background: #221d0c; padding: 15px; border-radius:15px; border: 2px solid var(--admin); margin-bottom:15px;">
             <label style="font-weight:bold; color:var(--admin); font-size:0.8rem;">Pilih Target Cabang untuk Diedit:</label>
-            <select id="mgmt-branch-select" onchange="changeMgmtBranch()" style="width:100%; padding:12px; margin-top:5px; border-radius:10px; border:1px solid #ddd; font-weight:bold;">
+            <select id="mgmt-branch-select" onchange="changeMgmtBranch()" style="width:100%; padding:12px; margin-top:5px; border-radius:10px; border:1px solid var(--border-color); font-weight:bold; background:#121212; color:white;">
                 <option value="ALL">✅ SEMUA CABANG SEKALIGUS</option>
                 <option value="KS4-TD">TANDUR</option>
                 <option value="KS4-KB">KEBON JERUK</option>
@@ -272,37 +279,37 @@
             </select>
         </div>
 
-        <div id="admin-add-menu-box" style="background:white; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
+        <div id="admin-add-menu-box" style="background:#161616; padding:15px; border-radius:15px; border: 2px dashed var(--admin); margin-bottom:15px">
             <h4 style="margin:0 0 10px 0; color:var(--admin);">FORM TAMBAH MENU BARU (KHUSUS ADMIN)</h4>
-            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px" onchange="toggleMgmtPriceInputs()">
+            <select id="new-mode" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border-color); border-radius:10px; background:#121212; color:white;" onchange="toggleMgmtPriceInputs()">
                 <option value="ONLINE">ONLINE</option><option value="DINEIN">DINE IN</option>
             </select>
 
-            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
-            <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <input type="text" id="new-name" placeholder="Nama Menu (Cth: Kopsu Bos)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border-color); border-radius:10px; background:#121212; color:white;">
+            <input type="number" id="new-price" placeholder="Harga Normal / Dine In (Wajib)" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border-color); border-radius:10px; background:#121212; color:white;">
             
             <div id="ojol-price-inputs-container">
                 <label style="font-size:0.75rem; font-weight:bold; color:var(--primary); margin-bottom:5px; display:block;">Tambahkan Harga Khusus (Ojol):</label>
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <input type="number" id="new-price-grab" placeholder="Harga Grab/Grab%" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
-                    <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
-                    <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid #ddd; border-radius:10px; font-size:0.8rem;">
+                    <input type="number" id="new-price-grab" placeholder="Harga Grab/Grab%" style="flex:1; width:100%; padding:12px; border:1px solid var(--border-color); border-radius:10px; font-size:0.8rem; background:#121212; color:white;">
+                    <input type="number" id="new-price-gojek" placeholder="Harga Gojek" style="flex:1; width:100%; padding:12px; border:1px solid var(--border-color); border-radius:10px; font-size:0.8rem; background:#121212; color:white;">
+                    <input type="number" id="new-price-shopee" placeholder="Harga Shopee" style="flex:1; width:100%; padding:12px; border:1px solid var(--border-color); border-radius:10px; font-size:0.8rem; background:#121212; color:white;">
                 </div>
             </div>
             
-            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:10px">
+            <select id="new-cat" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border-color); border-radius:10px; background:#121212; color:white;">
                 <option value="ICE">ICE</option><option value="HOT">HOT</option><option value="PAKET">PAKET</option><option value="SNACKS">ROTI</option><option value="EXTRA">EXTRA</option>
             </select>
 
-            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#fdfbf7; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
+            <button type="button" onclick="document.getElementById('komponen-panel').style.display='block'; this.style.display='none'" style="width:100%; padding:12px; background:#1f1f1f; color:var(--primary); border:2px dashed var(--primary); border-radius:10px; margin-bottom:10px; font-weight:bold; cursor:pointer;">+ Atur Komponen Laporan (Klik Disini)</button>
             
-            <div id="komponen-panel" style="display:none; background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px;">
+            <div id="komponen-panel" style="display:none; background:#121212; padding:15px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:15px;">
                 <label style="font-size:0.8rem; font-weight:bold; color:var(--primary); margin-bottom:10px; display:block;">Pengaturan Fisik Cup & Susu (Otomatis Dihitung)</label>
                 
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <div style="flex:1">
-                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Jenis Wadah</label>
-                        <select id="new-wadah" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                        <label style="font-size:0.7rem; color:#aaa; font-weight:bold;">Jenis Wadah</label>
+                        <select id="new-wadah" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; background:#1a1a1a; color:white;">
                             <option value="Cup Kecil">Cup Kecil</option>
                             <option value="Cup Besar">Cup Besar</option>
                             <option value="Cup Hot">Cup Hot</option>
@@ -312,24 +319,24 @@
                         </select>
                     </div>
                     <div style="flex:1">
-                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Total Cup Keluar</label>
-                        <input type="number" id="new-qty-wadah" placeholder="Cth: 3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                        <label style="font-size:0.7rem; color:#aaa; font-weight:bold;">Total Cup Keluar</label>
+                        <input type="number" id="new-qty-wadah" placeholder="Cth: 3" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; background:#1a1a1a; color:white;">
                     </div>
                 </div>
 
                 <div style="display:flex; gap:10px;">
                     <div style="flex:1">
-                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Susu</label>
-                        <input type="number" id="new-qty-susu" placeholder="Cth: 2" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                        <label style="font-size:0.7rem; color:#aaa; font-weight:bold;">Cup Susu</label>
+                        <input type="number" id="new-qty-susu" placeholder="Cth: 2" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; background:#1a1a1a; color:white;">
                     </div>
                     <div style="flex:1">
-                        <label style="font-size:0.7rem; color:#666; font-weight:bold;">Cup Non-Susu</label>
-                        <input type="number" id="new-qty-non" placeholder="Cth: 1" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                        <label style="font-size:0.7rem; color:#aaa; font-weight:bold;">Cup Non-Susu</label>
+                        <input type="number" id="new-qty-non" placeholder="Cth: 1" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; background:#1a1a1a; color:white;">
                     </div>
                 </div>
             </div>
 
-            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:white; border:none; border-radius:10px; font-weight:bold">SIMPAN MENU</button>
+            <button onclick="addNewMenu()" style="width:100%; padding:12px; background:var(--admin); color:#000; border:none; border-radius:10px; font-weight:900; cursor:pointer;">SIMPAN MENU</button>
         </div>
         
         <div id="mgmt-list"></div>
@@ -338,39 +345,39 @@
 
 <!-- Modal Edit Menu (Untuk Admin dan Cabang) -->
 <div id="modal-edit-menu" class="modal">
-    <div class="modal-content" style="font-family: inherit;">
+    <div class="modal-content">
         <h3 style="color:var(--primary); margin-top:0;">📝 Edit Menu</h3>
         <input type="hidden" id="edit-menu-branch">
         <input type="hidden" id="edit-menu-mode">
         <input type="hidden" id="edit-menu-id">
         
-        <label style="font-size:0.8rem; font-weight:bold; color:var(--text);">Nama Menu:</label>
-        <input type="text" id="edit-menu-name" style="width:100%; padding:12px; margin:5px 0 15px 0; border:1px solid #ddd; border-radius:10px; font-size:1rem;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#aaa;">Nama Menu:</label>
+        <input type="text" id="edit-menu-name" style="width:100%; padding:12px; margin:5px 0 15px 0; border:1px solid var(--border-color); background:#121212; color:white; border-radius:10px; font-size:1rem;">
         
-        <label style="font-size:0.8rem; font-weight:bold; color:var(--text);">Harga Dine-In / Normal:</label>
-        <input type="number" id="edit-menu-price" style="width:100%; padding:12px; margin:5px 0 15px 0; border:1px solid #ddd; border-radius:10px; font-size:1rem;">
+        <label style="font-size:0.8rem; font-weight:bold; color:#aaa;">Harga Dine-In / Normal:</label>
+        <input type="number" id="edit-menu-price" style="width:100%; padding:12px; margin:5px 0 15px 0; border:1px solid var(--border-color); background:#121212; color:white; border-radius:10px; font-size:1rem;">
         
         <div id="edit-ojol-prices-container" style="display:none;">
             <label style="font-size:0.8rem; font-weight:bold; color:var(--admin);">Harga Khusus Online (Ojol):</label>
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:5px; margin-bottom:15px;">
                 <div>
-                    <span style="font-size:0.7rem; color:#666;">Harga GRAB / GRAB%</span>
-                    <input type="number" id="edit-menu-price-grab" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+                    <span style="font-size:0.7rem; color:#aaa;">Harga GRAB / GRAB%</span>
+                    <input type="number" id="edit-menu-price-grab" style="width:100%; padding:10px; border:1px solid var(--border-color); background:#121212; color:white; border-radius:10px;">
                 </div>
                 <div>
-                    <span style="font-size:0.7rem; color:#666;">Harga GOJEK</span>
-                    <input type="number" id="edit-menu-price-gojek" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+                    <span style="font-size:0.7rem; color:#aaa;">Harga GOJEK</span>
+                    <input type="number" id="edit-menu-price-gojek" style="width:100%; padding:10px; border:1px solid var(--border-color); background:#121212; color:white; border-radius:10px;">
                 </div>
                 <div>
-                    <span style="font-size:0.7rem; color:#666;">Harga SHOPEE</span>
-                    <input type="number" id="edit-menu-price-shopee" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:10px;">
+                    <span style="font-size:0.7rem; color:#aaa;">Harga SHOPEE</span>
+                    <input type="number" id="edit-menu-price-shopee" style="width:100%; padding:10px; border:1px solid var(--border-color); background:#121212; color:white; border-radius:10px;">
                 </div>
             </div>
         </div>
         
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="closeModal()">Batal</button>
-            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="saveEditedMenu()">Simpan Perubahan</button>
+            <button style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:#000; border:none; border-radius:10px; font-weight:900; cursor:pointer;" onclick="saveEditedMenu()">Simpan Perubahan</button>
         </div>
     </div>
 </div>
@@ -382,47 +389,47 @@
     <button class="nav-btn" id="btn-nav-mgmt" onclick="showPage('mgmt')">Menu</button>
 </nav>
 
-<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3>Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button></div></div>
+<div id="modal-bread" class="modal"><div class="modal-content" style="text-align:center"><h3 style="color:var(--primary);">Pilih Roti</h3><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold;background:#1f1f1f;color:white;border:1px solid var(--border-color);cursor:pointer;" onclick="selectBread(41, 'Roti Coklat')">Roti Coklat</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold;background:#1f1f1f;color:white;border:1px solid var(--border-color);cursor:pointer;" onclick="selectBread(42, 'Roti Vanila')">Roti Vanila</button><button style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;font-weight:bold;background:#1f1f1f;color:white;border:1px solid var(--border-color);cursor:pointer;" onclick="selectBread(43, 'Roti Blueberry')">Roti Blueberry</button><button style="width:100%;padding:10px;color:#aaa;border:none;background:none;margin-top:10px;cursor:pointer;" onclick="closeModal()">Batal</button></div></div>
 
 <div id="modal-payment" class="modal">
     <div class="modal-content" style="text-align:center">
         <h3 style="color:var(--primary); margin-bottom:15px;">Pilih Metode Pembayaran</h3>
         <div id="payment-methods-list"></div>
-        <button style="width:100%;padding:10px;color:#999;border:none;background:none;margin-top:10px;" onclick="closeModal()">Batal</button>
+        <button style="width:100%;padding:10px;color:#aaa;border:none;background:none;margin-top:10px;cursor:pointer;" onclick="closeModal()">Batal</button>
     </div>
 </div>
 
 <div id="modal-cash" class="modal">
     <div class="modal-content" style="text-align:center">
         <h3 style="color:var(--primary); margin-bottom:10px;">Pembayaran Tunai</h3>
-        <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px;"></div>
-        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid #ede6da; text-align:center; margin-bottom:20px;">
+        <div id="cash-total-display" style="font-size:1.2rem; font-weight:bold; margin-bottom:15px; color:var(--primary);"></div>
+        <input type="number" id="cash-input-val" placeholder="Masukkan Nominal Uang" style="width:100%; padding:15px; font-size:1.2rem; border-radius:10px; border:2px solid var(--primary); background:#121212; color:white; text-align:center; margin-bottom:20px;">
         <div style="display:flex; gap:10px;">
-            <button style="flex:1; padding:15px; background:#ccc; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
-            <button style="flex:1; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="processCash()">Proses</button>
+            <button style="flex:1; padding:15px; background:#333; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="closeModal(); openPaymentMethod();">Kembali</button>
+            <button style="flex:1; padding:15px; background:var(--primary); color:#000; border:none; border-radius:10px; font-weight:900; font-size:1rem; cursor:pointer;" onclick="processCash()">Proses</button>
         </div>
     </div>
 </div>
 
 <div id="modal-receipt" class="modal"><div class="modal-content" style="text-align:center">
-    <h3 id="rec-header">STRUK</h3>
-    <div id="rec-branch" style="font-size:0.7rem"></div>
-    <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:#555;"></div>
+    <h3 id="rec-header" style="color:var(--primary);">STRUK</h3>
+    <div id="rec-branch" style="font-size:0.7rem; color:#aaa;"></div>
+    <div id="rec-method" style="font-size:0.8rem; font-weight:bold; margin-top:5px; color:var(--primary);"></div>
     <table id="rec-table" style="margin-top:10px;"></table>
     <h4 id="rec-total" style="text-align:right; color:var(--primary); font-size:1.2rem; margin-top:10px;"></h4>
     
     <div id="modal-btns-confirm">
-        <button style="width:100%;padding:15px;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:bold;margin-top:20px;font-size:1rem;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
-        <button style="width:100%;padding:12px;background:#e74c3c;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:8px;font-size:1rem;cursor:pointer;" onclick="closeModal()">❌ BATAL / KEMBALI EDIT</button>
-        <button id="btn-change-pay-modal" style="width:100%;padding:12px;color:#999;border:none;background:none;font-weight:bold;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
+        <button style="width:100%;padding:15px;background:var(--primary);color:#000;border:none;border-radius:10px;font-weight:900;margin-top:20px;font-size:1rem;cursor:pointer;" onclick="confirmPayment()">KONFIRMASI BAYAR</button>
+        <button style="width:100%;padding:12px;background:#c0392b;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:8px;font-size:1rem;cursor:pointer;" onclick="closeModal()">❌ BATAL / KEMBALI EDIT</button>
+        <button id="btn-change-pay-modal" style="width:100%;padding:12px;color:#aaa;border:none;background:none;font-weight:bold;cursor:pointer;" onclick="openPaymentMethod()">Ubah Metode Pembayaran</button>
     </div>
     
     <div id="modal-btns-close" style="display:none; margin-top:20px;">
         <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="cetakRawBT()">🖨️ CETAK</button>
-            <button style="flex:1; padding:15px; background:#e74c3c; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
+            <button style="flex:2; padding:15px; background:#2980b9; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="cetakRawBT()">🖨️ CETAK</button>
+            <button style="flex:1; padding:15px; background:#c0392b; color:white; border:none; border-radius:10px; font-weight:bold; font-size:1rem; cursor:pointer;" onclick="deleteTransFromModal()">🗑️ HAPUS</button>
         </div>
-        <button style="width:100%;padding:15px;background:#444;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;" onclick="closeModal()">TUTUP STRUK</button>
+        <button style="width:100%;padding:15px;background:#333;color:white;border:none;border-radius:10px;font-weight:bold;font-size:1rem;cursor:pointer;" onclick="closeModal()">TUTUP STRUK</button>
     </div>
 </div></div>
 
@@ -431,8 +438,8 @@
         <h3 id="date-modal-title" style="color:var(--primary);">Pilih Tanggal</h3>
         <div id="date-input-container" style="margin-top:15px;"></div>
         <div style="display:flex; gap:10px; margin-top:25px;">
-            <button style="flex:1; padding:12px; background:#ccc; border:none; border-radius:8px; font-weight:bold;" onclick="closeModal()">Batal</button>
-            <button style="flex:1; padding:12px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;" onclick="applyDateFilter()">Terapkan</button>
+            <button style="flex:1; padding:12px; background:#333; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="closeModal()">Batal</button>
+            <button style="flex:1; padding:12px; background:var(--primary); color:#000; border:none; border-radius:8px; font-weight:900; cursor:pointer;" onclick="applyDateFilter()">Terapkan</button>
         </div>
     </div>
 </div>
@@ -489,7 +496,6 @@
 
     function parseFirebaseMenus(data) {
         let result = {};
-        // PERBAIKAN: Menambahkan 'KS4-HW' ke daftar branchKeys agar menu cabang HW diproses & dimuat
         let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST", "KS4-HW"];
         if (!data) data = {};
         
@@ -673,7 +679,7 @@
             platformSelector.style.display = "flex";
             document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-            document.getElementById('platform-warning-text').style.color = "#d35400";
+            document.getElementById('platform-warning-text').style.color = "var(--primary)";
         } else {
             selectedPaymentMethod = "Tunai"; 
             document.getElementById('label-mode').innerText = "MODE: DINE IN";
@@ -708,9 +714,9 @@
 
     function openDateModal(type) {
         filterTypeTemp = type; const container = document.getElementById('date-input-container'); const title = document.getElementById('date-modal-title');
-        if(type === 'day') { title.innerText = "Laporan Harian"; container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; } 
-        else if(type === 'range') { title.innerText = "Laporan Mingguan / Kustom"; container.innerHTML = `<div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Mulai Tanggal:</div><input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc; font-size:1rem;"><div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#666; margin-bottom:5px;">Hingga Tanggal:</div><input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; } 
-        else if(type === 'month') { title.innerText = "Laporan Bulanan"; container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">`; }
+        if(type === 'day') { title.innerText = "Laporan Harian"; container.innerHTML = `<input type="date" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:#121212; color:white; font-size:1rem;">`; } 
+        else if(type === 'range') { title.innerText = "Laporan Mingguan / Kustom"; container.innerHTML = `<div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#aaa; margin-bottom:5px;">Mulai Tanggal:</div><input type="date" id="date-val1" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid var(--border-color); background:#121212; color:white; font-size:1rem;"><div style="text-align:left; font-size:0.8rem; font-weight:bold; color:#aaa; margin-bottom:5px;">Hingga Tanggal:</div><input type="date" id="date-val2" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:#121212; color:white; font-size:1rem;">`; } 
+        else if(type === 'month') { title.innerText = "Laporan Bulanan"; container.innerHTML = `<input type="month" id="date-val1" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:#121212; color:white; font-size:1rem;">`; }
         document.getElementById('modal-date').classList.add('show');
     }
 
@@ -1019,7 +1025,7 @@
             }); 
         });
 
-        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">`;
+        let paymentHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">`;
         if(payMethods["Grab"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab: <b>Rp ${payMethods["Grab"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Grab%"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Grab%: <b>Rp ${payMethods["Grab%"].toLocaleString('id-ID')}</b></div>`;
         if(payMethods["Gojek"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Gojek: <b>Rp ${payMethods["Gojek"].toLocaleString('id-ID')}</b></div>`;
@@ -1028,14 +1034,14 @@
         if(payMethods["Tunai"] > 0) paymentHtml += `<div style="flex:1 1 45%; font-size:0.8rem;">Tunai: <b>Rp ${payMethods["Tunai"].toLocaleString('id-ID')}</b></div>`;
         paymentHtml += `</div>`;
 
-        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #ede6da; margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
+        document.getElementById('report-summary-box').innerHTML = `<div class="report-card" style="background:#161616; padding:15px; border-radius:15px; border:1px solid var(--border-color); margin-bottom:12px"><h4>Omzet Terfilter: Rp ${om.toLocaleString()}</h4>${paymentHtml}<div class="table-container" style="margin-top:15px;"><table><thead><tr><th style="text-align:left;">FISIK</th><th style="text-align:left;">QTY</th></tr></thead><tbody><tr><td>Cup Kecil</td><td><b>${Math.max(0, k_raw-b)}</b></td></tr><tr><td>Cup Besar</td><td><b>${b}</b></td></tr><tr><td>Cup Hot</td><td><b>${h}</b></td></tr><tr><td>Botol 1 Liter</td><td><b>${l1}</b></td></tr><tr><td>Botol 500 ML</td><td><b>${ml500}</b></td></tr><tr><td>Remon</td><td><b>${r}</b></td></tr><tr><td>Roti Coklat</td><td><b>${rc}</b></td></tr><tr><td>Roti Vanila</td><td><b>${rv}</b></td></tr><tr><td>Roti Blueberry</td><td><b>${rb}</b></td></tr><tr class="row-total"><td>Total Roti</td><td><b>${rc+rv+rb}</b></td></tr></tbody></table></div></div>`;
         
-        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #f5f5f5;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #f5f5f5;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
-        if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#999; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
+        let detailsHtml = ""; const catNames = ["ICE", "HOT", "PAKET", "SNACKS", "EXTRA"]; catNames.forEach(c => { if(Object.keys(catItems[c]).length > 0) { const sorted = Object.entries(catItems[c]).sort((a,b)=>b[1]-a[1]); detailsHtml += `<div class="cat-header">${c}</div><table style="width:100%; margin-bottom:15px;">`; sorted.forEach(p => { detailsHtml += `<tr><td style="padding:5px 0; border-bottom:1px solid #222;">${p[0]}</td><td style="text-align:right; padding:5px 0; border-bottom:1px solid #222;"><b>${p[1]}</b></td></tr>`; }); detailsHtml += `</table>`; } });
+        if(detailsHtml === "") detailsHtml = "<p style='text-align:center; color:#777; margin-top:20px;'>Belum ada menu terjual pada tanggal ini.</p>";
         
-        if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #ccc; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#ede6da; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
+        if(currentBranchId === "KS4-ADM") { detailsHtml += `<div style="margin-top:25px; border-top: 2px dashed #444; padding-top:15px;"><h4 style="color:var(--admin); margin-top:0; margin-bottom:10px;">Statistik Bahan Susu vs Non-Susu</h4><div class="table-container" style="overflow-x:auto;"><table style="text-align:center; width:100%; font-size:0.7rem;"><thead><tr style="background:#1f1f1f; color:var(--primary);"><th style="text-align:center; padding:8px;">Cup Susu</th><th style="text-align:center; padding:8px;">Cup Non Susu</th><th style="text-align:center; padding:8px;">1L Susu</th><th style="text-align:center; padding:8px;">1L Non Susu</th><th style="text-align:center; padding:8px;">500ml Susu</th><th style="text-align:center; padding:8px;">500ml Non</th></tr></thead><tbody><tr><td style="padding:10px; font-size:1rem;"><b>${cupSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${cupNonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${l1NonSusu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500Susu}</b></td><td style="padding:10px; font-size:1rem;"><b>${ml500NonSusu}</b></td></tr></tbody></table></div></div>`; }
         
-        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:white; padding:15px; border-radius:15px; border:1px solid #ede6da; margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
+        document.getElementById('report-details-box').innerHTML = `<div class="report-card" style="background:#161616; padding:15px; border-radius:15px; border:1px solid var(--border-color); margin-bottom:12px"><h4>Menu Terjual</h4>${detailsHtml}</div>`;
         
         if(currentBranchId === "KS4-ADM") { 
             document.getElementById('admin-history-box').style.display = 'block'; 
@@ -1045,16 +1051,16 @@
                     <td style="text-align:left;">
                         ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} <br> 
                         ${new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
-                        <span style="font-size:0.65rem; font-weight:bold; color:#d35400;">${t.paymentMethod || 'Tunai'}</span>
+                        <span style="font-size:0.65rem; font-weight:bold; color:var(--primary);">${t.paymentMethod || 'Tunai'}</span>
                     </td>
                     <td style="text-align:left;">
                         <b>${t.branchName}</b><br>
-                        <span style="font-size:0.65rem; color:#888;">${t.mode}</span>
+                        <span style="font-size:0.65rem; color:#aaa;">${t.mode}</span>
                     </td>
                     <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
                     <td style="text-align:left;">
-                        <button style="background:var(--primary); color:white; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%;" onclick="viewStruk('${t.id}')">STRUK</button>
-                        <button onclick="deleteTrans('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px; border-radius:5px; width:100%;">HAPUS</button>
+                        <button style="background:var(--primary); color:#000; border:none; padding:6px; border-radius:5px; margin-bottom:5px; width:100%; font-weight:bold; cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button>
+                        <button onclick="deleteTrans('${t.id}')" style="background:#c0392b; color:white; border:none; padding:6px; border-radius:5px; width:100%; cursor:pointer;">HAPUS</button>
                     </td>
                 </tr>`; 
             }); 
@@ -1070,11 +1076,11 @@
                 auditBox = newDiv;
             }
             
-            let auditHtml = `<h3 style="color:#c0392b; border-bottom: 2px solid #c0392b; padding-bottom:5px;">⚠️ Log Pembatalan / Struk Dihapus (Audit Pusat)</h3>
+            let auditHtml = `<h3 style="color:#e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom:5px;">⚠️ Log Pembatalan / Struk Dihapus (Audit Pusat)</h3>
                              <div class="table-container">
-                                <table style="background: #f9f9f9;">
+                                <table style="background: #141414;">
                                     <thead>
-                                        <tr style="background:#f2dede; color:#a94442;">
+                                        <tr style="background:#2c1515; color:#e74c3c;">
                                             <th style="text-align:left;">WAKTU DIAUDIT</th>
                                             <th style="text-align:left;">CABANG / OLEH</th>
                                             <th style="text-align:left;">NOMINAL</th>
@@ -1085,15 +1091,15 @@
             
             deletedTransactions.forEach(at => {
                 let delTime = at.deletedAt ? new Date(at.deletedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-';
-                auditHtml += `<tr style="color: #c0392b; font-style: italic;">
+                auditHtml += `<tr style="color: #e74c3c; font-style: italic;">
                     <td style="text-align:left;">${new Date(at.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}<br>${delTime}</td>
                     <td style="text-align:left;"><b>${at.branchName}</b><br><small>User: ${at.deletedBy || 'Unknown'}</small></td>
                     <td style="text-align:left;">Rp ${at.total.toLocaleString()}</td>
-                    <td style="text-align:left;"><button style="background:#7f8c8d; color:white; border:none; padding:6px; border-radius:5px; width:100%;" onclick="viewStruk('${at.id}')">CEK DETAIL</button></td>
+                    <td style="text-align:left;"><button style="background:#333; color:white; border:none; padding:6px; border-radius:5px; width:100%; cursor:pointer;" onclick="viewStruk('${at.id}')">CEK DETAIL</button></td>
                 </tr>`;
             });
             
-            if(deletedTransactions.length === 0) auditHtml += `<tr><td colspan="4" style="text-align:center; color:#999;">Aman. Tidak ada struk yang dihapus cabang hari ini.</td></tr>`;
+            if(deletedTransactions.length === 0) auditHtml += `<tr><td colspan="4" style="text-align:center; color:#777;">Aman. Tidak ada struk yang dihapus cabang hari ini.</td></tr>`;
             auditHtml += `</tbody></table></div>`;
             auditBox.innerHTML = auditHtml;
         } else { 
@@ -1101,7 +1107,7 @@
             if(document.getElementById('admin-audit-box')) document.getElementById('admin-audit-box').style.display = 'none';
         }
         
-        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
+        const delBox = document.getElementById('admin-delete-report-box'); if (currentBranchId === "KS4-ADM" && filtered.length > 0) { delBox.innerHTML = `<button onclick="clearReportData()" style="width:100%; padding:15px; background:#c0392b; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; margin-bottom:30px; cursor:pointer;">🗑️ KOSONGKAN LAPORAN INI TOTAL</button>`; } else { delBox.innerHTML = ''; }
     }
 
     function clearReportData() { if(currentFilteredTransactions.length === 0) return; let warning = prompt("PERINGATAN!\nSeluruh transaksi pada laporan filter ini akan DIHAPUS PERMANEN.\n\nKetik kata 'HAPUS' (huruf besar) untuk melanjutkan:"); if (warning === "HAPUS") { const idsToRemove = currentFilteredTransactions.map(t => t.id); transRef.once('value', s => { const data = s.val(); let updates = {}; for (let k in data) { if (idsToRemove.includes(data[k].id)) { updates[k] = null; } } transRef.update(updates).then(() => { alert("Seluruh data laporan ini berhasil dikosongkan!"); }); }); } }
@@ -1135,16 +1141,16 @@
         methods.forEach(method => {
             const rows = list.filter(t => (t.paymentMethod || 'Tunai') === method);
             if (!rows.length) return;
-            html += `<tr><td colspan="4" style="background:#4a3b32;color:#fff;font-weight:bold;text-align:center;padding:10px;">${method} (${rows.length} Struk)</td></tr>`;
+            html += `<tr><td colspan="4" style="background:#1f1f1f;color:var(--primary);font-weight:bold;text-align:center;padding:10px;border-top:1px solid var(--border-color);">${method} (${rows.length} Struk)</td></tr>`;
             rows.forEach(t => {
                 html += `<tr>
                 <td style="text-align:left;">
                 ${new Date(t.date).toLocaleDateString('id-ID', {day:'numeric', month:'short'})} ${new Date(t.date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}<br>
-                <span style="font-size:0.65rem;font-weight:bold;color:#d35400;">${method}</span>
+                <span style="font-size:0.65rem;font-weight:bold;color:var(--primary);">${method}</span>
                 </td>
-                <td style="text-align:left;"><span style="font-weight:bold;color:${t.mode==='DINEIN'?'#2980b9':'#4a3b32'}">${t.mode}</span></td>
+                <td style="text-align:left;"><span style="font-weight:bold;color:${t.mode==='DINEIN'?'#3498db':'var(--primary)'}">${t.mode}</span></td>
                 <td style="text-align:left;">Rp ${t.total.toLocaleString()}</td>
-                <td style="text-align:left;"><button style="background:var(--primary);color:#fff;border:none;padding:6px;border-radius:5px" onclick="viewStruk('${t.id}')">STRUK</button></td>
+                <td style="text-align:left;"><button style="background:var(--primary);color:#000;border:none;padding:6px;border-radius:5px;font-weight:bold;cursor:pointer;" onclick="viewStruk('${t.id}')">STRUK</button></td>
                 </tr>`;
             });
         });
@@ -1264,9 +1270,9 @@
             } 
         } 
         if(t.extraBread) t.extraBread.forEach(bid => { let rn = bid==41?'Roti Coklat':(bid==42?'Roti Vanila':'Roti Blueberry'); h += `<tr><td>- ${rn}</td><td>x1</td><td style="text-align:right">0</td></tr>`; }); 
-        if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Diskon:</td><td style="text-align:right; color:red; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
+        if(t.disc && t.disc > 0) h += `<tr><td colspan="2" style="text-align:right; color:#e74c3c; font-weight:bold; border-top:1px dashed #444; padding-top:8px;">Diskon:</td><td style="text-align:right; color:#e74c3c; font-weight:bold; border-top:1px dashed #444; padding-top:8px;">- Rp ${t.disc.toLocaleString('id-ID')}</td></tr>`; 
         if (t.paymentMethod === "Tunai" && t.cashReceived) {
-            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #ccc; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
+            h += `<tr><td colspan="2" style="text-align:right; font-weight:bold; border-top:1px dashed #444; padding-top:8px;">Tunai:</td><td style="text-align:right; font-weight:bold; border-top:1px dashed #444; padding-top:8px;">Rp ${t.cashReceived.toLocaleString('id-ID')}</td></tr>`;
             h += `<tr><td colspan="2" style="text-align:right; font-weight:bold;">Kembali:</td><td style="text-align:right; font-weight:bold;">Rp ${t.cashChange.toLocaleString('id-ID')}</td></tr>`;
         }
         document.getElementById('rec-table').innerHTML = h; 
@@ -1346,7 +1352,7 @@
             let isAdmin = (currentBranchId === "KS4-ADM");
             if (isAdmin) {
                 let selElem = document.getElementById('mgmt-branch-select'); if(selElem) viewBranch = selElem.value;
-                if (viewBranch === "ALL") { list.innerHTML += `<div style="background:#e74c3c; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini mengubah data SELURUH CABANG!</div>`; }
+                if (viewBranch === "ALL") { list.innerHTML += `<div style="background:#c0392b; color:white; padding:10px; text-align:center; border-radius:8px; font-weight:bold; margin-bottom:10px;">PERINGATAN: Edit/Hapus disini mengubah data SELURUH CABANG!</div>`; }
             }
             
             let targetBranchData = allMenusData[viewBranch] || { ONLINE: [], DINEIN: [] };
@@ -1365,14 +1371,14 @@
 
                         let managementButtons = `
                             <button onclick="openEditMenuModal('${viewBranch}', '${m}', ${item.id})" style="padding:6px 12px; background:#2980b9; color:white; border:none; border-radius:5px; font-size:0.7rem; font-weight:bold; cursor:pointer;">✏️ EDIT</button>
-                            <button onclick="deleteMenu('${viewBranch}', '${m}', ${item.id})" style="padding:6px 12px; background:#e74c3c; color:white; border:none; border-radius:5px; font-size:0.7rem; font-weight:bold; cursor:pointer;">HAPUS</button>
+                            <button onclick="deleteMenu('${viewBranch}', '${m}', ${item.id})" style="padding:6px 12px; background:#c0392b; color:white; border:none; border-radius:5px; font-size:0.7rem; font-weight:bold; cursor:pointer;">HAPUS</button>
                         `;
 
                         list.innerHTML += `
                             <div class="mg-card">
                                 <div>
-                                    <b style="font-size:0.85rem;">${displayName}</b> (${item.cat})<br>
-                                    <span style="font-size:0.7rem; color:#666;">${priceInfo}</span><br>
+                                    <b style="font-size:0.85rem; color:white;">${displayName}</b> (${item.cat})<br>
+                                    <span style="font-size:0.7rem; color:#aaa;">${priceInfo}</span><br>
                                     <span style="font-size:0.7rem; font-weight:bold; color:${item.isHidden?'#e74c3c':'#27ae60'};">Status: ${statusText}</span>
                                 </div>
                                 <div style="display:flex; gap:5px;">
@@ -1566,7 +1572,7 @@
                 selectedPaymentMethod = "";
                 document.querySelectorAll('.platform-btn').forEach(btn => btn.classList.remove('active'));
                 document.getElementById('platform-warning-text').innerText = "⚠️ KASIR WAJIB PILIH PLATFORM:";
-                document.getElementById('platform-warning-text').style.color = "#d35400";
+                document.getElementById('platform-warning-text').style.color = "var(--primary)";
             }
             renderMenu();
             updateUI();
