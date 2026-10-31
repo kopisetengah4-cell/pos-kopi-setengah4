@@ -489,7 +489,6 @@
 
     function parseFirebaseMenus(data) {
         let result = {};
-        // PERBAIKAN: Menambahkan 'KS4-HW' ke daftar branchKeys agar menu cabang HW diproses & dimuat
         let branchKeys = ["ALL", "KS4-TD", "KS4-KB", "KS4-CK", "KS4-MT", "KS4-CP", "KS4-OT", "KS4-ST", "KS4-HW"];
         if (!data) data = {};
         
@@ -946,7 +945,7 @@
                 let kategori = m.cat || "EXTRA"; 
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
 
-                if (m.isNewCustom && m.name.includes("WADAH:")) {
+                if (m.name.includes("WADAH:")) {
                     let parts = m.name.split(' | ');
                     let metadata = parts[2] || ""; 
                     let wType = "Cup Kecil", wQty = 0, sQty = 0, nQty = 0;
