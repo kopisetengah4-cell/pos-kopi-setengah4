@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#fcfbfa">
     
-    <title>POS KS4 - Sunter Branch v79 (Gold & Cream Edition)</title>
+    <title>POS KS4 - Gold & Cream Edition (Fixed Report)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -19,7 +19,7 @@
         :root { 
             --primary: #c5a059; /* Gold Elegan & Berkelas */
             --primary-hover: #b08d4c;
-            --secondary: #fcfbfa; /* Cream Sangat Lembut / Cerah */
+            --secondary: #fcfbfa; /* Cream Lembut / Cerah */
             --card-bg: #ffffff; /* Putih Bersih */
             --text: #2c2a29; 
             --text-muted: #736f6b;
@@ -898,6 +898,7 @@
         openCheckout();
     }
     
+    // SINKRONISASI LOGIKA SISTEM AWAL UNTUK KALKULASI LAPORAN
     function updateReport() {
         const bF = document.getElementById('branch-filter') ? document.getElementById('branch-filter').value : "ALL";
         const now = new Date(); const nowStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
@@ -952,7 +953,7 @@
                 let kategori = m.cat || "EXTRA"; 
                 catItems[kategori][displayName] = (catItems[kategori][displayName] || 0) + q; 
 
-                // Perbaikan deteksi komponen wadah custom dari menu baru (termasuk cabang HW)
+                // Sistem Kalkulasi Utama (Sama Seperti Sistem Awal)
                 if (m.name.includes("WADAH:")) {
                     let parts = m.name.split(' | ');
                     let metadata = parts[2] || ""; 
@@ -980,15 +981,31 @@
                     if(nameLower.includes("500ml")) ml500 += q; 
                     
                     if(!isPaketBotol) { 
-                        if(nameLower.includes("besar")) b += q; 
-                        else if(nameLower.includes("hot") || m.cat === "HOT") h += q; 
-                        else if(nameLower.includes("roti coklat")) rc += q; 
-                        else if(nameLower.includes("roti vanila")) rv += q; 
-                        else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) rb += q; 
-                        else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { k_raw += (q * 4); r += q; } 
-                        else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) k_raw += q; else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) k_raw += (q * 2); 
-                        else if(nameLower.includes("5x")) k_raw += (q * 5); else if(nameLower.includes("2x")) k_raw += (q * 2); 
-                        else if(m.cat === "ICE") { k_raw += q; if(nameLower.includes("remon")) r += q; } 
+                        if(nameLower.includes("besar")) {
+                            b += q;
+                            k_raw += q; // Terhitung ke cup besar & k_raw
+                        } else if(nameLower.includes("hot") || m.cat === "HOT") {
+                            h += q; 
+                        } else if(nameLower.includes("roti coklat")) {
+                            rc += q; 
+                        } else if(nameLower.includes("roti vanila")) {
+                            rv += q; 
+                        } else if(nameLower.includes("roti blue") || nameLower.includes("roti blub") || nameLower.includes("bluberry")) {
+                            rb += q; 
+                        } else if(nameLower.includes("buy3get1") || nameLower.includes("4x")) { 
+                            k_raw += (q * 4); r += q; 
+                        } else if(nameLower.includes("puas") || nameLower.includes("kopsu bos")) {
+                            k_raw += q; 
+                        } else if(nameLower.includes("paling laku") || nameLower.includes("favorite")) {
+                            k_raw += (q * 2); 
+                        } else if(nameLower.includes("5x")) {
+                            k_raw += (q * 5); 
+                        } else if(nameLower.includes("2x")) {
+                            k_raw += (q * 2); 
+                        } else if(m.cat === "ICE") { 
+                            k_raw += q; // MEMASTIKAN MINUMAN ES TERHITUNG KE CUP KECIL SEPERTI AWAL
+                            if(nameLower.includes("remon")) r += q; 
+                        } 
                     } 
                     
                     if (m.cat !== "SNACKS" && m.cat !== "EXTRA") { 
